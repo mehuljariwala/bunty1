@@ -10,15 +10,7 @@ import {
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBUp2ODHF6k2pVaYY26jY4cyLCbou5kxXg",
-  authDomain: "meet-hub-3c03e.firebaseapp.com",
-  projectId: "meet-hub-3c03e",
-  storageBucket: "meet-hub-3c03e.firebasestorage.app",
-  messagingSenderId: "17836504239",
-  appId: "1:17836504239:web:0145ed139dafe24462d05a",
-  measurementId: "G-YNNNRP88PX",
-};
+const firebaseConfig = {};
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -47,7 +39,9 @@ function delay(ms: number): Promise<void> {
 
 async function upload(): Promise<void> {
   const jsonPath = resolve(__dirname, "../order_details.json");
-  const data: Record<string, OrderDetail> = JSON.parse(readFileSync(jsonPath, "utf-8"));
+  const data: Record<string, OrderDetail> = JSON.parse(
+    readFileSync(jsonPath, "utf-8"),
+  );
   const csvIds = Object.keys(data);
   console.log(`Loaded ${csvIds.length} order details from JSON.`);
 
@@ -89,14 +83,18 @@ async function upload(): Promise<void> {
 
     if (batchOps >= BATCH_SIZE) {
       await batch.commit();
-      console.log(`  Committed batch — ${uploaded} orders, ${totalItems} items so far`);
+      console.log(
+        `  Committed batch — ${uploaded} orders, ${totalItems} items so far`,
+      );
       batch = writeBatch(db);
       batchOps = 0;
       await delay(DELAY_MS);
     }
 
     if (uploaded % 500 === 0) {
-      console.log(`  Progress: ${uploaded}/${csvIds.length} orders (${totalItems} items, ${skipped} skipped)`);
+      console.log(
+        `  Progress: ${uploaded}/${csvIds.length} orders (${totalItems} items, ${skipped} skipped)`,
+      );
     }
   }
 
@@ -105,7 +103,9 @@ async function upload(): Promise<void> {
     console.log(`  Committed final batch`);
   }
 
-  console.log(`\nDone! Uploaded ${uploaded} orders with ${totalItems} embedded items. Skipped ${skipped}.`);
+  console.log(
+    `\nDone! Uploaded ${uploaded} orders with ${totalItems} embedded items. Skipped ${skipped}.`,
+  );
   process.exit(0);
 }
 
