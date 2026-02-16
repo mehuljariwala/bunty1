@@ -1,0 +1,139 @@
+ID,Category,"Sub category","Colour name","Colour code","Low stock","Max stock",Status
+139,Yarn,Celtionic,"Maha Rani",#d11010,3,6,Enable
+138,"3 Tar",Celtionic,"Maha Rani",#d11010,3,6,Enable
+137,"5 Tar",Celtionic,"Maha Rani",#d11010,3,6,Enable
+136,Yarn,Polyester,Limbudi,#f1f359,3,6,Enable
+135,"3 Tar",Polyester,Limbudi,#f1f359,3,6,Enable
+134,"5 Tar",Polyester,Limbudi,#f1f359,3,6,Enable
+133,Yarn,Polyester,"D peach",#de7e5d,3,8,Enable
+132,"3 Tar",Polyester,"D peach",#de7e5d,3,8,Enable
+131,"5 Tar",Polyester,"D peach",#de7e5d,3,8,Enable
+130,Yarn,Polyester,"L Pink",#ffb6c1,2,6,Enable
+129,"3 Tar",Polyester,"L Pink",#ffb6c1,2,6,Enable
+128,"5 Tar",Polyester,"L Pink",#ffb6c1,2,6,Enable
+127,Yarn,Polyester,Rust,#7a2f14,2,5,Enable
+126,"3 Tar",Polyester,Rust,#7a2f14,2,5,Enable
+125,"5 Tar",Polyester,Rust,#7a2f14,2,5,Enable
+124,Yarn,Polyester,Mustard,#e1ad01,2,5,Enable
+123,"3 Tar",Polyester,Mustard,#e1ad01,2,5,Enable
+122,"5 Tar",Polyester,Mustard,#e1ad01,2,5,Enable
+121,Yarn,Celtionic,"L MAHENDI",#808000,5,15,Enable
+120,"3 Tar",Celtionic,"L MAHENDI",#808000,5,15,Enable
+119,"5 Tar",Celtionic,"L MAHENDI",#808000,5,15,Enable
+118,Yarn,Celtionic,LEMON,#fff700,5,15,Enable
+117,"3 Tar",Celtionic,LEMON,#fff700,5,15,Enable
+116,"5 Tar",Celtionic,LEMON,#fff700,5,15,Enable
+115,Yarn,"Rani multy","Rani Multy",#cc0058,20,60,Enable
+114,"3 Tar","Rani multy","Rani Multy",#cc0058,15,30,Enable
+113,"5 Tar","Rani multy","Rani Multy",#cc0058,15,30,Enable
+112,Yarn,Multy,"AK Multy",#e65695,12,15,Enable
+111,"3 Tar",Multy,"AK Multy",#e65695,6,15,Enable
+110,"5 Tar",Multy,"AK Multy",#e65695,6,15,Enable
+109,Yarn,Multy,"L Multy",#fff04d,30,90,Enable
+108,"3 Tar",Multy,"L Multy",#fff04d,20,90,Enable
+107,"5 Tar",Multy,"L Multy",#fff04d,30,90,Enable
+106,Yarn,Multy,"D Multy",#1a3be0,20,90,Enable
+105,"3 Tar",Multy,"D Multy",#1a3be0,30,90,Enable
+104,"5 Tar",Multy,"D Multy",#1a3be0,30,90,Enable
+103,Yarn,Polyester,"C Green(pl)",#68ffd1,3,6,Enable
+102,"3 Tar",Polyester,"C Green(pl)",#68ffd1,3,6,Enable
+101,"5 Tar",Polyester,"C Green(pl)",#68ffd1,3,6,Enable
+100,Yarn,Polyester,White,#ffffff,10,30,Enable
+99,"3 Tar",Celtionic,White,#ffffff,10,30,Enable
+98,"5 Tar",Celtionic,White,#ffffff,10,30,Enable
+97,Yarn,Polyester,Petrol,#002a2f,10,30,Enable
+96,"3 Tar",Polyester,Petrol,#002a2f,10,30,Enable
+95,"5 Tar",Polyester,Petrol,#002a2f,10,30,Enable
+94,Yarn,Polyester,Lovender,#afaffa,5,15,Enable
+93,"3 Tar",Polyester,Lovender,#afaffa,5,15,Enable
+92,"5 Tar",Polyester,Lovender,#afaffa,5,15,Enable
+91,Yarn,Polyester,Sky,#71bce1,6,15,Enable
+90,"3 Tar",Polyester,Sky,#71bce1,6,15,Enable
+89,"5 Tar",Polyester,Sky,#71bce1,6,15,Enable
+88,Yarn,Polyester,Mahendi,#026600,6,30,Enable
+87,"3 Tar",Polyester,Mahendi,#026600,6,30,Enable
+86,"5 Tar",Polyester,Mahendi,#026600,10,30,Enable
+85,Yarn,Polyester,Pitch,#ffcba4,5,20,Enable
+84,"3 Tar",Polyester,Pitch,#ffcba4,5,20,Enable
+83,"5 Tar",Polyester,Pitch,#ffcba4,10,30,Enable
+82,Yarn,Polyester,Pista,#93c572,5,20,Enable
+81,"3 Tar",Polyester,Pista,#93c572,5,15,Enable
+80,"5 Tar",Polyester,Pista,#93c572,5,15,Enable
+79,Yarn,Polyester,Cofee,#573d2b,10,45,Enable
+78,"3 Tar",Polyester,Cofee,#573d2b,5,20,Enable
+77,"5 Tar",Polyester,Cofee,#573d2b,5,20,Enable
+76,Yarn,Polyester,"B Green",#0b4233,15,45,Enable
+75,"3 Tar",Polyester,"B Green",#0b4233,10,30,Enable
+74,"5 Tar",Polyester,"B Green",#0b4233,15,30,Enable
+73,Yarn,Polyester,Wine,#722f37,15,30,Enable
+72,"3 Tar",Polyester,Wine,#722f37,10,30,Enable
+71,"5 Tar",Polyester,Wine,#722f37,15,30,Enable
+70,Yarn,Polyester,"D Pink",#fc97a7,10,30,Enable
+69,"3 Tar",Polyester,"D Pink",#fc97a7,10,30,Enable
+68,"5 Tar",Polyester,"D Pink",#fc97a7,15,30,Enable
+67,Yarn,Polyester,"B Cream",#fffdd0,15,45,Enable
+66,"3 Tar",Polyester,"B Cream",#fffdd0,5,30,Enable
+65,"5 Tar",Polyester,"B Cream",#fffdd0,5,30,Enable
+64,Yarn,Polyester,Gray,#808080,20,60,Enable
+63,"3 Tar",Polyester,Gray,#808080,15,45,Enable
+62,"5 Tar",Polyester,Gray,#808080,15,45,Enable
+61,Yarn,Polyester,Mahrron,#800000,30,90,Enable
+60,"3 Tar",Polyester,Mahrron,#800000,15,45,Enable
+59,"5 Tar",Polyester,Mahrron,#800000,20,60,Enable
+58,Yarn,Polyester,Black,#000000,30,90,Enable
+57,"3 Tar",Polyester,Black,#000000,30,90,Enable
+56,"5 Tar",Polyester,Black,#000000,30,90,Enable
+55,Yarn,Celtionic,"L Perot",#9ecc1f,5,30,Enable
+54,"3 Tar",Celtionic,"L Perot",#9ecc1f,5,15,Enable
+53,"5 Tar",Celtionic,"L Perot",#9ecc1f,3,15,Enable
+51,Yarn,Celtionic,"L Green",#3bad3b,10,45,Enable
+50,"3 Tar",Celtionic,"L Green",#3bad3b,10,30,Enable
+49,"5 Tar",Celtionic,"L Green",#3bad3b,10,30,Enable
+48,Yarn,Litchy,Oninen,#894452,10,30,Enable
+47,"3 Tar",Celtionic,Oninen,#894452,10,150,Enable
+46,"5 Tar",Celtionic,Oninen,#894452,10,45,Enable
+45,Yarn,Celtionic,"C Green ",#00ffff,15,30,Enable
+44,"3 Tar",Celtionic,"C Green ",#00ffff,10,30,Enable
+43,"5 Tar",Celtionic,"C Green ",#00ffff,15,30,Enable
+42,Yarn,Celtionic,Chiku,#e09758,30,120,Enable
+41,"3 Tar",Celtionic,Chiku,#e09758,30,120,Enable
+40,"5 Tar",Celtionic,Chiku,#e09758,30,120,Enable
+39,Yarn,Celtionic,"N Blue",#000080,20,90,Enable
+38,"3 Tar",Celtionic,"N Blue",#000080,20,45,Enable
+37,"5 Tar",Celtionic,"N Blue",#000080,20,45,Enable
+36,Yarn,Litchy,Gajari,#fc4949,15,45,Enable
+35,"3 Tar",Celtionic,Gajari,#fc4949,10,45,Enable
+34,"5 Tar",Celtionic,Gajari,#fc4949,15,45,Enable
+33,Yarn,Litchy,Perot,#6cf205,15,45,Enable
+32,"3 Tar",Celtionic,Perot,#6cf205,10,45,Enable
+31,"5 Tar",Celtionic,Perot,#6cf205,15,45,Enable
+30,Yarn,Celtionic,Golden,#ffc400,20,60,Enable
+29,"3 Tar",Celtionic,Golden,#ffc400,20,45,Enable
+28,"5 Tar",Celtionic,Golden,#ffc400,20,45,Enable
+27,Yarn,Celtionic,Rama,#009b77,15,45,Enable
+26,"3 Tar",Celtionic,Rama,#009b77,15,45,Enable
+25,"5 Tar",Celtionic,Rama,#009b77,15,45,Enable
+24,Yarn,Litchy,Firozi,#72b8b1,15,45,Enable
+23,"3 Tar",Celtionic,Firozi,#72b8b1,10,30,Enable
+22,"5 Tar",Celtionic,Firozi,#72b8b1,10,30,Enable
+21,Yarn,Celtionic,Majenta,#d40078,10,30,Enable
+20,"3 Tar",Celtionic,Majenta,#d40078,10,30,Enable
+19,"5 Tar",Celtionic,Majenta,#d40078,10,30,Enable
+18,Yarn,Celtionic,Jambli,#511191,10,30,Enable
+17,"3 Tar",Celtionic,Jambli,#511191,10,30,Enable
+16,"5 Tar",Celtionic,Jambli,#511191,10,30,Enable
+15,Yarn,Celtionic,Orange,#ff8c00,30,100,Enable
+14,"3 Tar",Celtionic,Orange,#ff8c00,30,100,Enable
+13,"5 Tar",Celtionic,Orange,#ff8c00,30,100,Enable
+12,Yarn,Celtionic,Green,#008000,15,45,Enable
+11,"3 Tar",Celtionic,Green,#008000,15,30,Enable
+10,"5 Tar",Celtionic,Green,#008000,15,30,Enable
+9,Yarn,Celtionic,"R Blue",#4169e1,15,60,Enable
+8,"3 Tar",Celtionic,"R Blue",#4169e1,15,60,Enable
+7,"5 Tar",Celtionic,"R Blue",#4169e1,25,60,Enable
+6,Yarn,Celtionic,Rani,#f716ec,25,90,Enable
+5,"3 Tar",Celtionic,Rani,#f716ec,15,60,Enable
+4,"5 Tar",Celtionic,Rani,#f716ec,15,60,Enable
+3,Yarn,Celtionic,Red,#ff0000,15,150,Enable
+2,"3 Tar",Celtionic,Red,#ff0000,30,75,Enable
+1,"5 Tar",Celtionic,Red,#ff0000,30,75,Enable
