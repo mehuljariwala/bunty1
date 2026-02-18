@@ -36,7 +36,7 @@ const EMPTY_FORM: ColorFormData = {
   runningColor: false,
 };
 
-const INPUT = "w-full h-9 px-3 rounded-lg bg-cream-50 border border-slate-warm-100 text-[0.82rem] text-slate-warm-800 placeholder:text-slate-warm-300 focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-sage-300 focus:bg-white transition-all";
+const INPUT = "w-full h-9 px-3 rounded-lg bg-slate-50 border border-slate-100 text-[0.82rem] text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 focus:bg-white transition-all";
 
 const SELECT_ARROW = {
   backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238a877e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -68,23 +68,23 @@ export default function AddColorModal({ open, onClose, onAdd, categories, subCat
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-slate-warm-900/30 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
+        className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
         onClick={onClose}
       />
 
       <div className="relative bg-white rounded-2xl w-full max-w-[480px] mx-4 shadow-2xl animate-[slideUp_250ms_ease-out]">
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-sage-50 flex items-center justify-center">
-              <Palette className="w-4 h-4 text-sage-500" strokeWidth={1.8} />
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+              <Palette className="w-4 h-4 text-blue-500" strokeWidth={1.8} />
             </div>
-            <h2 className="text-[0.95rem] font-semibold text-slate-warm-900">
+            <h2 className="text-[0.95rem] font-semibold text-slate-900">
               {isEdit ? "Edit Color" : "Add New Color"}
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-cream-100 transition-colors text-slate-warm-400 hover:text-slate-warm-600"
+            className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
           >
             <X className="w-4 h-4" strokeWidth={1.8} />
           </button>
@@ -123,7 +123,7 @@ export default function AddColorModal({ open, onClose, onAdd, categories, subCat
                   />
                   <label
                     htmlFor="color-picker"
-                    className="block w-9 h-9 rounded-lg border-2 border-slate-warm-100 cursor-pointer hover:border-sage-300 peer-focus:ring-2 peer-focus:ring-sage-200 transition-colors"
+                    className="block w-9 h-9 rounded-lg border-2 border-slate-100 cursor-pointer hover:border-blue-300 peer-focus:ring-2 peer-focus:ring-blue-200 transition-colors"
                     style={{ backgroundColor: form.hex }}
                     title={form.hex}
                   />
@@ -162,8 +162,8 @@ export default function AddColorModal({ open, onClose, onAdd, categories, subCat
             </Label>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-slate-warm-100">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-slate-warm-400 mb-2">
+          <div className="mt-3 pt-3 border-t border-slate-100">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-slate-400 mb-2">
               Stock Details
             </p>
             <div className="grid grid-cols-3 gap-3">
@@ -203,7 +203,7 @@ export default function AddColorModal({ open, onClose, onAdd, categories, subCat
             </div>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-slate-warm-100">
+          <div className="mt-3 pt-3 border-t border-slate-100">
             <label className="flex items-center gap-3 cursor-pointer group">
               <div className="relative">
                 <input
@@ -212,31 +212,31 @@ export default function AddColorModal({ open, onClose, onAdd, categories, subCat
                   onChange={(e) => update("runningColor", e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 rounded-full bg-slate-warm-200 peer-checked:bg-sage-500 transition-colors" />
+                <div className="w-9 h-5 rounded-full bg-slate-200 peer-checked:bg-blue-500 transition-colors" />
                 <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm peer-checked:translate-x-4 transition-transform" />
               </div>
               <div>
-                <p className="text-[0.82rem] font-medium text-slate-warm-800 group-hover:text-sage-700 transition-colors">
+                <p className="text-[0.82rem] font-medium text-slate-800 group-hover:text-blue-700 transition-colors">
                   Running Color
                 </p>
-                <p className="text-[0.72rem] text-slate-warm-400">
+                <p className="text-[0.72rem] text-slate-400">
                   Mark as currently in production
                 </p>
               </div>
             </label>
           </div>
 
-          <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-slate-warm-100">
+          <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="h-9 px-4 rounded-xl text-[0.82rem] font-medium text-slate-warm-600 hover:bg-cream-100 transition-colors"
+              className="h-9 px-4 rounded-xl text-[0.82rem] font-medium text-slate-600 hover:bg-slate-100 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="h-9 px-5 rounded-xl bg-sage-500 text-white text-[0.82rem] font-medium hover:bg-sage-600 active:bg-sage-700 transition-colors shadow-sm"
+              className="h-9 px-5 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors shadow-sm"
             >
               {isEdit ? "Save Changes" : "Add Color"}
             </button>
@@ -250,7 +250,7 @@ export default function AddColorModal({ open, onClose, onAdd, categories, subCat
 function Label({ text, children }: { text: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[0.74rem] font-medium text-slate-warm-600 mb-1">
+      <label className="block text-[0.74rem] font-medium text-slate-600 mb-1">
         {text}
       </label>
       {children}

@@ -46,14 +46,14 @@ function stockPct(current: number, max: number): number {
 
 function barColor(current: number, min: number): string {
   if (current < 0) return "bg-red-400";
-  if (current === 0) return "bg-slate-warm-300";
+  if (current === 0) return "bg-slate-300";
   if (current <= min) return "bg-amber-400";
-  return "bg-sage-400";
+  return "bg-blue-400";
 }
 
 function statusLabel(current: number, min: number): { text: string; color: string; dot: string } | null {
   if (current < 0) return { text: "Deficit", color: "text-red-500", dot: "bg-red-500" };
-  if (current === 0) return { text: "Empty", color: "text-slate-warm-400", dot: "bg-slate-warm-300" };
+  if (current === 0) return { text: "Empty", color: "text-slate-400", dot: "bg-slate-300" };
   if (current <= min) return { text: "Low", color: "text-amber-500", dot: "bg-amber-400" };
   return null;
 }
@@ -179,8 +179,8 @@ export default function StockInventoryPage(): React.JSX.Element {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-sage-500 animate-spin" strokeWidth={1.8} />
-          <p className="text-[0.85rem] text-slate-warm-400">Loading inventory...</p>
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" strokeWidth={1.8} />
+          <p className="text-[0.85rem] text-slate-400">Loading inventory...</p>
         </div>
       </div>
     );
@@ -190,9 +190,9 @@ export default function StockInventoryPage(): React.JSX.Element {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
-          <Package className="w-10 h-10 text-slate-warm-300" strokeWidth={1.5} />
-          <p className="text-[0.9rem] text-slate-warm-400">No colors in inventory</p>
-          <p className="text-[0.78rem] text-slate-warm-300">Add colors in Color Master first</p>
+          <Package className="w-10 h-10 text-slate-300" strokeWidth={1.5} />
+          <p className="text-[0.9rem] text-slate-400">No colors in inventory</p>
+          <p className="text-[0.78rem] text-slate-300">Add colors in Color Master first</p>
         </div>
       </div>
     );
@@ -203,11 +203,11 @@ export default function StockInventoryPage(): React.JSX.Element {
 
       <div className="grid grid-cols-4 gap-4">
         <SummaryCard
-          icon={<Package className="w-5 h-5 text-sage-500" strokeWidth={1.8} />}
-          bg="bg-sage-50"
+          icon={<Package className="w-5 h-5 text-blue-500" strokeWidth={1.8} />}
+          bg="bg-blue-50"
           label="Total In Stock"
           value={positiveTotal.toLocaleString()}
-          valueColor="text-slate-warm-900"
+          valueColor="text-slate-900"
           sub={`${stock.length} colours, ${categories.length} categories`}
         />
         <SummaryCard
@@ -233,15 +233,15 @@ export default function StockInventoryPage(): React.JSX.Element {
           badgeColor="bg-amber-500"
         />
         <SummaryCard
-          icon={<CircleCheck className="w-5 h-5 text-sage-500" strokeWidth={1.8} />}
-          bg="bg-sage-50"
+          icon={<CircleCheck className="w-5 h-5 text-blue-500" strokeWidth={1.8} />}
+          bg="bg-blue-50"
           label="Healthy"
           value={String(allHealthy)}
-          valueColor="text-sage-600"
+          valueColor="text-blue-600"
           sub="Stock above min level"
           items={healthyItems}
           onItemClick={handleItemClick}
-          badgeColor="bg-sage-500"
+          badgeColor="bg-blue-500"
         />
       </div>
 
@@ -257,15 +257,15 @@ export default function StockInventoryPage(): React.JSX.Element {
                   onClick={() => setActiveTab(cat)}
                   className={`relative px-5 py-3 rounded-t-xl text-[0.84rem] font-semibold transition-all ${
                     active
-                      ? "bg-cream-50 text-slate-warm-900 shadow-[inset_0_2px_0_0_var(--color-sage-400)]"
-                      : "text-slate-warm-400 hover:text-slate-warm-600 hover:bg-cream-50/50"
+                      ? "bg-slate-50 text-slate-900 shadow-[inset_0_2px_0_0_var(--color-blue-400)]"
+                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/50"
                   }`}
                 >
                   <span>{cat}</span>
                   {t && (
                     <>
                       <span className={`ml-2 text-[0.72rem] font-bold tabular-nums ${
-                        t.total < 0 ? "text-red-500" : active ? "text-sage-600" : "text-slate-warm-300"
+                        t.total < 0 ? "text-red-500" : active ? "text-blue-600" : "text-slate-300"
                       }`}>
                         {t.total.toLocaleString()}
                       </span>
@@ -282,13 +282,13 @@ export default function StockInventoryPage(): React.JSX.Element {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex rounded-lg border border-slate-warm-100 overflow-hidden">
+            <div className="flex rounded-lg border border-slate-100 overflow-hidden">
               <button
                 onClick={() => setViewMode("grid")}
                 className={`p-1.5 transition-colors ${
                   viewMode === "grid"
-                    ? "bg-sage-50 text-sage-600"
-                    : "text-slate-warm-300 hover:text-slate-warm-500 hover:bg-cream-50"
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-slate-300 hover:text-slate-500 hover:bg-slate-50"
                 }`}
               >
                 <LayoutGrid className="w-4 h-4" strokeWidth={1.8} />
@@ -297,8 +297,8 @@ export default function StockInventoryPage(): React.JSX.Element {
                 onClick={() => setViewMode("table")}
                 className={`p-1.5 transition-colors ${
                   viewMode === "table"
-                    ? "bg-sage-50 text-sage-600"
-                    : "text-slate-warm-300 hover:text-slate-warm-500 hover:bg-cream-50"
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-slate-300 hover:text-slate-500 hover:bg-slate-50"
                 }`}
               >
                 <TableProperties className="w-4 h-4" strokeWidth={1.8} />
@@ -306,20 +306,20 @@ export default function StockInventoryPage(): React.JSX.Element {
             </div>
 
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-warm-400" strokeWidth={1.8} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" strokeWidth={1.8} />
               <input
                 type="text"
                 placeholder="Search colour..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-48 h-8 pl-8 pr-3 rounded-lg bg-cream-50 border border-slate-warm-100 text-[0.8rem] text-slate-warm-700 placeholder:text-slate-warm-300 focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-sage-300 transition-all"
+                className="w-48 h-8 pl-8 pr-3 rounded-lg bg-slate-50 border border-slate-100 text-[0.8rem] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all"
               />
             </div>
           </div>
         </div>
 
         {viewMode === "grid" ? (
-          <div className="bg-cream-50 px-5 py-4">
+          <div className="bg-slate-50 px-5 py-4">
             <div className="grid grid-cols-5 gap-2.5">
               {tabItems.map((item) => {
                 const key = makeKey(item);
@@ -337,31 +337,31 @@ export default function StockInventoryPage(): React.JSX.Element {
                     data-stock-key={key}
                     className={`group rounded-xl bg-white border transition-all hover:shadow-md ${
                       highlighted
-                        ? "ring-2 ring-sage-400 border-sage-300 shadow-lg scale-[1.03]"
+                        ? "ring-2 ring-blue-400 border-blue-300 shadow-lg scale-[1.03]"
                         : deficit ? "border-red-200"
                         : empty || low ? "border-amber-200"
-                        : "border-slate-warm-100"
+                        : "border-slate-100"
                     }`}
                   >
                     <div className="flex items-center gap-2.5 px-3 pt-2.5 pb-1">
                       <div
-                        className={`w-7 h-7 rounded-lg shrink-0 ${isLight(item.hex) ? "border border-slate-warm-200" : ""}`}
+                        className={`w-7 h-7 rounded-lg shrink-0 ${isLight(item.hex) ? "border border-slate-200" : ""}`}
                         style={{ backgroundColor: item.hex }}
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-[0.78rem] font-semibold text-slate-warm-800 truncate leading-tight">
+                        <p className="text-[0.78rem] font-semibold text-slate-800 truncate leading-tight">
                           {item.name}
                         </p>
                         <div className="flex items-baseline gap-1.5 mt-0.5">
                           <span className={`text-[1.05rem] font-bold tabular-nums leading-none ${
                             deficit ? "text-red-600" :
-                            empty ? "text-slate-warm-400" :
+                            empty ? "text-slate-400" :
                             low ? "text-amber-600" :
-                            "text-slate-warm-800"
+                            "text-slate-800"
                           }`}>
                             {item.currentStock}
                           </span>
-                          <span className="text-[0.6rem] text-slate-warm-300 tabular-nums">
+                          <span className="text-[0.6rem] text-slate-300 tabular-nums">
                             / {item.maxStock}
                           </span>
                         </div>
@@ -369,7 +369,7 @@ export default function StockInventoryPage(): React.JSX.Element {
                     </div>
 
                     <div className="px-3 pb-1.5">
-                      <div className="relative h-1.5 rounded-full bg-slate-warm-100 overflow-hidden">
+                      <div className="relative h-1.5 rounded-full bg-slate-100 overflow-hidden">
                         {deficit ? (
                           <div
                             className="absolute inset-y-0 left-0 rounded-full bg-red-400 animate-pulse"
@@ -382,13 +382,13 @@ export default function StockInventoryPage(): React.JSX.Element {
                           />
                         )}
                         <div
-                          className="absolute top-0 bottom-0 w-px bg-slate-warm-300"
+                          className="absolute top-0 bottom-0 w-px bg-slate-300"
                           style={{ left: `${minPct}%` }}
                           title={`Min: ${item.minStock}`}
                         />
                       </div>
                       <div className="flex items-center justify-between mt-0.5">
-                        <span className="text-[0.55rem] text-slate-warm-300 tabular-nums">
+                        <span className="text-[0.55rem] text-slate-300 tabular-nums">
                           min {item.minStock}
                         </span>
                         {status ? (
@@ -396,14 +396,14 @@ export default function StockInventoryPage(): React.JSX.Element {
                             {status.text}
                           </span>
                         ) : (
-                          <span className="text-[0.55rem] text-slate-warm-300 tabular-nums">
+                          <span className="text-[0.55rem] text-slate-300 tabular-nums">
                             max {item.maxStock}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 px-2 pb-2 pt-1 border-t border-slate-warm-50">
+                    <div className="flex items-center gap-1 px-2 pb-2 pt-1 border-t border-slate-50">
                       <button
                         onClick={() => adjustStock(item.id, -1)}
                         className="flex items-center gap-0.5 h-6 px-1.5 rounded-md bg-red-50 text-red-500 hover:bg-red-100 transition-colors shrink-0"
@@ -418,11 +418,11 @@ export default function StockInventoryPage(): React.JSX.Element {
                         onChange={(e) => setInput(key, e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && applyInput(key)}
                         onBlur={() => applyInput(key)}
-                        className="w-full h-6 text-center rounded-md bg-cream-50 border border-slate-warm-100 text-[0.72rem] font-bold text-slate-warm-700 placeholder:text-slate-warm-300 placeholder:font-normal focus:outline-none focus:ring-1 focus:ring-sage-200 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-6 text-center rounded-md bg-slate-50 border border-slate-100 text-[0.72rem] font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-normal focus:outline-none focus:ring-1 focus:ring-blue-200 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <button
                         onClick={() => adjustStock(item.id, 3)}
-                        className="flex items-center gap-0.5 h-6 px-1.5 rounded-md bg-sage-50 text-sage-600 hover:bg-sage-100 transition-colors shrink-0"
+                        className="flex items-center gap-0.5 h-6 px-1.5 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors shrink-0"
                       >
                         <Plus className="w-3 h-3" strokeWidth={2.5} />
                         <span className="text-[0.62rem] font-bold">3</span>
@@ -435,8 +435,8 @@ export default function StockInventoryPage(): React.JSX.Element {
 
             {tabItems.length === 0 && (
               <div className="py-12 text-center">
-                <p className="text-[0.9rem] text-slate-warm-400">No colours found</p>
-                <p className="text-[0.78rem] text-slate-warm-300 mt-1">Try a different search</p>
+                <p className="text-[0.9rem] text-slate-400">No colours found</p>
+                <p className="text-[0.78rem] text-slate-300 mt-1">Try a different search</p>
               </div>
             )}
           </div>
@@ -453,23 +453,23 @@ export default function StockInventoryPage(): React.JSX.Element {
                 <col className="w-[180px]" />
               </colgroup>
               <thead>
-                <tr className="border-b border-slate-warm-100 bg-cream-50">
-                  <th className="px-5 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400" colSpan={2}>
+                <tr className="border-b border-slate-100 bg-slate-50">
+                  <th className="px-5 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400" colSpan={2}>
                     Colour
                   </th>
-                  <th className="px-2 py-2.5 text-right text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400">
+                  <th className="px-2 py-2.5 text-right text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400">
                     Stock
                   </th>
-                  <th className="px-3 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400">
+                  <th className="px-3 py-2.5 text-left text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400">
                     Level
                   </th>
-                  <th className="px-2 py-2.5 text-center text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400">
+                  <th className="px-2 py-2.5 text-center text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400">
                     Min
                   </th>
-                  <th className="px-2 py-2.5 text-center text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400">
+                  <th className="px-2 py-2.5 text-center text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400">
                     Max
                   </th>
-                  <th className="px-5 py-2.5 text-center text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400">
+                  <th className="px-5 py-2.5 text-center text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400">
                     Action
                   </th>
                 </tr>
@@ -488,20 +488,20 @@ export default function StockInventoryPage(): React.JSX.Element {
                     <tr
                       key={key}
                       data-stock-key={key}
-                      className={`border-b border-slate-warm-50 transition-all hover:bg-cream-50/60 ${
+                      className={`border-b border-slate-50 transition-all hover:bg-slate-50/60 ${
                         highlighted
-                          ? "!bg-sage-50 ring-2 ring-inset ring-sage-400"
+                          ? "!bg-blue-50 ring-2 ring-inset ring-blue-400"
                           : deficit ? "bg-red-50/40" : ""
-                      } ${!highlighted && idx % 2 !== 0 ? "bg-cream-50/30" : ""}`}
+                      } ${!highlighted && idx % 2 !== 0 ? "bg-slate-50/30" : ""}`}
                     >
                       <td className="pl-5 py-2">
                         <div
-                          className={`w-6 h-6 rounded-md shrink-0 ${isLight(item.hex) ? "border border-slate-warm-200" : ""}`}
+                          className={`w-6 h-6 rounded-md shrink-0 ${isLight(item.hex) ? "border border-slate-200" : ""}`}
                           style={{ backgroundColor: item.hex }}
                         />
                       </td>
                       <td className="px-2 py-2">
-                        <span className="text-[0.82rem] font-semibold text-slate-warm-800">
+                        <span className="text-[0.82rem] font-semibold text-slate-800">
                           {item.name}
                         </span>
                       </td>
@@ -509,8 +509,8 @@ export default function StockInventoryPage(): React.JSX.Element {
                         <div className="flex items-baseline justify-end gap-1">
                           <span className={`text-[0.88rem] font-bold tabular-nums ${
                             deficit ? "text-red-600" :
-                            empty ? "text-slate-warm-400" :
-                            "text-slate-warm-800"
+                            empty ? "text-slate-400" :
+                            "text-slate-800"
                           }`}>
                             {item.currentStock}
                           </span>
@@ -522,7 +522,7 @@ export default function StockInventoryPage(): React.JSX.Element {
                         </div>
                       </td>
                       <td className="px-3 py-2">
-                        <div className="relative h-2 rounded-full bg-slate-warm-100 overflow-hidden">
+                        <div className="relative h-2 rounded-full bg-slate-100 overflow-hidden">
                           {deficit ? (
                             <div className="absolute inset-y-0 left-0 rounded-full bg-red-400 animate-pulse w-full" />
                           ) : (
@@ -532,15 +532,15 @@ export default function StockInventoryPage(): React.JSX.Element {
                             />
                           )}
                           <div
-                            className="absolute top-0 bottom-0 w-px bg-slate-warm-400/50"
+                            className="absolute top-0 bottom-0 w-px bg-slate-400/50"
                             style={{ left: `${minPct}%` }}
                           />
                         </div>
                       </td>
-                      <td className="px-2 py-2 text-center text-[0.75rem] text-slate-warm-400 tabular-nums">
+                      <td className="px-2 py-2 text-center text-[0.75rem] text-slate-400 tabular-nums">
                         {item.minStock}
                       </td>
-                      <td className="px-2 py-2 text-center text-[0.75rem] text-slate-warm-400 tabular-nums">
+                      <td className="px-2 py-2 text-center text-[0.75rem] text-slate-400 tabular-nums">
                         {item.maxStock}
                       </td>
                       <td className="px-5 py-2">
@@ -559,11 +559,11 @@ export default function StockInventoryPage(): React.JSX.Element {
                             onChange={(e) => setInput(key, e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && applyInput(key)}
                             onBlur={() => applyInput(key)}
-                            className="w-16 h-7 text-center rounded-lg bg-cream-50 border border-slate-warm-100 text-[0.75rem] font-bold text-slate-warm-700 placeholder:text-slate-warm-300 placeholder:font-normal focus:outline-none focus:ring-1 focus:ring-sage-200 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-16 h-7 text-center rounded-lg bg-slate-50 border border-slate-100 text-[0.75rem] font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-normal focus:outline-none focus:ring-1 focus:ring-blue-200 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <button
                             onClick={() => adjustStock(item.id, 3)}
-                            className="flex items-center gap-0.5 h-7 px-2 rounded-lg bg-sage-50 text-sage-600 hover:bg-sage-100 transition-colors shrink-0"
+                            className="flex items-center gap-0.5 h-7 px-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors shrink-0"
                           >
                             <Plus className="w-3.5 h-3.5" strokeWidth={2.2} />
                             <span className="text-[0.68rem] font-bold">3</span>
@@ -578,19 +578,19 @@ export default function StockInventoryPage(): React.JSX.Element {
 
             {tabItems.length === 0 && (
               <div className="py-12 text-center">
-                <p className="text-[0.9rem] text-slate-warm-400">No colours found</p>
-                <p className="text-[0.78rem] text-slate-warm-300 mt-1">Try a different search</p>
+                <p className="text-[0.9rem] text-slate-400">No colours found</p>
+                <p className="text-[0.78rem] text-slate-300 mt-1">Try a different search</p>
               </div>
             )}
           </div>
         )}
 
-        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-warm-100 bg-white">
-          <p className="text-[0.78rem] text-slate-warm-400">
-            {tabItems.length} colours in <span className="font-semibold text-slate-warm-600">{activeTab}</span>
+        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
+          <p className="text-[0.78rem] text-slate-400">
+            {tabItems.length} colours in <span className="font-semibold text-slate-600">{activeTab}</span>
           </p>
           {tabTotals[activeTab] && (
-            <p className={`text-[0.82rem] font-bold tabular-nums ${tabTotals[activeTab].total < 0 ? "text-red-600" : "text-slate-warm-800"}`}>
+            <p className={`text-[0.82rem] font-bold tabular-nums ${tabTotals[activeTab].total < 0 ? "text-red-600" : "text-slate-800"}`}>
               Total: {tabTotals[activeTab].total.toLocaleString()}
             </p>
           )}
@@ -644,12 +644,12 @@ function SummaryCard({ icon, bg, label, value, valueColor, sub, items, onItemCli
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400">{label}</p>
+            <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400">{label}</p>
             {hasPopup && (
               <button
                 onMouseEnter={() => setOpen(true)}
                 onClick={() => setOpen((p) => !p)}
-                className="p-0.5 rounded-full text-slate-warm-300 hover:text-sage-500 hover:bg-sage-50 transition-colors"
+                className="p-0.5 rounded-full text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-colors"
               >
                 <Info className="w-3.5 h-3.5" strokeWidth={2} />
               </button>
@@ -658,22 +658,22 @@ function SummaryCard({ icon, bg, label, value, valueColor, sub, items, onItemCli
           <p className={`text-xl font-bold ${valueColor}`}>{value}</p>
         </div>
       </div>
-      <p className="text-[0.72rem] text-slate-warm-400 mt-2">{sub}</p>
+      <p className="text-[0.72rem] text-slate-400 mt-2">{sub}</p>
 
       {hasPopup && open && (
         <div
-          className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-xl border border-slate-warm-100 shadow-xl animate-[fadeIn_150ms_ease-out]"
+          className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-xl border border-slate-100 shadow-xl animate-[fadeIn_150ms_ease-out]"
           onMouseLeave={() => setOpen(false)}
         >
           <div className="px-3.5 pt-3 pb-1.5">
-            <p className="text-[0.7rem] font-semibold text-slate-warm-500 uppercase tracking-widest">
-              {label} <span className="text-slate-warm-300">({items.length})</span>
+            <p className="text-[0.7rem] font-semibold text-slate-500 uppercase tracking-widest">
+              {label} <span className="text-slate-300">({items.length})</span>
             </p>
           </div>
           <div className="max-h-[240px] overflow-y-auto px-1.5 pb-2">
             {Object.entries(grouped).map(([cat, catItems]) => (
               <div key={cat}>
-                <p className="px-2 pt-2 pb-1 text-[0.62rem] font-bold uppercase tracking-widest text-slate-warm-300">
+                <p className="px-2 pt-2 pb-1 text-[0.62rem] font-bold uppercase tracking-widest text-slate-300">
                   {cat}
                 </p>
                 {catItems.map((item) => (
@@ -683,19 +683,19 @@ function SummaryCard({ icon, bg, label, value, valueColor, sub, items, onItemCli
                       onItemClick?.(item);
                       setOpen(false);
                     }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cream-50 transition-colors group"
+                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors group"
                   >
                     <div
-                      className={`w-4 h-4 rounded shrink-0 ${isLight(item.hex) ? "border border-slate-warm-200" : ""}`}
+                      className={`w-4 h-4 rounded shrink-0 ${isLight(item.hex) ? "border border-slate-200" : ""}`}
                       style={{ backgroundColor: item.hex }}
                     />
-                    <span className="text-[0.76rem] font-medium text-slate-warm-700 group-hover:text-slate-warm-900 truncate text-left flex-1">
+                    <span className="text-[0.76rem] font-medium text-slate-700 group-hover:text-slate-900 truncate text-left flex-1">
                       {item.name}
                     </span>
                     <span className={`text-[0.72rem] font-bold tabular-nums shrink-0 ${
                       item.currentStock < 0 ? "text-red-500" :
-                      item.currentStock === 0 ? "text-slate-warm-400" :
-                      "text-slate-warm-600"
+                      item.currentStock === 0 ? "text-slate-400" :
+                      "text-slate-600"
                     }`}>
                       {item.currentStock}
                     </span>

@@ -11,8 +11,8 @@ const contacts = [
 ];
 
 const statusStyles: Record<string, string> = {
-  Active: "bg-sage-50 text-sage-600",
-  Inactive: "bg-slate-warm-100 text-slate-warm-500",
+  Active: "bg-blue-50 text-blue-600",
+  Inactive: "bg-slate-100 text-slate-500",
   Lead: "bg-sky-400/10 text-sky-500",
 };
 
@@ -21,24 +21,24 @@ export default function ContactsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[0.85rem] text-slate-warm-400">
+          <p className="text-[0.85rem] text-slate-400">
             {contacts.length} contacts total
           </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-warm-400" strokeWidth={1.8} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" strokeWidth={1.8} />
             <input
               type="text"
               placeholder="Search contacts..."
-              className="w-56 h-9 pl-9 pr-4 rounded-xl bg-white border border-slate-warm-100 text-[0.85rem] text-slate-warm-700 placeholder:text-slate-warm-300 focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-sage-300 transition-all"
+              className="w-56 h-9 pl-9 pr-4 rounded-xl bg-white border border-slate-100 text-[0.85rem] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all"
             />
           </div>
-          <button className="flex items-center gap-2 h-9 px-3 rounded-xl bg-white border border-slate-warm-100 text-[0.82rem] font-medium text-slate-warm-600 hover:bg-cream-50 transition-colors">
+          <button className="flex items-center gap-2 h-9 px-3 rounded-xl bg-white border border-slate-100 text-[0.82rem] font-medium text-slate-600 hover:bg-slate-50 transition-colors">
             <Filter className="w-3.5 h-3.5" strokeWidth={1.8} />
             Filter
           </button>
-          <button className="flex items-center gap-2 h-9 px-4 rounded-xl bg-sage-500 text-white text-[0.82rem] font-medium hover:bg-sage-600 transition-colors shadow-sm">
+          <button className="flex items-center gap-2 h-9 px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm">
             <Plus className="w-4 h-4" strokeWidth={2.2} />
             Add Contact
           </button>
@@ -48,44 +48,44 @@ export default function ContactsPage() {
       <div className="bg-white rounded-2xl card-shadow overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-slate-warm-100">
-              <th className="text-left px-6 py-3.5 text-[0.72rem] font-semibold uppercase tracking-wider text-slate-warm-400">Name</th>
-              <th className="text-left px-6 py-3.5 text-[0.72rem] font-semibold uppercase tracking-wider text-slate-warm-400">Company</th>
-              <th className="text-left px-6 py-3.5 text-[0.72rem] font-semibold uppercase tracking-wider text-slate-warm-400">Contact</th>
-              <th className="text-left px-6 py-3.5 text-[0.72rem] font-semibold uppercase tracking-wider text-slate-warm-400">Status</th>
+            <tr className="border-b border-slate-100">
+              <th className="text-left px-6 py-3.5 text-[0.72rem] font-semibold uppercase tracking-wider text-slate-400">Name</th>
+              <th className="text-left px-6 py-3.5 text-[0.72rem] font-semibold uppercase tracking-wider text-slate-400">Company</th>
+              <th className="text-left px-6 py-3.5 text-[0.72rem] font-semibold uppercase tracking-wider text-slate-400">Contact</th>
+              <th className="text-left px-6 py-3.5 text-[0.72rem] font-semibold uppercase tracking-wider text-slate-400">Status</th>
               <th className="w-12"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-warm-50">
+          <tbody className="divide-y divide-slate-50">
             {contacts.map((contact, i) => (
               <tr
                 key={i}
-                className="hover:bg-cream-50 transition-colors cursor-pointer"
+                className="hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-sage-100 flex items-center justify-center text-[0.72rem] font-semibold text-sage-700 shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-[0.72rem] font-semibold text-blue-700 shrink-0">
                       {contact.avatar}
                     </div>
                     <div>
-                      <p className="text-[0.84rem] font-medium text-slate-warm-800">
+                      <p className="text-[0.84rem] font-medium text-slate-800">
                         {contact.name}
                       </p>
-                      <p className="text-[0.74rem] text-slate-warm-400">
+                      <p className="text-[0.74rem] text-slate-400">
                         {contact.email}
                       </p>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-[0.84rem] text-slate-warm-600">
+                <td className="px-6 py-4 text-[0.84rem] text-slate-600">
                   {contact.company}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <button className="p-1.5 rounded-lg hover:bg-sage-50 transition-colors text-slate-warm-400 hover:text-sage-500">
+                    <button className="p-1.5 rounded-lg hover:bg-blue-50 transition-colors text-slate-400 hover:text-blue-500">
                       <Mail className="w-3.5 h-3.5" strokeWidth={1.8} />
                     </button>
-                    <button className="p-1.5 rounded-lg hover:bg-sage-50 transition-colors text-slate-warm-400 hover:text-sage-500">
+                    <button className="p-1.5 rounded-lg hover:bg-blue-50 transition-colors text-slate-400 hover:text-blue-500">
                       <Phone className="w-3.5 h-3.5" strokeWidth={1.8} />
                     </button>
                   </div>
@@ -98,7 +98,7 @@ export default function ContactsPage() {
                   </span>
                 </td>
                 <td className="px-3 py-4">
-                  <button className="p-1.5 rounded-lg hover:bg-cream-100 transition-colors text-slate-warm-300">
+                  <button className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-300">
                     <MoreHorizontal className="w-4 h-4" strokeWidth={1.8} />
                   </button>
                 </td>

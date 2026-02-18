@@ -54,28 +54,28 @@ function stockPct(current: number, max: number): number {
 function cellBg(item: StockItem | undefined): string {
   if (!item) return "";
   if (item.currentStock < 0) return "bg-red-50/60";
-  if (item.currentStock === 0) return "bg-slate-warm-50/60";
+  if (item.currentStock === 0) return "bg-slate-50/60";
   if (item.currentStock <= item.minStock) return "bg-amber-50/40";
   return "";
 }
 
 function barFill(item: StockItem): string {
   if (item.currentStock < 0) return "bg-red-400";
-  if (item.currentStock === 0) return "bg-slate-warm-300";
+  if (item.currentStock === 0) return "bg-slate-300";
   if (item.currentStock <= item.minStock) return "bg-amber-400";
-  return "bg-sage-400";
+  return "bg-blue-400";
 }
 
 function stockNumColor(item: StockItem): string {
   if (item.currentStock < 0) return "text-red-600";
-  if (item.currentStock === 0) return "text-slate-warm-400";
+  if (item.currentStock === 0) return "text-slate-400";
   if (item.currentStock <= item.minStock) return "text-amber-600";
-  return "text-slate-warm-800";
+  return "text-slate-800";
 }
 
 function statusTag(item: StockItem): { label: string; bg: string; text: string } | null {
   if (item.currentStock < 0) return { label: "Deficit", bg: "bg-red-100", text: "text-red-700" };
-  if (item.currentStock === 0) return { label: "Empty", bg: "bg-slate-warm-100", text: "text-slate-warm-600" };
+  if (item.currentStock === 0) return { label: "Empty", bg: "bg-slate-100", text: "text-slate-600" };
   if (item.currentStock <= item.minStock) return { label: "Low", bg: "bg-amber-100", text: "text-amber-700" };
   return null;
 }
@@ -214,17 +214,17 @@ export default function InventoryReportPage(): React.JSX.Element {
     { key: "all", label: "All", count: filterCounts.all },
     { key: "attention", label: "Needs Attention", count: filterCounts.attention },
     { key: "deficit", label: "Deficit", count: filterCounts.deficit, dot: "bg-red-500" },
-    { key: "empty", label: "Empty", count: filterCounts.empty, dot: "bg-slate-warm-400" },
+    { key: "empty", label: "Empty", count: filterCounts.empty, dot: "bg-slate-400" },
     { key: "low", label: "Low Stock", count: filterCounts.low, dot: "bg-amber-400" },
-    { key: "at-max", label: "At Max", count: filterCounts["at-max"], dot: "bg-sage-500" },
+    { key: "at-max", label: "At Max", count: filterCounts["at-max"], dot: "bg-blue-500" },
     { key: "ok", label: "All Good", count: filterCounts.ok },
   ];
 
   const SortHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
     <th
       onClick={() => toggleSort(field)}
-      className={`py-3 text-[0.65rem] font-bold uppercase tracking-widest cursor-pointer select-none transition-colors hover:text-sage-600 ${
-        sortField === field ? "text-sage-600" : "text-slate-warm-400"
+      className={`py-3 text-[0.65rem] font-bold uppercase tracking-widest cursor-pointer select-none transition-colors hover:text-blue-600 ${
+        sortField === field ? "text-blue-600" : "text-slate-400"
       } ${className ?? ""}`}
     >
       <span className="inline-flex items-center gap-1">
@@ -244,8 +244,8 @@ export default function InventoryReportPage(): React.JSX.Element {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-sage-400 animate-spin" strokeWidth={1.8} />
-          <p className="text-[0.85rem] text-slate-warm-400 font-medium">Loading inventory data...</p>
+          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" strokeWidth={1.8} />
+          <p className="text-[0.85rem] text-slate-400 font-medium">Loading inventory data...</p>
         </div>
       </div>
     );
@@ -257,22 +257,22 @@ export default function InventoryReportPage(): React.JSX.Element {
       {/* Summary cards */}
       <div className="grid grid-cols-6 gap-3">
         <div className="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sage-50 flex items-center justify-center">
-            <Layers className="w-5 h-5 text-sage-500" strokeWidth={1.8} />
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+            <Layers className="w-5 h-5 text-blue-500" strokeWidth={1.8} />
           </div>
           <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-warm-400">Total</p>
-            <p className="text-xl font-bold text-slate-warm-900">{filterCounts.all}</p>
+            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Total</p>
+            <p className="text-xl font-bold text-slate-900">{filterCounts.all}</p>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sage-50 flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-sage-500" strokeWidth={1.8} />
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+            <TrendingUp className="w-5 h-5 text-blue-500" strokeWidth={1.8} />
           </div>
           <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-warm-400">Health</p>
-            <p className={`text-xl font-bold ${healthPct >= 50 ? "text-sage-600" : "text-amber-600"}`}>{healthPct}%</p>
+            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Health</p>
+            <p className={`text-xl font-bold ${healthPct >= 50 ? "text-blue-600" : "text-amber-600"}`}>{healthPct}%</p>
           </div>
         </div>
 
@@ -281,18 +281,18 @@ export default function InventoryReportPage(): React.JSX.Element {
             <span className="w-3 h-3 rounded-full bg-red-500" />
           </div>
           <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-warm-400">Deficit</p>
+            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Deficit</p>
             <p className="text-xl font-bold text-red-600">{filterCounts.deficit}</p>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter("empty")}>
-          <div className="w-10 h-10 rounded-xl bg-slate-warm-50 flex items-center justify-center">
-            <span className="w-3 h-3 rounded-full bg-slate-warm-400" />
+          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center">
+            <span className="w-3 h-3 rounded-full bg-slate-400" />
           </div>
           <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-warm-400">Empty</p>
-            <p className="text-xl font-bold text-slate-warm-600">{filterCounts.empty}</p>
+            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Empty</p>
+            <p className="text-xl font-bold text-slate-600">{filterCounts.empty}</p>
           </div>
         </div>
 
@@ -301,18 +301,18 @@ export default function InventoryReportPage(): React.JSX.Element {
             <span className="w-3 h-3 rounded-full bg-amber-400" />
           </div>
           <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-warm-400">Low</p>
+            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Low</p>
             <p className="text-xl font-bold text-amber-600">{filterCounts.low}</p>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter("ok")}>
-          <div className="w-10 h-10 rounded-xl bg-sage-50 flex items-center justify-center">
-            <CircleCheck className="w-5 h-5 text-sage-500" strokeWidth={1.8} />
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+            <CircleCheck className="w-5 h-5 text-blue-500" strokeWidth={1.8} />
           </div>
           <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-warm-400">Good</p>
-            <p className="text-xl font-bold text-sage-600">{filterCounts.ok}</p>
+            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Good</p>
+            <p className="text-xl font-bold text-blue-600">{filterCounts.ok}</p>
           </div>
         </div>
       </div>
@@ -326,14 +326,14 @@ export default function InventoryReportPage(): React.JSX.Element {
           return (
             <div key={cat} className="bg-white rounded-xl card-shadow px-5 py-3.5">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-[0.82rem] font-bold text-slate-warm-800">{cat}</h3>
-                <span className={`text-[0.82rem] font-bold tabular-nums ${ct.total < 0 ? "text-red-600" : "text-slate-warm-700"}`}>
+                <h3 className="text-[0.82rem] font-bold text-slate-800">{cat}</h3>
+                <span className={`text-[0.82rem] font-bold tabular-nums ${ct.total < 0 ? "text-red-600" : "text-slate-700"}`}>
                   {ct.total.toLocaleString()}
                 </span>
               </div>
-              <div className="h-1.5 flex rounded-full overflow-hidden bg-slate-warm-100">
+              <div className="h-1.5 flex rounded-full overflow-hidden bg-slate-100">
                 {ct.healthy > 0 && (
-                  <div className="bg-sage-400" style={{ width: `${(ct.healthy / (ct.deficit + ct.low + ct.healthy)) * 100}%` }} />
+                  <div className="bg-blue-400" style={{ width: `${(ct.healthy / (ct.deficit + ct.low + ct.healthy)) * 100}%` }} />
                 )}
                 {ct.low > 0 && (
                   <div className="bg-amber-400" style={{ width: `${(ct.low / (ct.deficit + ct.low + ct.healthy)) * 100}%` }} />
@@ -343,10 +343,10 @@ export default function InventoryReportPage(): React.JSX.Element {
                 )}
               </div>
               <div className="flex items-center gap-3 mt-2">
-                <span className="text-[0.62rem] text-sage-600 font-semibold">{ct.healthy} good</span>
+                <span className="text-[0.62rem] text-blue-600 font-semibold">{ct.healthy} good</span>
                 <span className="text-[0.62rem] text-amber-600 font-semibold">{ct.low} low</span>
                 <span className="text-[0.62rem] text-red-600 font-semibold">{ct.deficit} deficit</span>
-                <span className="ml-auto text-[0.62rem] font-bold text-slate-warm-400">{catHealthPct}%</span>
+                <span className="ml-auto text-[0.62rem] font-bold text-slate-400">{catHealthPct}%</span>
               </div>
             </div>
           );
@@ -357,19 +357,19 @@ export default function InventoryReportPage(): React.JSX.Element {
       <div className="bg-white rounded-2xl card-shadow overflow-hidden">
 
         {/* Toolbar */}
-        <div className="px-5 pt-4 pb-3 border-b border-slate-warm-100 space-y-2.5">
+        <div className="px-5 pt-4 pb-3 border-b border-slate-100 space-y-2.5">
           {/* Category filter + search */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
-              <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-slate-warm-300 mr-2">Category</span>
+              <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-slate-300 mr-2">Category</span>
               {["all", ...CATEGORIES].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => { setCatFilter(cat); setFilter("all"); }}
                   className={`px-3 py-1.5 rounded-lg text-[0.78rem] font-semibold transition-all ${
                     catFilter === cat
-                      ? "bg-slate-warm-800 text-white shadow-sm"
-                      : "text-slate-warm-400 hover:text-slate-warm-600 hover:bg-cream-50"
+                      ? "bg-slate-800 text-white shadow-sm"
+                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
                   }`}
                 >
                   {cat === "all" ? "All" : cat}
@@ -377,13 +377,13 @@ export default function InventoryReportPage(): React.JSX.Element {
               ))}
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-warm-400" strokeWidth={1.8} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" strokeWidth={1.8} />
               <input
                 type="text"
                 placeholder="Search colour..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-52 h-8 pl-8 pr-3 rounded-lg bg-cream-50 border border-slate-warm-100 text-[0.8rem] text-slate-warm-700 placeholder:text-slate-warm-300 focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-sage-300 transition-all"
+                className="w-52 h-8 pl-8 pr-3 rounded-lg bg-slate-50 border border-slate-100 text-[0.8rem] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all"
               />
             </div>
           </div>
@@ -396,14 +396,14 @@ export default function InventoryReportPage(): React.JSX.Element {
                 onClick={() => setFilter(f.key)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.78rem] font-medium transition-all ${
                   filter === f.key
-                    ? "bg-sage-50 text-sage-700 shadow-[inset_0_0_0_1px_var(--color-sage-200)]"
-                    : "text-slate-warm-400 hover:text-slate-warm-600 hover:bg-cream-50"
+                    ? "bg-blue-50 text-blue-700 shadow-[inset_0_0_0_1px_var(--color-blue-200)]"
+                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 {f.dot && <span className={`w-2 h-2 rounded-full ${f.dot}`} />}
                 {f.label}
                 <span className={`text-[0.68rem] tabular-nums ${
-                  filter === f.key ? "text-sage-500" : "text-slate-warm-300"
+                  filter === f.key ? "text-blue-500" : "text-slate-300"
                 }`}>{f.count}</span>
               </button>
             ))}
@@ -414,7 +414,7 @@ export default function InventoryReportPage(): React.JSX.Element {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-cream-50/60">
+              <tr className="bg-slate-50/60">
                 <SortHeader field="name" className="pl-5 pr-3 text-left w-[180px]">Colour</SortHeader>
                 {CATEGORIES.map((cat) => (
                   <SortHeader key={cat} field={cat} className="px-2 text-center">{cat}</SortHeader>
@@ -427,25 +427,25 @@ export default function InventoryReportPage(): React.JSX.Element {
               {filtered.map((row, idx) => (
                 <tr
                   key={row.name}
-                  className={`border-b border-slate-warm-50 transition-colors hover:bg-cream-50/60 ${
-                    idx % 2 !== 0 ? "bg-cream-50/25" : ""
+                  className={`border-b border-slate-50 transition-colors hover:bg-slate-50/60 ${
+                    idx % 2 !== 0 ? "bg-slate-50/25" : ""
                   }`}
                 >
                   {/* Colour name + swatch */}
                   <td className="pl-5 pr-3 py-2">
                     <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-6 h-6 rounded-md shrink-0 shadow-sm ${LIGHT_HEXES.has(row.hex) ? "border border-slate-warm-200" : ""}`}
+                        className={`w-6 h-6 rounded-md shrink-0 shadow-sm ${LIGHT_HEXES.has(row.hex) ? "border border-slate-200" : ""}`}
                         style={{ backgroundColor: row.hex }}
                       />
-                      <span className="text-[0.82rem] font-semibold text-slate-warm-800">{row.name}</span>
+                      <span className="text-[0.82rem] font-semibold text-slate-800">{row.name}</span>
                     </div>
                   </td>
 
                   {/* Category cells with inline progress */}
                   {CATEGORIES.map((cat) => {
                     const item = row.stocks[cat];
-                    if (!item) return <td key={cat} className="px-2 py-2 text-center text-[0.78rem] text-slate-warm-300">&mdash;</td>;
+                    if (!item) return <td key={cat} className="px-2 py-2 text-center text-[0.78rem] text-slate-300">&mdash;</td>;
 
                     const pct = stockPct(item.currentStock, item.maxStock);
                     const minPct = stockPct(item.minStock, item.maxStock);
@@ -465,7 +465,7 @@ export default function InventoryReportPage(): React.JSX.Element {
                               </span>
                             )}
                           </div>
-                          <div className="w-full max-w-[100px] relative h-1 rounded-full bg-slate-warm-100 overflow-hidden">
+                          <div className="w-full max-w-[100px] relative h-1 rounded-full bg-slate-100 overflow-hidden">
                             {deficit ? (
                               <div className="absolute inset-0 rounded-full bg-red-400 animate-pulse" />
                             ) : (
@@ -475,13 +475,13 @@ export default function InventoryReportPage(): React.JSX.Element {
                               />
                             )}
                             <div
-                              className="absolute top-0 bottom-0 w-px bg-slate-warm-400/40"
+                              className="absolute top-0 bottom-0 w-px bg-slate-400/40"
                               style={{ left: `${minPct}%` }}
                             />
                           </div>
                           <div className="flex items-center justify-between w-full max-w-[100px]">
-                            <span className="text-[0.6rem] text-slate-warm-400 tabular-nums">{item.minStock}</span>
-                            <span className="text-[0.6rem] text-slate-warm-400 tabular-nums">{item.maxStock}</span>
+                            <span className="text-[0.6rem] text-slate-400 tabular-nums">{item.minStock}</span>
+                            <span className="text-[0.6rem] text-slate-400 tabular-nums">{item.maxStock}</span>
                           </div>
                         </div>
                       </td>
@@ -490,7 +490,7 @@ export default function InventoryReportPage(): React.JSX.Element {
 
                   {/* Total */}
                   <td className={`px-3 py-2 text-right text-[0.88rem] font-bold tabular-nums ${
-                    row.totalStock < 0 ? "text-red-600" : "text-slate-warm-800"
+                    row.totalStock < 0 ? "text-red-600" : "text-slate-800"
                   }`}>
                     {row.totalStock}
                   </td>
@@ -498,7 +498,7 @@ export default function InventoryReportPage(): React.JSX.Element {
                   {/* Status */}
                   <td className="px-5 py-2 text-center">
                     {row.issueCount === 0 ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-sage-50 text-sage-600 text-[0.7rem] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 text-blue-600 text-[0.7rem] font-bold">
                         <CircleCheck className="w-3 h-3" strokeWidth={2.2} />
                         OK
                       </span>
@@ -521,29 +521,29 @@ export default function InventoryReportPage(): React.JSX.Element {
 
           {filtered.length === 0 && (
             <div className="py-12 text-center">
-              <p className="text-[0.9rem] text-slate-warm-400">No colours found</p>
+              <p className="text-[0.9rem] text-slate-400">No colours found</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-warm-100 bg-white">
-          <p className="text-[0.78rem] text-slate-warm-400">
-            Showing <span className="font-semibold text-slate-warm-600">{filtered.length}</span> of {baseRows.length} colours
-            {catFilter !== "all" && <span className="ml-1 text-slate-warm-500">in {catFilter}</span>}
+        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
+          <p className="text-[0.78rem] text-slate-400">
+            Showing <span className="font-semibold text-slate-600">{filtered.length}</span> of {baseRows.length} colours
+            {catFilter !== "all" && <span className="ml-1 text-slate-500">in {catFilter}</span>}
           </p>
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-warm-400">
+            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-400">
               <span className="w-2 h-2 rounded-full bg-red-400" /> Deficit
             </span>
-            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-warm-400">
-              <span className="w-2 h-2 rounded-full bg-slate-warm-300" /> Empty
+            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-400">
+              <span className="w-2 h-2 rounded-full bg-slate-300" /> Empty
             </span>
-            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-warm-400">
+            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-400">
               <span className="w-2 h-2 rounded-full bg-amber-400" /> Low
             </span>
-            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-warm-400">
-              <span className="w-2 h-2 rounded-full bg-sage-400" /> Good
+            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-400">
+              <span className="w-2 h-2 rounded-full bg-blue-400" /> Good
             </span>
           </div>
         </div>

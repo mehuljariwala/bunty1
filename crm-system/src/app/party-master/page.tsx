@@ -180,8 +180,8 @@ export default function PartyMasterPage(): React.JSX.Element {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-sage-500 animate-spin" strokeWidth={1.8} />
-          <p className="text-[0.85rem] text-slate-warm-400">Loading parties...</p>
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" strokeWidth={1.8} />
+          <p className="text-[0.85rem] text-slate-400">Loading parties...</p>
         </div>
       </div>
     );
@@ -190,18 +190,18 @@ export default function PartyMasterPage(): React.JSX.Element {
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:justify-between">
-        <p className="text-[0.85rem] text-slate-warm-400">
+        <p className="text-[0.85rem] text-slate-400">
           {filtered.length} of {parties.length} parties
         </p>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-initial">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-warm-400" strokeWidth={1.8} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" strokeWidth={1.8} />
             <input
               type="text"
               placeholder="Search name, address, route, ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-72 h-9 pl-9 pr-4 rounded-xl bg-white border border-slate-warm-100 text-[0.85rem] text-slate-warm-700 placeholder:text-slate-warm-300 focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-sage-300 transition-all"
+              className="w-full sm:w-72 h-9 pl-9 pr-4 rounded-xl bg-white border border-slate-100 text-[0.85rem] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all"
             />
           </div>
 
@@ -210,27 +210,27 @@ export default function PartyMasterPage(): React.JSX.Element {
               onClick={() => setFilterOpen((v) => !v)}
               className={`flex items-center gap-2 h-9 px-3 rounded-xl border text-[0.82rem] font-medium transition-colors ${
                 activeFilterCount > 0
-                  ? "bg-sage-50 border-sage-200 text-sage-700"
-                  : "bg-white border-slate-warm-100 text-slate-warm-600 hover:bg-cream-50"
+                  ? "bg-blue-50 border-blue-200 text-blue-700"
+                  : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50"
               }`}
             >
               <Filter className="w-3.5 h-3.5" strokeWidth={1.8} />
               Filter
               {activeFilterCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-sage-500 text-white text-[0.68rem] font-bold flex items-center justify-center">
+                <span className="w-5 h-5 rounded-full bg-blue-500 text-white text-[0.68rem] font-bold flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
             </button>
 
             {filterOpen && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl border border-slate-warm-100 shadow-lg z-40 animate-[fadeIn_150ms_ease-out]">
+              <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl border border-slate-100 shadow-lg z-40 animate-[fadeIn_150ms_ease-out]">
                 <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
-                  <p className="text-[0.82rem] font-semibold text-slate-warm-800">Filters</p>
+                  <p className="text-[0.82rem] font-semibold text-slate-800">Filters</p>
                   {activeFilterCount > 0 && (
                     <button
                       onClick={clearFilters}
-                      className="text-[0.72rem] font-medium text-coral-500 hover:text-coral-600 transition-colors"
+                      className="text-[0.72rem] font-medium text-orange-500 hover:text-orange-600 transition-colors"
                     >
                       Clear all
                     </button>
@@ -238,7 +238,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                 </div>
 
                 <div className="px-4 pb-3">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400 mb-2">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400 mb-2">
                     Route
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -250,8 +250,8 @@ export default function PartyMasterPage(): React.JSX.Element {
                           onClick={() => toggleRoute(route)}
                           className={`px-2.5 py-1 rounded-lg text-[0.78rem] font-medium transition-colors ${
                             active
-                              ? "bg-sage-500 text-white"
-                              : "bg-cream-50 text-slate-warm-600 hover:bg-cream-100"
+                              ? "bg-blue-500 text-white"
+                              : "bg-slate-50 text-slate-600 hover:bg-slate-100"
                           }`}
                         >
                           {route}
@@ -261,8 +261,8 @@ export default function PartyMasterPage(): React.JSX.Element {
                   </div>
                 </div>
 
-                <div className="border-t border-slate-warm-100 px-4 py-3">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400 mb-2">
+                <div className="border-t border-slate-100 px-4 py-3">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400 mb-2">
                     Rate Status
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -279,8 +279,8 @@ export default function PartyMasterPage(): React.JSX.Element {
                           onClick={() => setFilters((prev) => ({ ...prev, rateStatus: value }))}
                           className={`px-2.5 py-1 rounded-lg text-[0.78rem] font-medium transition-colors ${
                             active
-                              ? "bg-sage-500 text-white"
-                              : "bg-cream-50 text-slate-warm-600 hover:bg-cream-100"
+                              ? "bg-blue-500 text-white"
+                              : "bg-slate-50 text-slate-600 hover:bg-slate-100"
                           }`}
                         >
                           {label}
@@ -295,7 +295,7 @@ export default function PartyMasterPage(): React.JSX.Element {
 
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 h-9 px-4 rounded-xl bg-sage-500 text-white text-[0.82rem] font-medium hover:bg-sage-600 transition-colors shadow-sm"
+            className="flex items-center gap-2 h-9 px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" strokeWidth={2.2} />
             Add Party
@@ -308,23 +308,23 @@ export default function PartyMasterPage(): React.JSX.Element {
           {filters.routes.map((route) => (
             <span
               key={route}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sage-50 border border-sage-100 text-[0.78rem] font-medium text-sage-700"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-[0.78rem] font-medium text-blue-700"
             >
               {route}
               <button
                 onClick={() => toggleRoute(route)}
-                className="hover:text-coral-500 transition-colors"
+                className="hover:text-orange-500 transition-colors"
               >
                 <X className="w-3 h-3" strokeWidth={2} />
               </button>
             </span>
           ))}
           {filters.rateStatus !== "all" && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sage-50 border border-sage-100 text-[0.78rem] font-medium text-sage-700">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-[0.78rem] font-medium text-blue-700">
               Rates: {filters.rateStatus}
               <button
                 onClick={() => setFilters((prev) => ({ ...prev, rateStatus: "all" }))}
-                className="hover:text-coral-500 transition-colors"
+                className="hover:text-orange-500 transition-colors"
               >
                 <X className="w-3 h-3" strokeWidth={2} />
               </button>
@@ -332,7 +332,7 @@ export default function PartyMasterPage(): React.JSX.Element {
           )}
           <button
             onClick={clearFilters}
-            className="text-[0.76rem] font-medium text-slate-warm-400 hover:text-coral-500 transition-colors ml-1"
+            className="text-[0.76rem] font-medium text-slate-400 hover:text-orange-500 transition-colors ml-1"
           >
             Clear all
           </button>
@@ -351,14 +351,14 @@ export default function PartyMasterPage(): React.JSX.Element {
             <col style={{ width: "10%" }} />
           </colgroup>
           <thead>
-            <tr className="border-b border-slate-warm-100">
+            <tr className="border-b border-slate-100">
               <th></th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">Name</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">ID</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">Address</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">Route</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">Password</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">Rates</th>
+              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Name</th>
+              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">ID</th>
+              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Address</th>
+              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Route</th>
+              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Password</th>
+              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Rates</th>
             </tr>
           </thead>
           <tbody>
@@ -370,13 +370,13 @@ export default function PartyMasterPage(): React.JSX.Element {
                 <Fragment key={party.id}>
                   <tr
                     onClick={() => toggleExpand(party.id)}
-                    className={`border-b border-slate-warm-50 cursor-pointer transition-colors ${
-                      isExpanded ? "bg-sage-50/50" : "hover:bg-cream-50"
+                    className={`border-b border-slate-50 cursor-pointer transition-colors ${
+                      isExpanded ? "bg-blue-50/50" : "hover:bg-slate-50"
                     }`}
                   >
                     <td className="text-center py-3.5">
                       <ChevronDown
-                        className={`w-4 h-4 text-slate-warm-300 transition-transform duration-200 inline-block ${
+                        className={`w-4 h-4 text-slate-300 transition-transform duration-200 inline-block ${
                           isExpanded ? "rotate-180" : ""
                         }`}
                         strokeWidth={1.8}
@@ -384,39 +384,39 @@ export default function PartyMasterPage(): React.JSX.Element {
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center text-[0.68rem] font-bold text-sage-700 shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[0.68rem] font-bold text-blue-700 shrink-0">
                           {party.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
                         </div>
-                        <p className="text-[0.84rem] font-medium text-slate-warm-800 truncate">
+                        <p className="text-[0.84rem] font-medium text-slate-800 truncate">
                           {party.name}
                         </p>
                       </div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className="text-[0.78rem] font-mono text-sage-600 bg-sage-50 px-2 py-0.5 rounded-md">
+                      <span className="text-[0.78rem] font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
                         {party.userId}
                       </span>
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-slate-warm-300 shrink-0" strokeWidth={1.8} />
-                        <span className="text-[0.82rem] text-slate-warm-600 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-slate-300 shrink-0" strokeWidth={1.8} />
+                        <span className="text-[0.82rem] text-slate-600 truncate">
                           {party.address}
                         </span>
                       </div>
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-1.5">
-                        <Route className="w-3.5 h-3.5 text-slate-warm-300 shrink-0" strokeWidth={1.8} />
-                        <span className="text-[0.82rem] text-slate-warm-600">
+                        <Route className="w-3.5 h-3.5 text-slate-300 shrink-0" strokeWidth={1.8} />
+                        <span className="text-[0.82rem] text-slate-600">
                           {party.route}
                         </span>
                       </div>
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-1.5">
-                        <KeyRound className="w-3.5 h-3.5 text-slate-warm-300 shrink-0" strokeWidth={1.8} />
-                        <span className="text-[0.82rem] text-slate-warm-500 font-mono">
+                        <KeyRound className="w-3.5 h-3.5 text-slate-300 shrink-0" strokeWidth={1.8} />
+                        <span className="text-[0.82rem] text-slate-500 font-mono">
                           {showPassFor === party.id ? party.password : "••••••"}
                         </span>
                         <button
@@ -424,7 +424,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                             e.stopPropagation();
                             setShowPassFor((prev) => (prev === party.id ? null : party.id));
                           }}
-                          className="p-0.5 rounded hover:bg-cream-100 text-slate-warm-300 hover:text-slate-warm-500 transition-colors"
+                          className="p-0.5 rounded hover:bg-slate-100 text-slate-300 hover:text-slate-500 transition-colors"
                         >
                           {showPassFor === party.id ? (
                             <EyeOff className="w-3.5 h-3.5" strokeWidth={1.8} />
@@ -437,10 +437,10 @@ export default function PartyMasterPage(): React.JSX.Element {
                     <td className="px-4 py-3.5">
                       <span className={`text-[0.7rem] font-medium px-2 py-0.5 rounded-full ${
                         rateCount === totalRates
-                          ? "bg-sage-50 text-sage-600"
+                          ? "bg-blue-50 text-blue-600"
                           : rateCount > 0
-                            ? "bg-coral-400/10 text-coral-500"
-                            : "bg-slate-warm-100 text-slate-warm-400"
+                            ? "bg-orange-400/10 text-orange-500"
+                            : "bg-slate-100 text-slate-400"
                       }`}>
                         {rateCount}/{totalRates}
                       </span>
@@ -453,33 +453,33 @@ export default function PartyMasterPage(): React.JSX.Element {
                     const isSaving = savingId === party.id;
                     const justSaved = savedId === party.id;
                     return (
-                      <tr className="border-b border-slate-warm-50">
+                      <tr className="border-b border-slate-50">
                         <td></td>
                         <td colSpan={6} className="px-4 py-4">
-                          <div className="bg-cream-50 rounded-xl border border-slate-warm-100 overflow-hidden animate-[fadeIn_150ms_ease-out]">
+                          <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden animate-[fadeIn_150ms_ease-out]">
                             <table className="w-full">
                               <thead>
-                                <tr className="border-b border-slate-warm-100">
-                                  <th className="text-left px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-warm-400 w-28">
+                                <tr className="border-b border-slate-100">
+                                  <th className="text-left px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-400 w-28">
                                     Material
                                   </th>
                                   {rateCategories.map((cat) => (
-                                    <th key={cat} className="text-center px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-warm-400">
+                                    <th key={cat} className="text-center px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-400">
                                       {cat}
                                     </th>
                                   ))}
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-warm-100/60">
+                              <tbody className="divide-y divide-slate-100/60">
                                 {rateMaterials.map((mat) => (
-                                  <tr key={mat} className="hover:bg-cream-100/50 transition-colors">
-                                    <td className="px-4 py-1.5 text-[0.8rem] font-medium text-slate-warm-700">
+                                  <tr key={mat} className="hover:bg-slate-100/50 transition-colors">
+                                    <td className="px-4 py-1.5 text-[0.8rem] font-medium text-slate-700">
                                       {mat}
                                     </td>
                                     {rateCategories.map((cat) => (
                                       <td key={cat} className="text-center px-3 py-1.5">
                                         <div className="relative inline-block">
-                                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.72rem] text-slate-warm-300 pointer-events-none">₹</span>
+                                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.72rem] text-slate-300 pointer-events-none">₹</span>
                                           <input
                                             type="number"
                                             step="0.01"
@@ -488,7 +488,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                                             value={rates[cat]?.[mat] ?? ""}
                                             onClick={(e) => e.stopPropagation()}
                                             onChange={(e) => setRate(party.id, party, cat, mat, e.target.value)}
-                                            className="w-24 h-8 pl-6 pr-2 rounded-lg bg-white border border-slate-warm-100 text-[0.82rem] text-slate-warm-800 text-center placeholder:text-slate-warm-300 focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-sage-300 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            className="w-24 h-8 pl-6 pr-2 rounded-lg bg-white border border-slate-100 text-[0.82rem] text-slate-800 text-center placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                           />
                                         </div>
                                       </td>
@@ -497,9 +497,9 @@ export default function PartyMasterPage(): React.JSX.Element {
                                 ))}
                               </tbody>
                             </table>
-                            <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-warm-100 bg-cream-50">
+                            <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-100 bg-slate-50">
                               {justSaved && (
-                                <span className="flex items-center gap-1.5 text-[0.78rem] font-medium text-sage-600">
+                                <span className="flex items-center gap-1.5 text-[0.78rem] font-medium text-blue-600">
                                   <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                                   Saved
                                 </span>
@@ -507,7 +507,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                               <button
                                 onClick={(e) => { e.stopPropagation(); saveRates(party); }}
                                 disabled={!changed || isSaving}
-                                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-sage-500 text-white text-[0.78rem] font-medium hover:bg-sage-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 h-8 px-4 rounded-lg bg-blue-500 text-white text-[0.78rem] font-medium hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                               >
                                 {isSaving ? (
                                   <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2} />
@@ -530,8 +530,8 @@ export default function PartyMasterPage(): React.JSX.Element {
 
         {filtered.length === 0 && (
           <div className="py-12 text-center">
-            <p className="text-[0.9rem] text-slate-warm-400">No parties found</p>
-            <p className="text-[0.78rem] text-slate-warm-300 mt-1">
+            <p className="text-[0.9rem] text-slate-400">No parties found</p>
+            <p className="text-[0.78rem] text-slate-300 mt-1">
               {activeFilterCount > 0 ? "Try adjusting your filters" : "Try a different search term"}
             </p>
           </div>

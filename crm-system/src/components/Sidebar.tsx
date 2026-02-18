@@ -49,7 +49,7 @@ const bottomNav = [
 function NavSection({ title, items, pathname }: { title: string; items: typeof masterNav; pathname: string | null }) {
   return (
     <div>
-      <p className="px-3 mb-1.5 text-[0.62rem] font-semibold uppercase tracking-widest text-slate-warm-300">
+      <p className="px-3 mb-1.5 text-[0.62rem] font-semibold uppercase tracking-widest text-slate-400">
         {title}
       </p>
       <ul className="space-y-0.5">
@@ -64,18 +64,18 @@ function NavSection({ title, items, pathname }: { title: string; items: typeof m
                   transition-all duration-200 ease-out
                   ${
                     active
-                      ? "bg-sage-50 text-sage-700 shadow-[inset_0_0_0_1px_var(--color-sage-100)]"
-                      : "text-slate-warm-500 hover:bg-cream-100 hover:text-slate-warm-700"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
                   }
                 `}
               >
                 <Icon
-                  className={`w-[1.15rem] h-[1.15rem] ${active ? "text-sage-500" : "text-slate-warm-400"}`}
+                  className={`w-[1.15rem] h-[1.15rem] ${active ? "text-white" : "text-slate-400"}`}
                   strokeWidth={active ? 2.2 : 1.8}
                 />
                 {label}
                 {active && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-sage-400" />
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
                 )}
               </Link>
             </li>
@@ -96,28 +96,28 @@ export default function Sidebar() {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 bg-slate-warm-900/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 lg:hidden"
           onClick={close}
         />
       )}
       <aside className={`
-        fixed left-0 top-0 bottom-0 w-[260px] bg-white sidebar-shadow flex flex-col z-50
+        fixed left-0 top-0 bottom-0 w-[260px] bg-slate-800 flex flex-col z-50
         transition-transform duration-300 ease-in-out
         lg:translate-x-0
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
       <div className="px-7 pt-7 pb-5 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-sage-500 flex items-center justify-center transition-transform group-hover:scale-105">
+          <div className="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center transition-transform group-hover:scale-105">
             <Sprout className="w-5 h-5 text-white" strokeWidth={2.2} />
           </div>
-          <span className="text-[1.2rem] font-semibold tracking-tight text-slate-warm-900">
+          <span className="text-[1.2rem] font-semibold tracking-tight text-white">
             Bloom
           </span>
         </Link>
         <button
           onClick={close}
-          className="lg:hidden p-2 rounded-lg hover:bg-cream-100 text-slate-warm-400 hover:text-slate-warm-700 transition-colors"
+          className="lg:hidden p-2 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
         >
           <X className="w-5 h-5" strokeWidth={1.8} />
         </button>
@@ -132,18 +132,18 @@ export default function Sidebar() {
               transition-all duration-200 ease-out
               ${
                 dashActive
-                  ? "bg-sage-50 text-sage-700 shadow-[inset_0_0_0_1px_var(--color-sage-100)]"
-                  : "text-slate-warm-500 hover:bg-cream-100 hover:text-slate-warm-700"
+                  ? "bg-blue-600 text-white"
+                  : "text-slate-300 hover:bg-slate-700 hover:text-white"
               }
             `}
           >
             <LayoutDashboard
-              className={`w-[1.15rem] h-[1.15rem] ${dashActive ? "text-sage-500" : "text-slate-warm-400"}`}
+              className={`w-[1.15rem] h-[1.15rem] ${dashActive ? "text-white" : "text-slate-400"}`}
               strokeWidth={dashActive ? 2.2 : 1.8}
             />
             Dashboard
             {dashActive && (
-              <div className="ml-auto w-1.5 h-1.5 rounded-full bg-sage-400" />
+              <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
             )}
           </Link>
 
@@ -157,18 +157,18 @@ export default function Sidebar() {
                   transition-all duration-200 ease-out
                   ${
                     roActive
-                      ? "bg-sage-50 text-sage-700 shadow-[inset_0_0_0_1px_var(--color-sage-100)]"
-                      : "text-slate-warm-500 hover:bg-cream-100 hover:text-slate-warm-700"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
                   }
                 `}
               >
                 <ListOrdered
-                  className={`w-[1.15rem] h-[1.15rem] ${roActive ? "text-sage-500" : "text-slate-warm-400"}`}
+                  className={`w-[1.15rem] h-[1.15rem] ${roActive ? "text-white" : "text-slate-400"}`}
                   strokeWidth={roActive ? 2.2 : 1.8}
                 />
                 Running Orders
                 {roActive && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-sage-400" />
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
                 )}
               </Link>
             );
@@ -184,18 +184,18 @@ export default function Sidebar() {
                   transition-all duration-200 ease-out
                   ${
                     ordActive
-                      ? "bg-sage-50 text-sage-700 shadow-[inset_0_0_0_1px_var(--color-sage-100)]"
-                      : "text-slate-warm-500 hover:bg-cream-100 hover:text-slate-warm-700"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
                   }
                 `}
               >
                 <Package
-                  className={`w-[1.15rem] h-[1.15rem] ${ordActive ? "text-sage-500" : "text-slate-warm-400"}`}
+                  className={`w-[1.15rem] h-[1.15rem] ${ordActive ? "text-white" : "text-slate-400"}`}
                   strokeWidth={ordActive ? 2.2 : 1.8}
                 />
                 Orders
                 {ordActive && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-sage-400" />
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
                 )}
               </Link>
             );
@@ -208,7 +208,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="px-4 pb-3">
-        <div className="border-t border-slate-warm-100 pt-3 space-y-0.5">
+        <div className="border-t border-slate-700 pt-3 space-y-0.5">
           {bottomNav.map(({ label, href, icon: Icon }) => {
             const active = pathname === href;
             return (
@@ -220,13 +220,13 @@ export default function Sidebar() {
                   transition-all duration-200
                   ${
                     active
-                      ? "bg-sage-50 text-sage-700"
-                      : "text-slate-warm-500 hover:bg-cream-100 hover:text-slate-warm-700"
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
                   }
                 `}
               >
                 <Icon
-                  className="w-[1.15rem] h-[1.15rem] text-slate-warm-400"
+                  className="w-[1.15rem] h-[1.15rem] text-slate-400"
                   strokeWidth={1.8}
                 />
                 {label}
@@ -237,20 +237,20 @@ export default function Sidebar() {
       </div>
 
       <div className="px-4 pb-5">
-        <div className="bg-cream-100 rounded-2xl p-4">
+        <div className="bg-slate-700 rounded-2xl p-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-sage-200 flex items-center justify-center text-sage-700 text-sm font-semibold">
+            <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
               JD
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[0.82rem] font-semibold text-slate-warm-800 truncate">
+              <p className="text-[0.82rem] font-semibold text-white truncate">
                 Jane Doe
               </p>
-              <p className="text-[0.72rem] text-slate-warm-400 truncate">
+              <p className="text-[0.72rem] text-slate-400 truncate">
                 jane@bloom.io
               </p>
             </div>
-            <button className="p-1.5 rounded-lg hover:bg-cream-200 transition-colors text-slate-warm-400 hover:text-coral-500">
+            <button className="p-1.5 rounded-lg hover:bg-slate-600 transition-colors text-slate-400 hover:text-orange-400">
               <LogOut className="w-4 h-4" strokeWidth={1.8} />
             </button>
           </div>

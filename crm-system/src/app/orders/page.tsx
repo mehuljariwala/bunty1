@@ -62,25 +62,25 @@ function OrderDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-warm-900/30 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
         className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-warm-100 shrink-0">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100 shrink-0">
           <div>
-            <h3 className="text-[1rem] font-bold text-slate-warm-800">
+            <h3 className="text-[1rem] font-bold text-slate-800">
               {order.partyName}
             </h3>
-            <span className="text-[0.72rem] font-mono text-slate-warm-400">
+            <span className="text-[0.72rem] font-mono text-slate-400">
               Order #{order.csvId}
             </span>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-cream-100 text-slate-warm-400 hover:text-slate-warm-600 transition-colors"
+            className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
           >
             <X className="w-4 h-4" strokeWidth={2} />
           </button>
@@ -88,38 +88,38 @@ function OrderDetailModal({
 
         <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-cream-50 rounded-xl px-4 py-3">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-warm-400">
+            <div className="bg-slate-50 rounded-xl px-4 py-3">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-400">
                 Route
               </p>
               <div className="flex items-center gap-1.5 mt-1">
-                <MapPin className="w-3.5 h-3.5 text-slate-warm-400" strokeWidth={1.8} />
-                <p className="text-[0.88rem] font-semibold text-slate-warm-800">
+                <MapPin className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.8} />
+                <p className="text-[0.88rem] font-semibold text-slate-800">
                   {order.route}
                 </p>
               </div>
             </div>
-            <div className="bg-cream-50 rounded-xl px-4 py-3">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-warm-400">
+            <div className="bg-slate-50 rounded-xl px-4 py-3">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-400">
                 Date
               </p>
               <div className="flex items-center gap-1.5 mt-1">
-                <Calendar className="w-3.5 h-3.5 text-slate-warm-400" strokeWidth={1.8} />
-                <p className="text-[0.88rem] font-semibold text-slate-warm-800">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.8} />
+                <p className="text-[0.88rem] font-semibold text-slate-800">
                   {formatDate(order.orderDate)}
                 </p>
               </div>
             </div>
-            <div className="bg-cream-50 rounded-xl px-4 py-3">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-warm-400">
+            <div className="bg-slate-50 rounded-xl px-4 py-3">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-400">
                 Status
               </p>
               <div className="mt-1.5">
                 <span
                   className={`inline-flex items-center gap-1.5 text-[0.76rem] font-medium px-2.5 py-1 rounded-full ${
                     order.type === "Running"
-                      ? "bg-sage-50 text-sage-700"
-                      : "bg-slate-warm-100 text-slate-warm-700"
+                      ? "bg-blue-50 text-blue-700"
+                      : "bg-slate-100 text-slate-700"
                   }`}
                 >
                   {order.type}
@@ -128,21 +128,21 @@ function OrderDetailModal({
             </div>
           </div>
 
-          <div className="bg-cream-50 rounded-xl px-4 py-3">
-            <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-warm-400">
+          <div className="bg-slate-50 rounded-xl px-4 py-3">
+            <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-400">
               Address
             </p>
-            <p className="text-[0.84rem] text-slate-warm-700 mt-1">
+            <p className="text-[0.84rem] text-slate-700 mt-1">
               {order.partyAddress}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-sage-50 rounded-xl px-4 py-3">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-sage-500">
+            <div className="bg-blue-50 rounded-xl px-4 py-3">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-blue-500">
                 Total Ordered
               </p>
-              <p className="text-[1.3rem] font-bold text-sage-700 mt-1">
+              <p className="text-[1.3rem] font-bold text-blue-700 mt-1">
                 {totalOrdered}
               </p>
             </div>
@@ -157,12 +157,12 @@ function OrderDetailModal({
           </div>
 
           <div>
-            <p className="text-[0.76rem] font-semibold text-slate-warm-600 uppercase tracking-wide mb-3">
+            <p className="text-[0.76rem] font-semibold text-slate-600 uppercase tracking-wide mb-3">
               Order Items
             </p>
 
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-slate-warm-400">
+              <div className="flex flex-col items-center justify-center py-10 text-slate-400">
                 <Package className="w-10 h-10 mb-2 opacity-30" />
                 <p className="text-[0.84rem] font-medium">No items found</p>
                 <p className="text-[0.72rem] mt-0.5">
@@ -174,10 +174,10 @@ function OrderDetailModal({
                 {Array.from(grouped.entries()).map(([category, materials]) => (
                   <div
                     key={category}
-                    className="bg-cream-50 rounded-xl overflow-hidden"
+                    className="bg-slate-50 rounded-xl overflow-hidden"
                   >
-                    <div className="px-4 py-2.5 bg-cream-100/60 border-b border-cream-200/50">
-                      <h4 className="text-[0.8rem] font-bold text-slate-warm-700">
+                    <div className="px-4 py-2.5 bg-slate-100/60 border-b border-slate-200/50">
+                      <h4 className="text-[0.8rem] font-bold text-slate-700">
                         {category}
                       </h4>
                     </div>
@@ -185,7 +185,7 @@ function OrderDetailModal({
                       {Array.from(materials.entries()).map(
                         ([material, matItems]) => (
                           <div key={material} className="py-2 first:pt-1 last:pb-1">
-                            <p className="text-[0.72rem] font-semibold text-slate-warm-500 mb-1.5">
+                            <p className="text-[0.72rem] font-semibold text-slate-500 mb-1.5">
                               {material}
                             </p>
                             <div className="space-y-1">
@@ -196,18 +196,18 @@ function OrderDetailModal({
                                     key={`${item.color}-${item.orderedQty}`}
                                     className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white/70"
                                   >
-                                    <span className="text-[0.82rem] text-slate-warm-800 font-medium">
+                                    <span className="text-[0.82rem] text-slate-800 font-medium">
                                       {item.color}
                                     </span>
                                     <div className="flex items-center gap-4 text-[0.76rem]">
-                                      <span className="text-sage-600 font-medium">
+                                      <span className="text-blue-600 font-medium">
                                         Ord: {item.orderedQty}
                                       </span>
                                       <span className="text-sky-600 font-medium">
                                         Del: {item.deliveredQty}
                                       </span>
                                       {pending > 0 && (
-                                        <span className="text-coral-500 font-semibold">
+                                        <span className="text-orange-500 font-semibold">
                                           Pen: {pending}
                                         </span>
                                       )}
@@ -227,10 +227,10 @@ function OrderDetailModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-warm-100 shrink-0">
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-100 shrink-0">
           <button
             onClick={onClose}
-            className="h-9 px-5 rounded-xl border border-slate-warm-200 text-[0.82rem] font-medium text-slate-warm-600 hover:bg-cream-50 transition-colors"
+            className="h-9 px-5 rounded-xl border border-slate-200 text-[0.82rem] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
           >
             Close
           </button>
@@ -316,15 +316,15 @@ export default function OrdersPage() {
         <div className="bg-white rounded-2xl p-5 card-shadow">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-slate-warm-600 text-[0.76rem] font-medium mb-1.5">
+              <p className="text-slate-600 text-[0.76rem] font-medium mb-1.5">
                 Total Orders
               </p>
-              <p className="text-[1.65rem] font-bold text-slate-warm-900 leading-none">
+              <p className="text-[1.65rem] font-bold text-slate-900 leading-none">
                 {orders.length.toLocaleString()}
               </p>
             </div>
-            <div className="w-11 h-11 rounded-full bg-sage-50 flex items-center justify-center">
-              <Package className="w-5 h-5 text-sage-600" />
+            <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center">
+              <Package className="w-5 h-5 text-blue-600" />
             </div>
           </div>
         </div>
@@ -332,15 +332,15 @@ export default function OrdersPage() {
         <div className="bg-white rounded-2xl p-5 card-shadow">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-slate-warm-600 text-[0.76rem] font-medium mb-1.5">
+              <p className="text-slate-600 text-[0.76rem] font-medium mb-1.5">
                 Running
               </p>
-              <p className="text-[1.65rem] font-bold text-slate-warm-900 leading-none">
+              <p className="text-[1.65rem] font-bold text-slate-900 leading-none">
                 {runningCount.toLocaleString()}
               </p>
             </div>
-            <div className="w-11 h-11 rounded-full bg-coral-50 flex items-center justify-center">
-              <Loader className="w-5 h-5 text-coral-600" />
+            <div className="w-11 h-11 rounded-full bg-orange-50 flex items-center justify-center">
+              <Loader className="w-5 h-5 text-orange-600" />
             </div>
           </div>
         </div>
@@ -348,15 +348,15 @@ export default function OrdersPage() {
         <div className="bg-white rounded-2xl p-5 card-shadow">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-slate-warm-600 text-[0.76rem] font-medium mb-1.5">
+              <p className="text-slate-600 text-[0.76rem] font-medium mb-1.5">
                 Complete
               </p>
-              <p className="text-[1.65rem] font-bold text-slate-warm-900 leading-none">
+              <p className="text-[1.65rem] font-bold text-slate-900 leading-none">
                 {completeCount.toLocaleString()}
               </p>
             </div>
-            <div className="w-11 h-11 rounded-full bg-sage-50 flex items-center justify-center">
-              <CircleCheck className="w-5 h-5 text-sage-600" />
+            <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center">
+              <CircleCheck className="w-5 h-5 text-blue-600" />
             </div>
           </div>
         </div>
@@ -365,18 +365,18 @@ export default function OrdersPage() {
       <div className="bg-white rounded-2xl p-5 card-shadow space-y-4">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-warm-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search by party name, address, or route..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-warm-100 text-[0.84rem] placeholder:text-slate-warm-400 focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-sage-300"
+              className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-100 text-[0.84rem] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[0.76rem] text-slate-warm-600 font-medium">
+            <span className="text-[0.76rem] text-slate-600 font-medium">
               Route:
             </span>
             {ROUTES.map((route) => (
@@ -385,8 +385,8 @@ export default function OrdersPage() {
                 onClick={() => toggleRoute(route)}
                 className={`px-3 h-9 rounded-xl text-[0.82rem] font-medium transition-all ${
                   selectedRoutes.has(route)
-                    ? "bg-sage-500 text-white shadow-sm"
-                    : "bg-white border border-slate-warm-200 text-slate-warm-600 hover:border-sage-300"
+                    ? "bg-blue-500 text-white shadow-sm"
+                    : "bg-white border border-slate-200 text-slate-600 hover:border-blue-300"
                 }`}
               >
                 {route}
@@ -395,7 +395,7 @@ export default function OrdersPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[0.76rem] text-slate-warm-600 font-medium">
+            <span className="text-[0.76rem] text-slate-600 font-medium">
               Type:
             </span>
             {TYPE_OPTIONS.map((type) => (
@@ -404,8 +404,8 @@ export default function OrdersPage() {
                 onClick={() => setTypeFilter(type)}
                 className={`px-3 h-9 rounded-xl text-[0.82rem] font-medium transition-all ${
                   typeFilter === type
-                    ? "bg-sage-500 text-white shadow-sm"
-                    : "bg-white border border-slate-warm-200 text-slate-warm-600 hover:border-sage-300"
+                    ? "bg-blue-500 text-white shadow-sm"
+                    : "bg-white border border-slate-200 text-slate-600 hover:border-blue-300"
                 }`}
               >
                 {type}
@@ -416,7 +416,7 @@ export default function OrdersPage() {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1.5 px-3 h-9 rounded-xl border border-slate-warm-200 text-[0.82rem] font-medium text-slate-warm-600 hover:bg-slate-warm-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 h-9 rounded-xl border border-slate-200 text-[0.82rem] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
             >
               <X className="w-3.5 h-3.5" />
               Clear
@@ -424,7 +424,7 @@ export default function OrdersPage() {
           )}
         </div>
 
-        <div className="text-[0.76rem] text-slate-warm-600">
+        <div className="text-[0.76rem] text-slate-600">
           Showing {filteredOrders.length.toLocaleString()} of{" "}
           {orders.length.toLocaleString()} orders
         </div>
@@ -433,10 +433,10 @@ export default function OrdersPage() {
       <div className="bg-white rounded-2xl card-shadow overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-96">
-            <Loader className="w-8 h-8 text-sage-500 animate-spin" />
+            <Loader className="w-8 h-8 text-blue-500 animate-spin" />
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-96 text-slate-warm-500">
+          <div className="flex flex-col items-center justify-center h-96 text-slate-500">
             <Package className="w-12 h-12 mb-3 opacity-30" />
             <p className="text-[0.9rem] font-medium">No orders found</p>
             <p className="text-[0.76rem] mt-1">
@@ -445,24 +445,24 @@ export default function OrdersPage() {
           </div>
         ) : (
           <div>
-            <div className="grid grid-cols-[60px_1fr_80px_40px] md:grid-cols-[80px_1fr_1fr_120px_100px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_100px_60px] gap-4 px-5 py-3.5 bg-slate-warm-50 border-b border-slate-warm-100 sticky top-0 z-10">
-              <div className="text-[0.72rem] font-semibold text-slate-warm-600 uppercase tracking-wide">
+            <div className="grid grid-cols-[60px_1fr_80px_40px] md:grid-cols-[80px_1fr_1fr_120px_100px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_100px_60px] gap-4 px-5 py-3.5 bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
+              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide">
                 ID
               </div>
-              <div className="text-[0.72rem] font-semibold text-slate-warm-600 uppercase tracking-wide">
+              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide">
                 Party Name
               </div>
-              <div className="text-[0.72rem] font-semibold text-slate-warm-600 uppercase tracking-wide hidden lg:block">
+              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide hidden lg:block">
                 Address
               </div>
-              <div className="text-[0.72rem] font-semibold text-slate-warm-600 uppercase tracking-wide hidden md:block">
+              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide hidden md:block">
                 Route
               </div>
-              <div className="text-[0.72rem] font-semibold text-slate-warm-600 uppercase tracking-wide flex items-center gap-1 hidden md:block">
+              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-1 hidden md:block">
                 <Calendar className="w-3 h-3" />
                 Date
               </div>
-              <div className="text-[0.72rem] font-semibold text-slate-warm-600 uppercase tracking-wide">
+              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide">
                 Type
               </div>
               <div />
@@ -487,35 +487,35 @@ export default function OrdersPage() {
                   return (
                     <div
                       key={order.id}
-                      className={`grid grid-cols-[60px_1fr_80px_40px] md:grid-cols-[80px_1fr_1fr_120px_100px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_100px_60px] gap-4 px-5 items-center absolute top-0 left-0 w-full transition-colors hover:bg-sage-50/50 ${
-                        isEven ? "bg-white" : "bg-slate-warm-25"
+                      className={`grid grid-cols-[60px_1fr_80px_40px] md:grid-cols-[80px_1fr_1fr_120px_100px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_100px_60px] gap-4 px-5 items-center absolute top-0 left-0 w-full transition-colors hover:bg-blue-50/50 ${
+                        isEven ? "bg-white" : "bg-slate-25"
                       }`}
                       style={{
                         height: `${virtualRow.size}px`,
                         transform: `translateY(${virtualRow.start}px)`,
                       }}
                     >
-                      <div className="text-[0.84rem] font-medium text-slate-warm-900">
+                      <div className="text-[0.84rem] font-medium text-slate-900">
                         {order.csvId}
                       </div>
-                      <div className="text-[0.84rem] text-slate-warm-900 truncate">
+                      <div className="text-[0.84rem] text-slate-900 truncate">
                         {order.partyName}
                       </div>
-                      <div className="text-[0.84rem] text-slate-warm-600 truncate hidden lg:block">
+                      <div className="text-[0.84rem] text-slate-600 truncate hidden lg:block">
                         {order.partyAddress}
                       </div>
-                      <div className="text-[0.84rem] text-slate-warm-700 font-medium hidden md:block">
+                      <div className="text-[0.84rem] text-slate-700 font-medium hidden md:block">
                         {order.route}
                       </div>
-                      <div className="text-[0.84rem] text-slate-warm-600 hidden md:block">
+                      <div className="text-[0.84rem] text-slate-600 hidden md:block">
                         {formatDate(order.orderDate)}
                       </div>
                       <div>
                         <span
                           className={`inline-flex items-center px-2.5 py-1 rounded-full text-[0.72rem] font-medium ${
                             order.type === "Running"
-                              ? "bg-sage-50 text-sage-700"
-                              : "bg-slate-warm-100 text-slate-warm-700"
+                              ? "bg-blue-50 text-blue-700"
+                              : "bg-slate-100 text-slate-700"
                           }`}
                         >
                           {order.type}
@@ -524,7 +524,7 @@ export default function OrdersPage() {
                       <div className="flex justify-center">
                         <button
                           onClick={() => setViewOrder(order)}
-                          className="p-1.5 rounded-lg text-slate-warm-300 hover:text-sky-500 hover:bg-sky-50 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-300 hover:text-sky-500 hover:bg-sky-50 transition-colors"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" strokeWidth={1.8} />

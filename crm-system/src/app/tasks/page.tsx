@@ -30,19 +30,19 @@ const taskGroups = [
 ];
 
 const priorityColor: Record<string, string> = {
-  high: "text-coral-500",
+  high: "text-orange-500",
   medium: "text-sky-500",
-  low: "text-slate-warm-300",
+  low: "text-slate-300",
 };
 
 export default function TasksPage() {
   return (
     <div className="max-w-[800px] mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-[0.85rem] text-slate-warm-400">
+        <p className="text-[0.85rem] text-slate-400">
           9 tasks remaining
         </p>
-        <button className="flex items-center gap-2 h-9 px-4 rounded-xl bg-sage-500 text-white text-[0.82rem] font-medium hover:bg-sage-600 transition-colors shadow-sm">
+        <button className="flex items-center gap-2 h-9 px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm">
           <Plus className="w-4 h-4" strokeWidth={2.2} />
           Add Task
         </button>
@@ -51,7 +51,7 @@ export default function TasksPage() {
       <div className="space-y-8">
         {taskGroups.map((group) => (
           <div key={group.label}>
-            <h3 className="text-[0.78rem] font-semibold uppercase tracking-wider text-slate-warm-400 mb-3 px-1">
+            <h3 className="text-[0.78rem] font-semibold uppercase tracking-wider text-slate-400 mb-3 px-1">
               {group.label}
             </h3>
             <div className="space-y-2">
@@ -65,8 +65,8 @@ export default function TasksPage() {
                   <div
                     className={`w-5 h-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-colors ${
                       task.done
-                        ? "bg-sage-500 border-sage-500"
-                        : "border-slate-warm-200 hover:border-sage-400"
+                        ? "bg-blue-500 border-blue-500"
+                        : "border-slate-200 hover:border-blue-400"
                     }`}
                   >
                     {task.done && (
@@ -85,15 +85,15 @@ export default function TasksPage() {
                     <p
                       className={`text-[0.88rem] font-medium ${
                         task.done
-                          ? "line-through text-slate-warm-400"
-                          : "text-slate-warm-800"
+                          ? "line-through text-slate-400"
+                          : "text-slate-800"
                       }`}
                     >
                       {task.title}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <div className="flex items-center gap-1.5 text-[0.74rem] text-slate-warm-400">
+                    <div className="flex items-center gap-1.5 text-[0.74rem] text-slate-400">
                       <Calendar className="w-3.5 h-3.5" strokeWidth={1.8} />
                       {task.due}
                     </div>

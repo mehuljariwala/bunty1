@@ -76,23 +76,23 @@ export default function AddPartyModal({ open, onClose, onAdd }: AddPartyModalPro
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-slate-warm-900/30 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
+        className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
         onClick={onClose}
       />
 
       <div className="relative bg-white rounded-2xl w-full max-w-[620px] mx-4 shadow-2xl animate-[slideUp_250ms_ease-out]">
         <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-sage-50 flex items-center justify-center">
-              <UserPlus className="w-4 h-4 text-sage-500" strokeWidth={1.8} />
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+              <UserPlus className="w-4 h-4 text-blue-500" strokeWidth={1.8} />
             </div>
-            <h2 className="text-[0.95rem] font-semibold text-slate-warm-900">
+            <h2 className="text-[0.95rem] font-semibold text-slate-900">
               Add New Party
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-cream-100 transition-colors text-slate-warm-400 hover:text-slate-warm-600"
+            className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
           >
             <X className="w-4 h-4" strokeWidth={1.8} />
           </button>
@@ -113,8 +113,8 @@ export default function AddPartyModal({ open, onClose, onAdd }: AddPartyModalPro
           </div>
 
           <SectionLabel>Rate Card</SectionLabel>
-          <div className="bg-cream-50 rounded-xl border border-slate-warm-100 overflow-hidden">
-            <div className="flex border-b border-slate-warm-100">
+          <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+            <div className="flex border-b border-slate-100">
               {RATE_CATEGORIES.map((cat) => {
                 const filled = RATE_MATERIALS.filter(
                   (m) => form.rates[cat]?.[m] !== ""
@@ -126,22 +126,22 @@ export default function AddPartyModal({ open, onClose, onAdd }: AddPartyModalPro
                     onClick={() => setActiveTab(cat)}
                     className={`flex-1 py-2 text-[0.78rem] font-medium transition-all relative flex items-center justify-center gap-1.5 ${
                       activeTab === cat
-                        ? "text-sage-700 bg-white"
-                        : "text-slate-warm-400 hover:text-slate-warm-600 hover:bg-cream-100"
+                        ? "text-blue-700 bg-white"
+                        : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
                     }`}
                   >
                     {cat}
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
                         filled === RATE_MATERIALS.length
-                          ? "bg-sage-400"
+                          ? "bg-blue-400"
                           : filled > 0
-                            ? "bg-coral-400"
-                            : "bg-slate-warm-200"
+                            ? "bg-orange-400"
+                            : "bg-slate-200"
                       }`}
                     />
                     {activeTab === cat && (
-                      <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-sage-500 rounded-full" />
+                      <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-blue-500 rounded-full" />
                     )}
                   </button>
                 );
@@ -151,11 +151,11 @@ export default function AddPartyModal({ open, onClose, onAdd }: AddPartyModalPro
             <div className="grid grid-cols-2 gap-x-3 gap-y-2 p-3">
               {RATE_MATERIALS.map((material) => (
                 <div key={material} className="flex items-center gap-2">
-                  <span className="w-[72px] text-[0.76rem] font-medium text-slate-warm-600 shrink-0">
+                  <span className="w-[72px] text-[0.76rem] font-medium text-slate-600 shrink-0">
                     {material}
                   </span>
                   <div className="relative flex-1">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.74rem] text-slate-warm-300">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.74rem] text-slate-300">
                       ₹
                     </span>
                     <input
@@ -165,7 +165,7 @@ export default function AddPartyModal({ open, onClose, onAdd }: AddPartyModalPro
                       placeholder="0.00"
                       value={form.rates[activeTab]?.[material] ?? ""}
                       onChange={(e) => updateRate(activeTab, material, e.target.value)}
-                      className="w-full h-8 pl-6 pr-2 rounded-lg bg-white border border-slate-warm-100 text-[0.82rem] text-slate-warm-800 placeholder:text-slate-warm-300 focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-sage-300 transition-all"
+                      className="w-full h-8 pl-6 pr-2 rounded-lg bg-white border border-slate-100 text-[0.82rem] text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all"
                     />
                   </div>
                 </div>
@@ -173,17 +173,17 @@ export default function AddPartyModal({ open, onClose, onAdd }: AddPartyModalPro
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-slate-warm-100">
+          <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="h-9 px-4 rounded-xl text-[0.82rem] font-medium text-slate-warm-600 hover:bg-cream-100 transition-colors"
+              className="h-9 px-4 rounded-xl text-[0.82rem] font-medium text-slate-600 hover:bg-slate-100 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="h-9 px-5 rounded-xl bg-sage-500 text-white text-[0.82rem] font-medium hover:bg-sage-600 active:bg-sage-700 transition-colors shadow-sm"
+              className="h-9 px-5 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors shadow-sm"
             >
               Add Party
             </button>
@@ -196,7 +196,7 @@ export default function AddPartyModal({ open, onClose, onAdd }: AddPartyModalPro
 
 function SectionLabel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={`text-[0.65rem] font-semibold uppercase tracking-widest text-slate-warm-400 mb-2 ${className}`}>
+    <p className={`text-[0.65rem] font-semibold uppercase tracking-widest text-slate-400 mb-2 ${className}`}>
       {children}
     </p>
   );
@@ -219,7 +219,7 @@ function Input({
 }) {
   return (
     <div>
-      <label className="block text-[0.74rem] font-medium text-slate-warm-600 mb-1">
+      <label className="block text-[0.74rem] font-medium text-slate-600 mb-1">
         {label}
       </label>
       <input
@@ -228,7 +228,7 @@ function Input({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
-        className="w-full h-9 px-3 rounded-lg bg-cream-50 border border-slate-warm-100 text-[0.82rem] text-slate-warm-800 placeholder:text-slate-warm-300 focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-sage-300 focus:bg-white transition-all"
+        className="w-full h-9 px-3 rounded-lg bg-slate-50 border border-slate-100 text-[0.82rem] text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 focus:bg-white transition-all"
       />
     </div>
   );

@@ -36,7 +36,7 @@ const sections = [
 export default function SettingsPage() {
   return (
     <div className="max-w-[700px] mx-auto space-y-6">
-      <p className="text-[0.85rem] text-slate-warm-400">
+      <p className="text-[0.85rem] text-slate-400">
         Manage your account and preferences
       </p>
 
@@ -46,19 +46,19 @@ export default function SettingsPage() {
             key={title}
             className="flex items-center gap-4 bg-white rounded-2xl px-6 py-5 card-shadow hover:card-shadow-hover transition-shadow duration-300 cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-xl bg-cream-100 flex items-center justify-center text-slate-warm-500 group-hover:bg-sage-50 group-hover:text-sage-500 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
               <Icon className="w-5 h-5" strokeWidth={1.8} />
             </div>
             <div className="flex-1">
-              <p className="text-[0.9rem] font-semibold text-slate-warm-800">
+              <p className="text-[0.9rem] font-semibold text-slate-800">
                 {title}
               </p>
-              <p className="text-[0.8rem] text-slate-warm-400 mt-0.5">
+              <p className="text-[0.8rem] text-slate-400 mt-0.5">
                 {description}
               </p>
             </div>
             <svg
-              className="w-4 h-4 text-slate-warm-300 group-hover:text-sage-400 group-hover:translate-x-0.5 transition-all"
+              className="w-4 h-4 text-slate-300 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

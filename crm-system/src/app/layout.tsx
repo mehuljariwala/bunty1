@@ -3,6 +3,7 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import { SidebarProvider } from "@/components/SidebarContext";
+import CommandPalette from "@/components/CommandPalette";
 
 export const metadata: Metadata = {
   title: "Bloom CRM",
@@ -24,11 +25,11 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen bg-cream-50 text-slate-warm-800">
+      <body className="min-h-screen bg-slate-100 text-slate-900">
         <SidebarProvider>
           <div className="flex min-h-screen">
             <Sidebar />
@@ -37,6 +38,7 @@ export default function RootLayout({
               <main className="flex-1 p-4 lg:p-8">{children}</main>
             </div>
           </div>
+          <CommandPalette />
         </SidebarProvider>
       </body>
     </html>

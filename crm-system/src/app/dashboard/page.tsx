@@ -156,7 +156,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 text-sage-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
       </div>
     );
   }
@@ -168,15 +168,15 @@ export default function DashboardPage() {
     <div className="space-y-6">
 
       <div>
-        <h2 className="text-[1.35rem] font-bold tracking-tight text-slate-warm-900">Dashboard</h2>
-        <p className="text-[0.82rem] text-slate-warm-400 mt-0.5">Overview of your business</p>
+        <h2 className="text-[1.35rem] font-bold tracking-tight text-slate-900">Dashboard</h2>
+        <p className="text-[0.82rem] text-slate-400 mt-0.5">Overview of your business</p>
       </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         {[
           { label: "Total Orders", value: stats.totalOrders, icon: Package, accent: "bg-blue-50 text-blue-500", href: "/orders" },
-          { label: "Running", value: stats.running, icon: ListOrdered, accent: "bg-sage-50 text-sage-500", href: "/running-orders" },
+          { label: "Running", value: stats.running, icon: ListOrdered, accent: "bg-blue-50 text-blue-500", href: "/running-orders" },
           { label: "Pending", value: stats.pending, icon: Clock, accent: "bg-amber-50 text-amber-500", href: "/running-orders" },
           { label: "Parties", value: stats.totalParties, icon: BookUser, accent: "bg-purple-50 text-purple-500", href: "/party-master" },
         ].map((s) => (
@@ -185,10 +185,10 @@ export default function DashboardPage() {
               <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${s.accent}`}>
                 <s.icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" strokeWidth={1.8} />
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-warm-300 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+              <ArrowRight className="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
             </div>
-            <p className="text-[1.2rem] sm:text-[1.6rem] font-bold tracking-tight text-slate-warm-900 leading-none tabular-nums">{s.value.toLocaleString()}</p>
-            <p className="text-[0.68rem] sm:text-[0.75rem] text-slate-warm-400 font-medium mt-0.5 sm:mt-1">{s.label}</p>
+            <p className="text-[1.2rem] sm:text-[1.6rem] font-bold tracking-tight text-slate-900 leading-none tabular-nums">{s.value.toLocaleString()}</p>
+            <p className="text-[0.68rem] sm:text-[0.75rem] text-slate-400 font-medium mt-0.5 sm:mt-1">{s.label}</p>
           </Link>
         ))}
       </div>
@@ -202,15 +202,15 @@ export default function DashboardPage() {
           { label: "Routes", value: stats.totalRoutes, sub: "active" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-lg sm:rounded-xl px-3 py-2.5 sm:px-4 sm:py-3.5 card-shadow">
-            <p className="text-[1rem] sm:text-[1.2rem] font-bold text-slate-warm-800 tabular-nums">{s.value.toLocaleString()}</p>
-            <p className="text-[0.65rem] sm:text-[0.72rem] text-slate-warm-400 mt-0.5">{s.label} <span className="text-slate-warm-300 hidden sm:inline">&middot; {s.sub}</span></p>
+            <p className="text-[1rem] sm:text-[1.2rem] font-bold text-slate-800 tabular-nums">{s.value.toLocaleString()}</p>
+            <p className="text-[0.65rem] sm:text-[0.72rem] text-slate-400 mt-0.5">{s.label} <span className="text-slate-300 hidden sm:inline">&middot; {s.sub}</span></p>
           </div>
         ))}
       </div>
 
       {/* Orders Trend — Area Chart */}
       <div className="bg-white rounded-xl sm:rounded-2xl card-shadow p-4 sm:p-5">
-        <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-warm-800 mb-4">Orders Trend — Last 30 Days</h3>
+        <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-800 mb-4">Orders Trend — Last 30 Days</h3>
         <div className="h-52 sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={stats.ordersTrend} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
@@ -261,7 +261,7 @@ export default function DashboardPage() {
 
         {/* Order Status — Donut */}
         <div className="lg:col-span-2 bg-white rounded-xl sm:rounded-2xl card-shadow p-4 sm:p-5">
-          <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-warm-800 mb-3">Order Status</h3>
+          <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-800 mb-3">Order Status</h3>
           <div className="h-52 sm:h-60 relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -291,18 +291,18 @@ export default function DashboardPage() {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-[1.5rem] sm:text-[1.8rem] font-bold text-slate-warm-900 tabular-nums leading-none">
+              <span className="text-[1.5rem] sm:text-[1.8rem] font-bold text-slate-900 tabular-nums leading-none">
                 {stats.totalOrders.toLocaleString()}
               </span>
-              <span className="text-[0.65rem] text-slate-warm-400 mt-0.5">Total</span>
+              <span className="text-[0.65rem] text-slate-400 mt-0.5">Total</span>
             </div>
           </div>
           <div className="flex items-center justify-center gap-4 mt-2">
             {stats.statusData.map((s) => (
               <div key={s.name} className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                <span className="text-[0.68rem] text-slate-warm-500 font-medium">
-                  {s.name} <span className="font-bold text-slate-warm-700 tabular-nums">{s.value}</span>
+                <span className="text-[0.68rem] text-slate-500 font-medium">
+                  {s.name} <span className="font-bold text-slate-700 tabular-nums">{s.value}</span>
                 </span>
               </div>
             ))}
@@ -312,8 +312,8 @@ export default function DashboardPage() {
         {/* Orders by Route — Horizontal Bar */}
         <div className="lg:col-span-3 bg-white rounded-xl sm:rounded-2xl card-shadow p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-warm-800">Orders by Route</h3>
-            <MapPin className="w-3.5 h-3.5 text-slate-warm-300" />
+            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-800">Orders by Route</h3>
+            <MapPin className="w-3.5 h-3.5 text-slate-300" />
           </div>
           <div className="h-52 sm:h-60">
             <ResponsiveContainer width="100%" height="100%">
@@ -369,12 +369,12 @@ export default function DashboardPage() {
               <Truck className="w-4 h-4 text-amber-500" strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-[0.78rem] font-bold text-slate-warm-800">Pending Deliveries</p>
-              <p className="text-[0.62rem] text-slate-warm-400">Items not fully delivered</p>
+              <p className="text-[0.78rem] font-bold text-slate-800">Pending Deliveries</p>
+              <p className="text-[0.62rem] text-slate-400">Items not fully delivered</p>
             </div>
           </div>
           <p className="text-[1.4rem] font-bold text-amber-600 tabular-nums leading-none">{stats.pending}</p>
-          <p className="text-[0.62rem] text-slate-warm-400 mt-1">orders with remaining qty</p>
+          <p className="text-[0.62rem] text-slate-400 mt-1">orders with remaining qty</p>
         </div>
 
         {/* Low Stock Colors */}
@@ -384,41 +384,41 @@ export default function DashboardPage() {
               <Palette className="w-4 h-4 text-red-500" strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-[0.78rem] font-bold text-slate-warm-800">Low Stock Colors</p>
-              <p className="text-[0.62rem] text-slate-warm-400">Below minimum level</p>
+              <p className="text-[0.78rem] font-bold text-slate-800">Low Stock Colors</p>
+              <p className="text-[0.62rem] text-slate-400">Below minimum level</p>
             </div>
           </div>
           <p className="text-[1.4rem] font-bold text-red-500 tabular-nums leading-none">{stats.lowStockColors.length}</p>
           {stats.lowStockColors.length > 0 && (
-            <p className="text-[0.62rem] text-slate-warm-400 mt-1 truncate">
+            <p className="text-[0.62rem] text-slate-400 mt-1 truncate">
               {stats.lowStockColors.slice(0, 3).map((c) => c.name).join(", ")}
               {stats.lowStockColors.length > 3 && ` +${stats.lowStockColors.length - 3} more`}
             </p>
           )}
           {stats.lowStockColors.length === 0 && (
-            <p className="text-[0.62rem] text-sage-500 mt-1">All colors stocked</p>
+            <p className="text-[0.62rem] text-blue-500 mt-1">All colors stocked</p>
           )}
         </div>
 
         {/* This Week Activity */}
-        <div className="bg-white rounded-xl sm:rounded-2xl card-shadow p-3.5 sm:p-4.5 border-l-[3px] border-sage-400">
+        <div className="bg-white rounded-xl sm:rounded-2xl card-shadow p-3.5 sm:p-4.5 border-l-[3px] border-blue-400">
           <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-sage-50 flex items-center justify-center">
-              <Activity className="w-4 h-4 text-sage-500" strokeWidth={1.8} />
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-blue-500" strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-[0.78rem] font-bold text-slate-warm-800">This Week</p>
-              <p className="text-[0.62rem] text-slate-warm-400">vs last week</p>
+              <p className="text-[0.78rem] font-bold text-slate-800">This Week</p>
+              <p className="text-[0.62rem] text-slate-400">vs last week</p>
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <p className="text-[1.4rem] font-bold text-sage-600 tabular-nums leading-none">{stats.thisWeekOrders}</p>
-            <div className={`flex items-center gap-0.5 ${weekUp ? "text-sage-500" : "text-red-400"}`}>
+            <p className="text-[1.4rem] font-bold text-blue-600 tabular-nums leading-none">{stats.thisWeekOrders}</p>
+            <div className={`flex items-center gap-0.5 ${weekUp ? "text-blue-500" : "text-red-400"}`}>
               {weekUp ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
               <span className="text-[0.68rem] font-bold tabular-nums">{weekUp ? "+" : ""}{weekDiff}</span>
             </div>
           </div>
-          <p className="text-[0.62rem] text-slate-warm-400 mt-1">new orders this week</p>
+          <p className="text-[0.62rem] text-slate-400 mt-1">new orders this week</p>
         </div>
 
         {/* Route Load */}
@@ -428,8 +428,8 @@ export default function DashboardPage() {
               <Route className="w-4 h-4 text-blue-500" strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-[0.78rem] font-bold text-slate-warm-800">Route Load</p>
-              <p className="text-[0.62rem] text-slate-warm-400">Concentration check</p>
+              <p className="text-[0.78rem] font-bold text-slate-800">Route Load</p>
+              <p className="text-[0.62rem] text-slate-400">Concentration check</p>
             </div>
           </div>
           {stats.heavyRoute ? (
@@ -443,8 +443,8 @@ export default function DashboardPage() {
             </>
           ) : (
             <>
-              <p className="text-[1.4rem] font-bold text-slate-warm-400 tabular-nums leading-none">OK</p>
-              <p className="text-[0.62rem] text-sage-500 mt-1">Load evenly distributed</p>
+              <p className="text-[1.4rem] font-bold text-slate-400 tabular-nums leading-none">OK</p>
+              <p className="text-[0.62rem] text-blue-500 mt-1">Load evenly distributed</p>
             </>
           )}
         </div>
@@ -455,26 +455,26 @@ export default function DashboardPage() {
 
         <div className="lg:col-span-3 bg-white rounded-xl sm:rounded-2xl card-shadow overflow-hidden">
           <div className="flex items-center justify-between px-4 sm:px-5 pt-3 sm:pt-4 pb-2 sm:pb-3">
-            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-warm-800">Recent Orders</h3>
-            <Link href="/orders" className="text-[0.7rem] sm:text-[0.72rem] font-medium text-sage-500 hover:text-sage-600 flex items-center gap-1">
+            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-800">Recent Orders</h3>
+            <Link href="/orders" className="text-[0.7rem] sm:text-[0.72rem] font-medium text-blue-500 hover:text-blue-600 flex items-center gap-1">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <div className="divide-y divide-slate-warm-50">
+          <div className="divide-y divide-slate-50">
             {stats.recentOrders.map((o) => (
-              <div key={o.id} className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 hover:bg-cream-50/50 transition-colors">
-                <div className={`w-2 h-2 rounded-full shrink-0 ${o.type === "Running" ? "bg-sage-400" : "bg-slate-warm-300"}`} />
+              <div key={o.id} className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 hover:bg-slate-50/50 transition-colors">
+                <div className={`w-2 h-2 rounded-full shrink-0 ${o.type === "Running" ? "bg-blue-400" : "bg-slate-300"}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[0.78rem] sm:text-[0.82rem] font-semibold text-slate-warm-800 truncate">{o.partyName}</p>
-                  <p className="text-[0.65rem] sm:text-[0.7rem] text-slate-warm-400 truncate">{o.partyAddress}</p>
+                  <p className="text-[0.78rem] sm:text-[0.82rem] font-semibold text-slate-800 truncate">{o.partyName}</p>
+                  <p className="text-[0.65rem] sm:text-[0.7rem] text-slate-400 truncate">{o.partyAddress}</p>
                 </div>
                 <div className="text-right shrink-0">
                   <span className={`text-[0.6rem] sm:text-[0.65rem] font-bold px-1.5 sm:px-2 py-0.5 rounded-full ${
-                    o.type === "Running" ? "bg-sage-50 text-sage-600" : "bg-slate-warm-100 text-slate-warm-500"
+                    o.type === "Running" ? "bg-blue-50 text-blue-600" : "bg-slate-100 text-slate-500"
                   }`}>
                     {o.type}
                   </span>
-                  <p className="text-[0.6rem] sm:text-[0.65rem] text-slate-warm-300 mt-1 tabular-nums">{o.orderDate}</p>
+                  <p className="text-[0.6rem] sm:text-[0.65rem] text-slate-300 mt-1 tabular-nums">{o.orderDate}</p>
                 </div>
               </div>
             ))}
@@ -483,17 +483,17 @@ export default function DashboardPage() {
 
         <div className="lg:col-span-2 bg-white rounded-xl sm:rounded-2xl card-shadow overflow-hidden">
           <div className="flex items-center justify-between px-4 sm:px-5 pt-3 sm:pt-4 pb-2 sm:pb-3">
-            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-warm-800">Top Parties</h3>
-            <TrendingUp className="w-3.5 h-3.5 text-slate-warm-300" />
+            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-800">Top Parties</h3>
+            <TrendingUp className="w-3.5 h-3.5 text-slate-300" />
           </div>
           <div className="px-4 sm:px-5 pb-3 sm:pb-4 space-y-2">
             {stats.topPartiesList.map(([name, count], i) => (
               <div key={name} className="flex items-center gap-3">
-                <span className="text-[0.65rem] font-bold text-slate-warm-300 w-4 tabular-nums">{i + 1}</span>
+                <span className="text-[0.65rem] font-bold text-slate-300 w-4 tabular-nums">{i + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[0.75rem] sm:text-[0.78rem] font-medium text-slate-warm-700 truncate">{name}</p>
+                  <p className="text-[0.75rem] sm:text-[0.78rem] font-medium text-slate-700 truncate">{name}</p>
                 </div>
-                <span className="text-[0.7rem] sm:text-[0.72rem] font-bold text-slate-warm-500 tabular-nums">{count}</span>
+                <span className="text-[0.7rem] sm:text-[0.72rem] font-bold text-slate-500 tabular-nums">{count}</span>
               </div>
             ))}
           </div>

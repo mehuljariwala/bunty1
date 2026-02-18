@@ -38,13 +38,13 @@ function stockStatus(current: string, min: string, max: string): "low" | "ok" | 
 
 const STOCK_STYLES = {
   low: "bg-red-50 text-red-600",
-  ok: "bg-sage-50 text-sage-600",
+  ok: "bg-blue-50 text-blue-600",
   high: "bg-sky-50 text-sky-600",
 };
 
 const STOCK_DOT = {
   low: "bg-red-400",
-  ok: "bg-sage-400",
+  ok: "bg-blue-400",
   high: "bg-sky-400",
 };
 
@@ -78,12 +78,12 @@ function colorToRow(c: Color): ColorRow {
 
 function StockBadge({ variant }: { variant: ColorRow | undefined }): React.JSX.Element {
   if (!variant) {
-    return <span className="text-[0.72rem] text-slate-warm-300">—</span>;
+    return <span className="text-[0.72rem] text-slate-300">—</span>;
   }
   const status = stockStatus(variant.currentStock, variant.minStock, variant.maxStock);
   return (
     <div className="flex items-center justify-center gap-1.5">
-      <span className="text-[0.78rem] font-medium text-slate-warm-700">{variant.currentStock}</span>
+      <span className="text-[0.78rem] font-medium text-slate-700">{variant.currentStock}</span>
       <span className={`w-2 h-2 rounded-full ${STOCK_DOT[status]}`} />
     </div>
   );
@@ -247,8 +247,8 @@ export default function ColorMasterPage(): React.JSX.Element {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-sage-500 animate-spin" strokeWidth={1.8} />
-          <p className="text-[0.85rem] text-slate-warm-400">Loading colors...</p>
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" strokeWidth={1.8} />
+          <p className="text-[0.85rem] text-slate-400">Loading colors...</p>
         </div>
       </div>
     );
@@ -257,19 +257,19 @@ export default function ColorMasterPage(): React.JSX.Element {
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:justify-between">
-        <p className="text-[0.85rem] text-slate-warm-400">
+        <p className="text-[0.85rem] text-slate-400">
           {groupedColors.length} colors{" "}
-          <span className="text-slate-warm-300">({filtered.length} entries)</span>
+          <span className="text-slate-300">({filtered.length} entries)</span>
         </p>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-initial">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-warm-400" strokeWidth={1.8} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" strokeWidth={1.8} />
             <input
               type="text"
               placeholder="Search name, code, category..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-64 h-9 pl-9 pr-4 rounded-xl bg-white border border-slate-warm-100 text-[0.85rem] text-slate-warm-700 placeholder:text-slate-warm-300 focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-sage-300 transition-all"
+              className="w-full sm:w-64 h-9 pl-9 pr-4 rounded-xl bg-white border border-slate-100 text-[0.85rem] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all"
             />
           </div>
 
@@ -278,32 +278,32 @@ export default function ColorMasterPage(): React.JSX.Element {
               onClick={() => setFilterOpen((v) => !v)}
               className={`flex items-center gap-2 h-9 px-3 rounded-xl border text-[0.82rem] font-medium transition-colors ${
                 activeFilterCount > 0
-                  ? "bg-sage-50 border-sage-200 text-sage-700"
-                  : "bg-white border-slate-warm-100 text-slate-warm-600 hover:bg-cream-50"
+                  ? "bg-blue-50 border-blue-200 text-blue-700"
+                  : "bg-white border-slate-100 text-slate-600 hover:bg-slate-50"
               }`}
             >
               <Filter className="w-3.5 h-3.5" strokeWidth={1.8} />
               Filter
               {activeFilterCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-sage-500 text-white text-[0.68rem] font-bold flex items-center justify-center">
+                <span className="w-5 h-5 rounded-full bg-blue-500 text-white text-[0.68rem] font-bold flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
             </button>
 
             {filterOpen && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl border border-slate-warm-100 shadow-lg z-40 animate-[fadeIn_150ms_ease-out]">
+              <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl border border-slate-100 shadow-lg z-40 animate-[fadeIn_150ms_ease-out]">
                 <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
-                  <p className="text-[0.82rem] font-semibold text-slate-warm-800">Filters</p>
+                  <p className="text-[0.82rem] font-semibold text-slate-800">Filters</p>
                   {activeFilterCount > 0 && (
-                    <button onClick={clearFilters} className="text-[0.72rem] font-medium text-coral-500 hover:text-coral-600 transition-colors">
+                    <button onClick={clearFilters} className="text-[0.72rem] font-medium text-orange-500 hover:text-orange-600 transition-colors">
                       Clear all
                     </button>
                   )}
                 </div>
 
                 <div className="px-4 pb-3">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400 mb-2">Category</p>
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400 mb-2">Category</p>
                   <div className="flex flex-wrap gap-1.5">
                     {categories.map((cat) => (
                       <button
@@ -311,8 +311,8 @@ export default function ColorMasterPage(): React.JSX.Element {
                         onClick={() => toggleCategory(cat)}
                         className={`px-2.5 py-1 rounded-lg text-[0.78rem] font-medium transition-colors ${
                           filters.categories.includes(cat)
-                            ? "bg-sage-500 text-white"
-                            : "bg-cream-50 text-slate-warm-600 hover:bg-cream-100"
+                            ? "bg-blue-500 text-white"
+                            : "bg-slate-50 text-slate-600 hover:bg-slate-100"
                         }`}
                       >
                         {cat}
@@ -321,8 +321,8 @@ export default function ColorMasterPage(): React.JSX.Element {
                   </div>
                 </div>
 
-                <div className="border-t border-slate-warm-100 px-4 py-3">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-warm-400 mb-2">Stock Level</p>
+                <div className="border-t border-slate-100 px-4 py-3">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400 mb-2">Stock Level</p>
                   <div className="flex flex-wrap gap-1.5">
                     {(["all", "low", "ok", "high"] as const).map((val) => (
                       <button
@@ -330,8 +330,8 @@ export default function ColorMasterPage(): React.JSX.Element {
                         onClick={() => setFilters((prev) => ({ ...prev, stockFilter: val }))}
                         className={`px-2.5 py-1 rounded-lg text-[0.78rem] font-medium transition-colors capitalize ${
                           filters.stockFilter === val
-                            ? "bg-sage-500 text-white"
-                            : "bg-cream-50 text-slate-warm-600 hover:bg-cream-100"
+                            ? "bg-blue-500 text-white"
+                            : "bg-slate-50 text-slate-600 hover:bg-slate-100"
                         }`}
                       >
                         {val === "all" ? "All" : STOCK_LABEL[val]}
@@ -340,7 +340,7 @@ export default function ColorMasterPage(): React.JSX.Element {
                   </div>
                 </div>
 
-                <div className="border-t border-slate-warm-100 px-4 py-3">
+                <div className="border-t border-slate-100 px-4 py-3">
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <div className="relative">
                       <input
@@ -349,10 +349,10 @@ export default function ColorMasterPage(): React.JSX.Element {
                         onChange={(e) => setFilters((prev) => ({ ...prev, runningOnly: e.target.checked }))}
                         className="sr-only peer"
                       />
-                      <div className="w-8 h-[18px] rounded-full bg-slate-warm-200 peer-checked:bg-sage-500 transition-colors" />
+                      <div className="w-8 h-[18px] rounded-full bg-slate-200 peer-checked:bg-blue-500 transition-colors" />
                       <div className="absolute top-[1px] left-[1px] w-4 h-4 rounded-full bg-white shadow-sm peer-checked:translate-x-[14px] transition-transform" />
                     </div>
-                    <span className="text-[0.8rem] font-medium text-slate-warm-700">Running colors only</span>
+                    <span className="text-[0.8rem] font-medium text-slate-700">Running colors only</span>
                   </label>
                 </div>
               </div>
@@ -361,7 +361,7 @@ export default function ColorMasterPage(): React.JSX.Element {
 
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 h-9 px-4 rounded-xl bg-sage-500 text-white text-[0.82rem] font-medium hover:bg-sage-600 transition-colors shadow-sm"
+            className="flex items-center gap-2 h-9 px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" strokeWidth={2.2} />
             Add Color
@@ -372,24 +372,24 @@ export default function ColorMasterPage(): React.JSX.Element {
       {activeFilterCount > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           {filters.categories.map((cat) => (
-            <span key={cat} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sage-50 border border-sage-100 text-[0.78rem] font-medium text-sage-700">
+            <span key={cat} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-[0.78rem] font-medium text-blue-700">
               {cat}
-              <button onClick={() => toggleCategory(cat)} className="hover:text-coral-500 transition-colors"><X className="w-3 h-3" strokeWidth={2} /></button>
+              <button onClick={() => toggleCategory(cat)} className="hover:text-orange-500 transition-colors"><X className="w-3 h-3" strokeWidth={2} /></button>
             </span>
           ))}
           {filters.stockFilter !== "all" && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sage-50 border border-sage-100 text-[0.78rem] font-medium text-sage-700">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-[0.78rem] font-medium text-blue-700">
               Stock: {STOCK_LABEL[filters.stockFilter]}
-              <button onClick={() => setFilters((p) => ({ ...p, stockFilter: "all" }))} className="hover:text-coral-500 transition-colors"><X className="w-3 h-3" strokeWidth={2} /></button>
+              <button onClick={() => setFilters((p) => ({ ...p, stockFilter: "all" }))} className="hover:text-orange-500 transition-colors"><X className="w-3 h-3" strokeWidth={2} /></button>
             </span>
           )}
           {filters.runningOnly && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sage-50 border border-sage-100 text-[0.78rem] font-medium text-sage-700">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-[0.78rem] font-medium text-blue-700">
               Running only
-              <button onClick={() => setFilters((p) => ({ ...p, runningOnly: false }))} className="hover:text-coral-500 transition-colors"><X className="w-3 h-3" strokeWidth={2} /></button>
+              <button onClick={() => setFilters((p) => ({ ...p, runningOnly: false }))} className="hover:text-orange-500 transition-colors"><X className="w-3 h-3" strokeWidth={2} /></button>
             </span>
           )}
-          <button onClick={clearFilters} className="text-[0.76rem] font-medium text-slate-warm-400 hover:text-coral-500 transition-colors ml-1">Clear all</button>
+          <button onClick={clearFilters} className="text-[0.76rem] font-medium text-slate-400 hover:text-orange-500 transition-colors ml-1">Clear all</button>
         </div>
       )}
 
@@ -404,12 +404,12 @@ export default function ColorMasterPage(): React.JSX.Element {
             <col style={{ width: "10%" }} />
           </colgroup>
           <thead>
-            <tr className="border-b border-slate-warm-100">
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">Color Name</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">Sub Cat.</th>
-              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">5 Tar</th>
-              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">3 Tar</th>
-              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-warm-400">Yarn</th>
+            <tr className="border-b border-slate-100">
+              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Color Name</th>
+              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Sub Cat.</th>
+              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">5 Tar</th>
+              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">3 Tar</th>
+              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Yarn</th>
               <th className="w-16"></th>
             </tr>
           </thead>
@@ -433,8 +433,8 @@ export default function ColorMasterPage(): React.JSX.Element {
 
         {groupedColors.length === 0 && (
           <div className="py-12 text-center">
-            <p className="text-[0.9rem] text-slate-warm-400">No colors found</p>
-            <p className="text-[0.78rem] text-slate-warm-300 mt-1">
+            <p className="text-[0.9rem] text-slate-400">No colors found</p>
+            <p className="text-[0.78rem] text-slate-300 mt-1">
               {activeFilterCount > 0 ? "Try adjusting your filters" : "Try a different search term"}
             </p>
           </div>
@@ -480,30 +480,30 @@ function GroupRows({
     <>
       <tr
         onClick={onToggle}
-        className={`border-b border-slate-warm-50 cursor-pointer transition-colors ${
-          isExpanded ? "bg-cream-50" : "hover:bg-cream-50"
+        className={`border-b border-slate-50 cursor-pointer transition-colors ${
+          isExpanded ? "bg-slate-50" : "hover:bg-slate-50"
         }`}
       >
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
             {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-slate-warm-400 shrink-0" strokeWidth={1.8} />
+              <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" strokeWidth={1.8} />
             ) : (
-              <ChevronRight className="w-4 h-4 text-slate-warm-300 shrink-0" strokeWidth={1.8} />
+              <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" strokeWidth={1.8} />
             )}
             <span
-              className="w-5 h-5 rounded-md shrink-0 border border-slate-warm-100"
+              className="w-5 h-5 rounded-md shrink-0 border border-slate-100"
               style={{ backgroundColor: group.hex }}
             />
-            <p className="text-[0.84rem] font-medium text-slate-warm-800 truncate">
+            <p className="text-[0.84rem] font-medium text-slate-800 truncate">
               {group.name}
             </p>
             {group.hasRunning && (
-              <CircleCheck className="w-3.5 h-3.5 text-sage-500 shrink-0" strokeWidth={2} />
+              <CircleCheck className="w-3.5 h-3.5 text-blue-500 shrink-0" strokeWidth={2} />
             )}
           </div>
         </td>
-        <td className="px-4 py-3 text-[0.82rem] text-slate-warm-500">
+        <td className="px-4 py-3 text-[0.82rem] text-slate-500">
           {group.subCategory}
         </td>
         {CATEGORY_ORDER.map((cat) => (
@@ -512,7 +512,7 @@ function GroupRows({
           </td>
         ))}
         <td className="px-3 py-3">
-          <span className="text-[0.72rem] text-slate-warm-300">
+          <span className="text-[0.72rem] text-slate-300">
             {group.variants.size} var{group.variants.size !== 1 && "s"}
           </span>
         </td>
@@ -531,36 +531,36 @@ function GroupRows({
           return (
             <tr
               key={variant.id}
-              className="border-b border-slate-warm-50 bg-cream-50/50"
+              className="border-b border-slate-50 bg-slate-50/50"
             >
               <td className="px-4 py-2.5 pl-14">
-                <span className="text-[0.76rem] text-slate-warm-500 bg-cream-100 px-2 py-0.5 rounded-md">
+                <span className="text-[0.76rem] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
                   {variant.category}
                 </span>
               </td>
               <td className="px-4 py-2.5">
-                <span className="text-[0.78rem] font-mono text-sage-600 bg-sage-50 px-2 py-0.5 rounded-md">
+                <span className="text-[0.78rem] font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
                   {variant.code}
                 </span>
               </td>
               <td className="px-4 py-2.5" colSpan={3}>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1">
-                    <ArrowDown className="w-3 h-3 text-slate-warm-300" strokeWidth={1.8} />
-                    <span className="text-[0.78rem] text-slate-warm-500">{variant.minStock}</span>
+                    <ArrowDown className="w-3 h-3 text-slate-300" strokeWidth={1.8} />
+                    <span className="text-[0.78rem] text-slate-500">{variant.minStock}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <ArrowUp className="w-3 h-3 text-slate-warm-300" strokeWidth={1.8} />
-                    <span className="text-[0.78rem] text-slate-warm-500">{variant.maxStock}</span>
+                    <ArrowUp className="w-3 h-3 text-slate-300" strokeWidth={1.8} />
+                    <span className="text-[0.78rem] text-slate-500">{variant.maxStock}</span>
                   </div>
                   <div className="flex items-center gap-2 flex-1 max-w-[200px]">
-                    <span className="text-[0.8rem] font-semibold text-slate-warm-800 w-8 text-right">
+                    <span className="text-[0.8rem] font-semibold text-slate-800 w-8 text-right">
                       {variant.currentStock}
                     </span>
-                    <div className="flex-1 h-1.5 rounded-full bg-slate-warm-100 overflow-hidden">
+                    <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
-                          status === "low" ? "bg-red-400" : status === "high" ? "bg-sky-400" : "bg-sage-400"
+                          status === "low" ? "bg-red-400" : status === "high" ? "bg-sky-400" : "bg-blue-400"
                         }`}
                         style={{ width: `${pct}%` }}
                       />
@@ -578,7 +578,7 @@ function GroupRows({
                       e.stopPropagation();
                       onEdit(variant);
                     }}
-                    className="p-1.5 rounded-lg hover:bg-cream-100 transition-colors text-slate-warm-300 hover:text-slate-warm-600"
+                    className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-300 hover:text-slate-600"
                   >
                     <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
                   </button>
@@ -587,7 +587,7 @@ function GroupRows({
                       e.stopPropagation();
                       onDelete(variant.id);
                     }}
-                    className="p-1.5 rounded-lg hover:bg-coral-400/10 transition-colors text-slate-warm-300 hover:text-coral-500"
+                    className="p-1.5 rounded-lg hover:bg-orange-400/10 transition-colors text-slate-300 hover:text-orange-500"
                   >
                     <Trash2 className="w-3.5 h-3.5" strokeWidth={1.8} />
                   </button>

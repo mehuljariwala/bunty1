@@ -253,18 +253,18 @@ export default function SeedColorsPage() {
   return (
     <div className="max-w-xl mx-auto py-12 space-y-6">
       <div className="bg-white rounded-2xl card-shadow p-8">
-        <h1 className="text-xl font-bold text-slate-warm-800 mb-2">Seed Colors to Firestore</h1>
-        <p className="text-[0.85rem] text-slate-warm-500 mb-6">
-          Load {TOTAL} colors from <code className="px-1.5 py-0.5 bg-cream-50 rounded text-[0.8rem]">colours_details.csv</code> into Firestore.
+        <h1 className="text-xl font-bold text-slate-800 mb-2">Seed Colors to Firestore</h1>
+        <p className="text-[0.85rem] text-slate-500 mb-6">
+          Load {TOTAL} colors from <code className="px-1.5 py-0.5 bg-slate-50 rounded text-[0.8rem]">colours_details.csv</code> into Firestore.
         </p>
 
         <div className="grid grid-cols-3 gap-3 mb-4">
           {CATEGORIES.map((cat) => {
             const count = CSV_DATA.filter((c) => c.category === cat).length;
             return (
-              <div key={cat} className="bg-cream-50 rounded-xl px-4 py-3">
-                <p className="text-[0.72rem] font-bold uppercase tracking-wider text-slate-warm-400">{cat}</p>
-                <p className="text-lg font-bold text-slate-warm-800 mt-1">{count} colors</p>
+              <div key={cat} className="bg-slate-50 rounded-xl px-4 py-3">
+                <p className="text-[0.72rem] font-bold uppercase tracking-wider text-slate-400">{cat}</p>
+                <p className="text-lg font-bold text-slate-800 mt-1">{count} colors</p>
               </div>
             );
           })}
@@ -272,7 +272,7 @@ export default function SeedColorsPage() {
 
         <div className="flex flex-wrap gap-1.5 mb-6">
           {SUB_CATEGORIES.map((sub) => (
-            <span key={sub} className="px-2.5 py-1 bg-sage-50 text-sage-700 text-[0.72rem] font-medium rounded-full">
+            <span key={sub} className="px-2.5 py-1 bg-blue-50 text-blue-700 text-[0.72rem] font-medium rounded-full">
               {sub}
             </span>
           ))}
@@ -282,14 +282,14 @@ export default function SeedColorsPage() {
           <div className="space-y-3">
             <button
               onClick={handleClearAndSeed}
-              className="w-full h-12 rounded-xl bg-sage-500 text-white text-[0.9rem] font-semibold hover:bg-sage-600 transition-colors shadow-sm flex items-center justify-center gap-2"
+              className="w-full h-12 rounded-xl bg-blue-500 text-white text-[0.9rem] font-semibold hover:bg-blue-600 transition-colors shadow-sm flex items-center justify-center gap-2"
             >
               <Trash2 className="w-4 h-4" strokeWidth={1.8} />
               Clear All & Seed {TOTAL} Colors
             </button>
             <button
               onClick={handleAddOnly}
-              className="w-full h-10 rounded-xl border-2 border-slate-warm-200 text-slate-warm-600 text-[0.84rem] font-medium hover:bg-cream-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full h-10 rounded-xl border-2 border-slate-200 text-slate-600 text-[0.84rem] font-medium hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
             >
               <Upload className="w-4 h-4" strokeWidth={1.8} />
               Add {TOTAL} Colors (Keep Existing)
@@ -298,7 +298,7 @@ export default function SeedColorsPage() {
         )}
 
         {status === "checking" && (
-          <div className="flex items-center justify-center gap-3 h-12 text-slate-warm-500">
+          <div className="flex items-center justify-center gap-3 h-12 text-slate-500">
             <Loader2 className="w-5 h-5 animate-spin" strokeWidth={1.8} />
             <span className="text-[0.85rem] font-medium">Checking existing data...</span>
           </div>
@@ -313,15 +313,15 @@ export default function SeedColorsPage() {
 
         {status === "seeding" && (
           <div className="space-y-3">
-            <div className="flex items-center justify-center gap-3 text-sage-600">
+            <div className="flex items-center justify-center gap-3 text-blue-600">
               <Loader2 className="w-5 h-5 animate-spin" strokeWidth={1.8} />
               <span className="text-[0.85rem] font-medium">
                 Seeding... {seededCount} / {TOTAL}
               </span>
             </div>
-            <div className="h-2 bg-slate-warm-100 rounded-full overflow-hidden">
+            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-sage-400 rounded-full transition-all duration-300"
+                className="h-full bg-blue-400 rounded-full transition-all duration-300"
                 style={{ width: `${(seededCount / TOTAL) * 100}%` }}
               />
             </div>
@@ -329,13 +329,13 @@ export default function SeedColorsPage() {
         )}
 
         {status === "done" && (
-          <div className="bg-sage-50 rounded-xl p-5 flex items-center gap-3">
-            <CircleCheck className="w-6 h-6 text-sage-500 shrink-0" strokeWidth={1.8} />
+          <div className="bg-blue-50 rounded-xl p-5 flex items-center gap-3">
+            <CircleCheck className="w-6 h-6 text-blue-500 shrink-0" strokeWidth={1.8} />
             <div>
-              <p className="text-[0.9rem] font-semibold text-sage-700">
+              <p className="text-[0.9rem] font-semibold text-blue-700">
                 Successfully seeded {TOTAL} colors!
               </p>
-              <p className="text-[0.78rem] text-sage-600 mt-0.5">
+              <p className="text-[0.78rem] text-blue-600 mt-0.5">
                 Go to Stock Inventory or Color Master to see them.
               </p>
             </div>
