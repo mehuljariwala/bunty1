@@ -30,6 +30,8 @@ function docToParty(id: string, data: Record<string, unknown>): Party {
     id,
     name: (data.name as string) ?? "",
     address: (data.address as string) ?? "",
+    addressGu: (data.addressGu as string) ?? "",
+    addressHi: (data.addressHi as string) ?? "",
     route: (data.route as string) ?? "",
     userId: (data.userId as string) ?? "",
     password: (data.password as string) ?? "",

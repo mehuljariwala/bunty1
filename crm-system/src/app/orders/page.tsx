@@ -62,25 +62,25 @@ function OrderDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-crm-sidebar/30 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
+        className="bg-crm-card rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-crm-border/50 shrink-0">
           <div>
-            <h3 className="text-[1rem] font-bold text-slate-800">
+            <h3 className="text-[1rem] font-bold text-crm-text">
               {order.partyName}
             </h3>
-            <span className="text-[0.72rem] font-mono text-slate-400">
+            <span className="text-[0.72rem] font-mono text-crm-text-muted">
               Order #{order.csvId}
             </span>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+            className="p-2 rounded-lg hover:bg-crm-primary-muted text-crm-text-muted hover:text-crm-text transition-colors"
           >
             <X className="w-4 h-4" strokeWidth={2} />
           </button>
@@ -88,38 +88,38 @@ function OrderDetailModal({
 
         <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-slate-50 rounded-xl px-4 py-3">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-400">
+            <div className="bg-crm-bg/50 rounded-xl px-4 py-3">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-crm-text-muted">
                 Route
               </p>
               <div className="flex items-center gap-1.5 mt-1">
-                <MapPin className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.8} />
-                <p className="text-[0.88rem] font-semibold text-slate-800">
+                <MapPin className="w-3.5 h-3.5 text-crm-text-muted" strokeWidth={1.8} />
+                <p className="text-[0.88rem] font-semibold text-crm-text">
                   {order.route}
                 </p>
               </div>
             </div>
-            <div className="bg-slate-50 rounded-xl px-4 py-3">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-400">
+            <div className="bg-crm-bg/50 rounded-xl px-4 py-3">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-crm-text-muted">
                 Date
               </p>
               <div className="flex items-center gap-1.5 mt-1">
-                <Calendar className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.8} />
-                <p className="text-[0.88rem] font-semibold text-slate-800">
+                <Calendar className="w-3.5 h-3.5 text-crm-text-muted" strokeWidth={1.8} />
+                <p className="text-[0.88rem] font-semibold text-crm-text">
                   {formatDate(order.orderDate)}
                 </p>
               </div>
             </div>
-            <div className="bg-slate-50 rounded-xl px-4 py-3">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-400">
+            <div className="bg-crm-bg/50 rounded-xl px-4 py-3">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-crm-text-muted">
                 Status
               </p>
               <div className="mt-1.5">
                 <span
                   className={`inline-flex items-center gap-1.5 text-[0.76rem] font-medium px-2.5 py-1 rounded-full ${
                     order.type === "Running"
-                      ? "bg-blue-50 text-blue-700"
-                      : "bg-slate-100 text-slate-700"
+                      ? "bg-crm-primary-muted text-crm-primary"
+                      : "bg-crm-bg text-crm-text-muted"
                   }`}
                 >
                   {order.type}
@@ -128,41 +128,41 @@ function OrderDetailModal({
             </div>
           </div>
 
-          <div className="bg-slate-50 rounded-xl px-4 py-3">
-            <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-slate-400">
+          <div className="bg-crm-bg/50 rounded-xl px-4 py-3">
+            <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-crm-text-muted">
               Address
             </p>
-            <p className="text-[0.84rem] text-slate-700 mt-1">
+            <p className="text-[0.84rem] text-crm-text mt-1">
               {order.partyAddress}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 rounded-xl px-4 py-3">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-blue-500">
+            <div className="bg-crm-primary-muted rounded-xl px-4 py-3">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-crm-primary">
                 Total Ordered
               </p>
-              <p className="text-[1.3rem] font-bold text-blue-700 mt-1">
+              <p className="text-[1.3rem] font-bold text-crm-text mt-1">
                 {totalOrdered}
               </p>
             </div>
-            <div className="bg-sky-50 rounded-xl px-4 py-3">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-sky-500">
+            <div className="bg-crm-primary-muted rounded-xl px-4 py-3">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-widest text-crm-primary">
                 Total Delivered
               </p>
-              <p className="text-[1.3rem] font-bold text-sky-700 mt-1">
+              <p className="text-[1.3rem] font-bold text-crm-text mt-1">
                 {totalDelivered}
               </p>
             </div>
           </div>
 
           <div>
-            <p className="text-[0.76rem] font-semibold text-slate-600 uppercase tracking-wide mb-3">
+            <p className="text-[0.76rem] font-semibold text-crm-text uppercase tracking-wide mb-3">
               Order Items
             </p>
 
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+              <div className="flex flex-col items-center justify-center py-10 text-crm-text-muted">
                 <Package className="w-10 h-10 mb-2 opacity-30" />
                 <p className="text-[0.84rem] font-medium">No items found</p>
                 <p className="text-[0.72rem] mt-0.5">
@@ -174,10 +174,10 @@ function OrderDetailModal({
                 {Array.from(grouped.entries()).map(([category, materials]) => (
                   <div
                     key={category}
-                    className="bg-slate-50 rounded-xl overflow-hidden"
+                    className="bg-crm-bg/50 rounded-xl overflow-hidden"
                   >
-                    <div className="px-4 py-2.5 bg-slate-100/60 border-b border-slate-200/50">
-                      <h4 className="text-[0.8rem] font-bold text-slate-700">
+                    <div className="px-4 py-2.5 bg-crm-primary-muted/60 border-b border-crm-border/50">
+                      <h4 className="text-[0.8rem] font-bold text-crm-text">
                         {category}
                       </h4>
                     </div>
@@ -185,7 +185,7 @@ function OrderDetailModal({
                       {Array.from(materials.entries()).map(
                         ([material, matItems]) => (
                           <div key={material} className="py-2 first:pt-1 last:pb-1">
-                            <p className="text-[0.72rem] font-semibold text-slate-500 mb-1.5">
+                            <p className="text-[0.72rem] font-semibold text-crm-text-muted mb-1.5">
                               {material}
                             </p>
                             <div className="space-y-1">
@@ -194,16 +194,16 @@ function OrderDetailModal({
                                 return (
                                   <div
                                     key={`${item.color}-${item.orderedQty}`}
-                                    className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white/70"
+                                    className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-crm-card"
                                   >
-                                    <span className="text-[0.82rem] text-slate-800 font-medium">
+                                    <span className="text-[0.82rem] text-crm-text font-medium">
                                       {item.color}
                                     </span>
                                     <div className="flex items-center gap-4 text-[0.76rem]">
-                                      <span className="text-blue-600 font-medium">
+                                      <span className="text-crm-primary font-medium">
                                         Ord: {item.orderedQty}
                                       </span>
-                                      <span className="text-sky-600 font-medium">
+                                      <span className="text-crm-text-muted font-medium">
                                         Del: {item.deliveredQty}
                                       </span>
                                       {pending > 0 && (
@@ -227,10 +227,10 @@ function OrderDetailModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-100 shrink-0">
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-crm-border/50 shrink-0">
           <button
             onClick={onClose}
-            className="h-9 px-5 rounded-xl border border-slate-200 text-[0.82rem] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="h-9 px-5 rounded-xl border border-crm-border text-[0.82rem] font-medium text-crm-text-muted hover:bg-crm-primary-muted transition-colors"
           >
             Close
           </button>
@@ -430,39 +430,39 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl card-shadow overflow-hidden">
+      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-96">
             <Loader className="w-8 h-8 text-blue-500 animate-spin" />
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-96 text-slate-500">
+          <div className="flex flex-col items-center justify-center h-96 text-crm-text-muted">
             <Package className="w-12 h-12 mb-3 opacity-30" />
             <p className="text-[0.9rem] font-medium">No orders found</p>
-            <p className="text-[0.76rem] mt-1">
+            <p className="text-[0.78rem] text-crm-border mt-1">
               Try adjusting your filters or search query
             </p>
           </div>
         ) : (
           <div>
-            <div className="grid grid-cols-[60px_1fr_80px_40px] md:grid-cols-[80px_1fr_1fr_120px_100px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_100px_60px] gap-4 px-5 py-3.5 bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
-              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide">
+            <div className="grid grid-cols-[60px_1fr_80px_40px] md:grid-cols-[80px_1fr_1fr_120px_100px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_100px_60px] gap-4 px-5 py-3.5 border-b-2 border-crm-border sticky top-0 z-10 bg-crm-card">
+              <div className="text-[0.8rem] font-bold text-crm-text">
                 ID
               </div>
-              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide">
+              <div className="text-[0.8rem] font-bold text-crm-text">
                 Party Name
               </div>
-              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide hidden lg:block">
+              <div className="text-[0.8rem] font-bold text-crm-text hidden lg:block">
                 Address
               </div>
-              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide hidden md:block">
+              <div className="text-[0.8rem] font-bold text-crm-text hidden md:block">
                 Route
               </div>
-              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-1 hidden md:block">
+              <div className="text-[0.8rem] font-bold text-crm-text flex items-center gap-1 hidden md:block">
                 <Calendar className="w-3 h-3" />
                 Date
               </div>
-              <div className="text-[0.72rem] font-semibold text-slate-600 uppercase tracking-wide">
+              <div className="text-[0.8rem] font-bold text-crm-text">
                 Type
               </div>
               <div />
@@ -487,35 +487,35 @@ export default function OrdersPage() {
                   return (
                     <div
                       key={order.id}
-                      className={`grid grid-cols-[60px_1fr_80px_40px] md:grid-cols-[80px_1fr_1fr_120px_100px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_100px_60px] gap-4 px-5 items-center absolute top-0 left-0 w-full transition-colors hover:bg-blue-50/50 ${
-                        isEven ? "bg-white" : "bg-slate-25"
+                      className={`grid grid-cols-[60px_1fr_80px_40px] md:grid-cols-[80px_1fr_1fr_120px_100px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_100px_60px] gap-4 px-5 items-center absolute top-0 left-0 w-full transition-colors hover:bg-crm-primary-muted/20 ${
+                        isEven ? "bg-crm-card" : "bg-crm-bg/30"
                       }`}
                       style={{
                         height: `${virtualRow.size}px`,
                         transform: `translateY(${virtualRow.start}px)`,
                       }}
                     >
-                      <div className="text-[0.84rem] font-medium text-slate-900">
+                      <div className="text-[0.84rem] font-medium text-crm-text-muted">
                         {order.csvId}
                       </div>
-                      <div className="text-[0.84rem] text-slate-900 truncate">
+                      <div className="text-[0.84rem] text-crm-text truncate">
                         {order.partyName}
                       </div>
-                      <div className="text-[0.84rem] text-slate-600 truncate hidden lg:block">
+                      <div className="text-[0.84rem] text-crm-text-muted truncate hidden lg:block">
                         {order.partyAddress}
                       </div>
-                      <div className="text-[0.84rem] text-slate-700 font-medium hidden md:block">
+                      <div className="text-[0.84rem] text-crm-text font-medium hidden md:block">
                         {order.route}
                       </div>
-                      <div className="text-[0.84rem] text-slate-600 hidden md:block">
+                      <div className="text-[0.84rem] text-crm-text-muted hidden md:block">
                         {formatDate(order.orderDate)}
                       </div>
                       <div>
                         <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-[0.72rem] font-medium ${
+                          className={`inline-flex items-center px-3 py-1 rounded-md text-[0.78rem] font-semibold ${
                             order.type === "Running"
-                              ? "bg-blue-50 text-blue-700"
-                              : "bg-slate-100 text-slate-700"
+                              ? "bg-emerald-500 text-white"
+                              : "bg-crm-bg text-crm-text-muted"
                           }`}
                         >
                           {order.type}
@@ -524,7 +524,7 @@ export default function OrdersPage() {
                       <div className="flex justify-center">
                         <button
                           onClick={() => setViewOrder(order)}
-                          className="p-1.5 rounded-lg text-slate-300 hover:text-sky-500 hover:bg-sky-50 transition-colors"
+                          className="p-1.5 rounded-lg text-crm-border hover:text-crm-primary hover:bg-crm-primary-muted transition-colors"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" strokeWidth={1.8} />

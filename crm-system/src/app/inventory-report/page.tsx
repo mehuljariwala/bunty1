@@ -2,15 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Search,
-  TrendingUp,
-  AlertTriangle,
-  CircleCheck,
-  Layers,
   ChevronDown,
   ChevronUp,
   ArrowUpDown,
   Loader2,
+  AlertTriangle,
+  CircleCheck,
+  Package,
 } from "lucide-react";
 
 import { subscribeColors } from "@/lib/colors";
@@ -36,7 +34,6 @@ interface ColorRow {
   stocks: Record<string, StockItem>;
   totalStock: number;
   issueCount: number;
-  worstDeficit: number;
 }
 
 type SortField = string;
@@ -51,32 +48,25 @@ function stockPct(current: number, max: number): number {
   return Math.max(0, Math.min(100, (current / max) * 100));
 }
 
-function cellBg(item: StockItem | undefined): string {
-  if (!item) return "";
-  if (item.currentStock < 0) return "bg-red-50/60";
-  if (item.currentStock === 0) return "bg-slate-50/60";
-  if (item.currentStock <= item.minStock) return "bg-amber-50/40";
-  return "";
-}
-
 function barFill(item: StockItem): string {
-  if (item.currentStock < 0) return "bg-red-400";
+  if (item.currentStock < 0) return "bg-red-400 animate-pulse";
   if (item.currentStock === 0) return "bg-slate-300";
   if (item.currentStock <= item.minStock) return "bg-amber-400";
+  if (item.currentStock >= item.maxStock) return "bg-emerald-400";
   return "bg-blue-400";
 }
 
 function stockNumColor(item: StockItem): string {
-  if (item.currentStock < 0) return "text-red-600";
-  if (item.currentStock === 0) return "text-slate-400";
-  if (item.currentStock <= item.minStock) return "text-amber-600";
-  return "text-slate-800";
+  if (item.currentStock < 0) return "text-red-500";
+  if (item.currentStock === 0) return "text-crm-text-muted";
+  if (item.currentStock <= item.minStock) return "text-amber-500";
+  return "text-crm-text";
 }
 
-function statusTag(item: StockItem): { label: string; bg: string; text: string } | null {
-  if (item.currentStock < 0) return { label: "Deficit", bg: "bg-red-100", text: "text-red-700" };
-  if (item.currentStock === 0) return { label: "Empty", bg: "bg-slate-100", text: "text-slate-600" };
-  if (item.currentStock <= item.minStock) return { label: "Low", bg: "bg-amber-100", text: "text-amber-700" };
+function statusTag(item: StockItem): { label: string; cls: string } | null {
+  if (item.currentStock < 0) return { label: "Deficit", cls: "bg-red-500 text-white" };
+  if (item.currentStock === 0) return { label: "Empty", cls: "bg-crm-bg text-crm-text-muted" };
+  if (item.currentStock <= item.minStock) return { label: "Low", cls: "bg-amber-400 text-white" };
   return null;
 }
 
@@ -108,8 +98,7 @@ export default function InventoryReportPage(): React.JSX.Element {
 
   const [filter, setFilter] = useState<Filter>("all");
   const [catFilter, setCatFilter] = useState<string>("all");
-  const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortField, setSortField] = useState<SortField>("default");
   const [sortAsc, setSortAsc] = useState(true);
 
   const colorRows = useMemo<ColorRow[]>(() => {
@@ -117,13 +106,12 @@ export default function InventoryReportPage(): React.JSX.Element {
     for (const item of ALL) {
       let row = map.get(item.name);
       if (!row) {
-        row = { name: item.name, hex: item.hex, stocks: {}, totalStock: 0, issueCount: 0, worstDeficit: 0 };
+        row = { name: item.name, hex: item.hex, stocks: {}, totalStock: 0, issueCount: 0 };
         map.set(item.name, row);
       }
       row.stocks[item.category] = item;
       row.totalStock += item.currentStock;
       if (hasIssue(item)) row.issueCount++;
-      if (item.currentStock < row.worstDeficit) row.worstDeficit = item.currentStock;
     }
     return Array.from(map.values());
   }, [ALL]);
@@ -136,8 +124,6 @@ export default function InventoryReportPage(): React.JSX.Element {
 
   const filtered = useMemo(() => {
     let rows = colorRows;
-    const q = search.toLowerCase();
-    if (q) rows = rows.filter((r) => r.name.toLowerCase().includes(q));
 
     if (catFilter !== "all") {
       rows = rows.filter((r) => r.stocks[catFilter]);
@@ -152,20 +138,20 @@ export default function InventoryReportPage(): React.JSX.Element {
       case "at-max": rows = rows.filter((r) => getStocksForFilter(r).some((s) => s.currentStock >= s.maxStock)); break;
     }
 
-    rows = [...rows].sort((a, b) => {
-      let cmp = 0;
-      switch (sortField) {
-        case "name": cmp = a.name.localeCompare(b.name); break;
-        case "total": cmp = a.totalStock - b.totalStock; break;
-        case "issues": cmp = a.issueCount - b.issueCount; break;
-        default:
-          cmp = (a.stocks[sortField]?.currentStock ?? -9999) - (b.stocks[sortField]?.currentStock ?? -9999);
-          break;
-      }
-      return sortAsc ? cmp : -cmp;
-    });
+    if (sortField !== "default") {
+      rows = [...rows].sort((a, b) => {
+        let cmp = 0;
+        switch (sortField) {
+          case "name": cmp = a.name.localeCompare(b.name); break;
+          default:
+            cmp = (a.stocks[sortField]?.currentStock ?? -9999) - (b.stocks[sortField]?.currentStock ?? -9999);
+            break;
+        }
+        return sortAsc ? cmp : -cmp;
+      });
+    }
     return rows;
-  }, [colorRows, filter, catFilter, search, sortField, sortAsc]);
+  }, [colorRows, filter, catFilter, sortField, sortAsc]);
 
   function toggleSort(field: SortField) {
     if (sortField === field) setSortAsc((p) => !p);
@@ -194,356 +180,287 @@ export default function InventoryReportPage(): React.JSX.Element {
     };
   }, [baseRows, catFilter]);
 
-  const healthPct = baseRows.length > 0 ? Math.round((filterCounts.ok / baseRows.length) * 100) : 0;
-
-  const catTotals = useMemo(() => {
-    const result: Record<string, { total: number; deficit: number; low: number; healthy: number }> = {};
-    for (const cat of CATEGORIES) {
-      const items = ALL.filter((i) => i.category === cat);
-      result[cat] = {
-        total: items.reduce((s, i) => s + i.currentStock, 0),
-        deficit: items.filter((i) => i.currentStock < 0).length,
-        low: items.filter((i) => i.currentStock >= 0 && i.currentStock <= i.minStock).length,
-        healthy: items.filter((i) => i.currentStock > i.minStock).length,
-      };
-    }
-    return result;
-  }, [ALL, CATEGORIES]);
-
   const FILTERS: { key: Filter; label: string; count: number; dot?: string }[] = [
     { key: "all", label: "All", count: filterCounts.all },
-    { key: "attention", label: "Needs Attention", count: filterCounts.attention },
+    { key: "attention", label: "Attention", count: filterCounts.attention, dot: "bg-amber-400" },
     { key: "deficit", label: "Deficit", count: filterCounts.deficit, dot: "bg-red-500" },
-    { key: "empty", label: "Empty", count: filterCounts.empty, dot: "bg-slate-400" },
-    { key: "low", label: "Low Stock", count: filterCounts.low, dot: "bg-amber-400" },
-    { key: "at-max", label: "At Max", count: filterCounts["at-max"], dot: "bg-blue-500" },
-    { key: "ok", label: "All Good", count: filterCounts.ok },
+    { key: "empty", label: "Empty", count: filterCounts.empty, dot: "bg-crm-border" },
+    { key: "low", label: "Low", count: filterCounts.low, dot: "bg-amber-400" },
+    { key: "at-max", label: "At Max", count: filterCounts["at-max"], dot: "bg-emerald-500" },
+    { key: "ok", label: "OK", count: filterCounts.ok, dot: "bg-blue-400" },
   ];
 
-  const SortHeader = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
-    <th
-      onClick={() => toggleSort(field)}
-      className={`py-3 text-[0.65rem] font-bold uppercase tracking-widest cursor-pointer select-none transition-colors hover:text-blue-600 ${
-        sortField === field ? "text-blue-600" : "text-slate-400"
-      } ${className ?? ""}`}
-    >
-      <span className="inline-flex items-center gap-1">
-        {children}
-        {sortField === field ? (
-          sortAsc
-            ? <ChevronUp className="w-3 h-3" strokeWidth={2.5} />
-            : <ChevronDown className="w-3 h-3" strokeWidth={2.5} />
-        ) : (
-          <ArrowUpDown className="w-2.5 h-2.5 opacity-30" strokeWidth={2} />
-        )}
-      </span>
-    </th>
-  );
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-2.5 h-2.5 opacity-30" strokeWidth={2} />;
+    return sortAsc
+      ? <ChevronUp className="w-3 h-3" strokeWidth={2.5} />
+      : <ChevronDown className="w-3 h-3" strokeWidth={2.5} />;
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-blue-400 animate-spin" strokeWidth={1.8} />
-          <p className="text-[0.85rem] text-slate-400 font-medium">Loading inventory data...</p>
+          <Loader2 className="w-8 h-8 text-crm-primary animate-spin" strokeWidth={1.8} />
+          <p className="text-[0.85rem] text-crm-text-muted">Loading inventory data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
+    <div className="h-[calc(100vh-7rem)] flex flex-col">
+      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-hidden flex flex-col flex-1 min-h-0">
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-6 gap-3">
-        <div className="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-            <Layers className="w-5 h-5 text-blue-500" strokeWidth={1.8} />
-          </div>
-          <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Total</p>
-            <p className="text-xl font-bold text-slate-900">{filterCounts.all}</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-blue-500" strokeWidth={1.8} />
-          </div>
-          <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Health</p>
-            <p className={`text-xl font-bold ${healthPct >= 50 ? "text-blue-600" : "text-amber-600"}`}>{healthPct}%</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter("deficit")}>
-          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
-            <span className="w-3 h-3 rounded-full bg-red-500" />
-          </div>
-          <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Deficit</p>
-            <p className="text-xl font-bold text-red-600">{filterCounts.deficit}</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter("empty")}>
-          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center">
-            <span className="w-3 h-3 rounded-full bg-slate-400" />
-          </div>
-          <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Empty</p>
-            <p className="text-xl font-bold text-slate-600">{filterCounts.empty}</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter("low")}>
-          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-            <span className="w-3 h-3 rounded-full bg-amber-400" />
-          </div>
-          <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Low</p>
-            <p className="text-xl font-bold text-amber-600">{filterCounts.low}</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl card-shadow p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter("ok")}>
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-            <CircleCheck className="w-5 h-5 text-blue-500" strokeWidth={1.8} />
-          </div>
-          <div>
-            <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-slate-400">Good</p>
-            <p className="text-xl font-bold text-blue-600">{filterCounts.ok}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Category quick stats */}
-      <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${CATEGORIES.length}, minmax(0, 1fr))` }}>
-        {CATEGORIES.map((cat) => {
-          const ct = catTotals[cat];
-          if (!ct) return null;
-          const catHealthPct = Math.round((ct.healthy / (ct.deficit + ct.low + ct.healthy)) * 100);
-          return (
-            <div key={cat} className="bg-white rounded-xl card-shadow px-5 py-3.5">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-[0.82rem] font-bold text-slate-800">{cat}</h3>
-                <span className={`text-[0.82rem] font-bold tabular-nums ${ct.total < 0 ? "text-red-600" : "text-slate-700"}`}>
-                  {ct.total.toLocaleString()}
-                </span>
-              </div>
-              <div className="h-1.5 flex rounded-full overflow-hidden bg-slate-100">
-                {ct.healthy > 0 && (
-                  <div className="bg-blue-400" style={{ width: `${(ct.healthy / (ct.deficit + ct.low + ct.healthy)) * 100}%` }} />
-                )}
-                {ct.low > 0 && (
-                  <div className="bg-amber-400" style={{ width: `${(ct.low / (ct.deficit + ct.low + ct.healthy)) * 100}%` }} />
-                )}
-                {ct.deficit > 0 && (
-                  <div className="bg-red-400" style={{ width: `${(ct.deficit / (ct.deficit + ct.low + ct.healthy)) * 100}%` }} />
-                )}
-              </div>
-              <div className="flex items-center gap-3 mt-2">
-                <span className="text-[0.62rem] text-blue-600 font-semibold">{ct.healthy} good</span>
-                <span className="text-[0.62rem] text-amber-600 font-semibold">{ct.low} low</span>
-                <span className="text-[0.62rem] text-red-600 font-semibold">{ct.deficit} deficit</span>
-                <span className="ml-auto text-[0.62rem] font-bold text-slate-400">{catHealthPct}%</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Main combined table */}
-      <div className="bg-white rounded-2xl card-shadow overflow-hidden">
-
-        {/* Toolbar */}
-        <div className="px-5 pt-4 pb-3 border-b border-slate-100 space-y-2.5">
-          {/* Category filter + search */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-slate-300 mr-2">Category</span>
-              {["all", ...CATEGORIES].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => { setCatFilter(cat); setFilter("all"); }}
-                  className={`px-3 py-1.5 rounded-lg text-[0.78rem] font-semibold transition-all ${
-                    catFilter === cat
-                      ? "bg-slate-800 text-white shadow-sm"
-                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  {cat === "all" ? "All" : cat}
-                </button>
-              ))}
-            </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" strokeWidth={1.8} />
-              <input
-                type="text"
-                placeholder="Search colour..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-52 h-8 pl-8 pr-3 rounded-lg bg-slate-50 border border-slate-100 text-[0.8rem] text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all"
-              />
-            </div>
+        {/* Tabs: category + filters */}
+        <div className="flex flex-col gap-0 px-3 sm:px-5 pt-1 sm:pt-3 pb-0 border-b border-crm-border/40 shrink-0">
+          <div className="flex gap-0 overflow-x-auto pb-0">
+            {["all", ...CATEGORIES].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => { setCatFilter(cat); setFilter("all"); }}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2.5 rounded-t-xl text-[0.76rem] sm:text-[0.82rem] font-semibold transition-all whitespace-nowrap ${
+                  catFilter === cat
+                    ? "bg-crm-bg/40 text-crm-text shadow-[inset_0_2px_0_0_var(--color-crm-primary)]"
+                    : "text-crm-text-muted hover:text-crm-text hover:bg-crm-bg/20"
+                }`}
+              >
+                {cat === "all" ? "All" : cat}
+              </button>
+            ))}
           </div>
 
-          {/* Status filters */}
-          <div className="flex gap-1 flex-wrap">
+          <div className="flex gap-0.5 sm:gap-1 flex-wrap pb-1.5 sm:pb-2.5">
             {FILTERS.map((f) => (
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.78rem] font-medium transition-all ${
+                className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[0.68rem] sm:text-[0.76rem] font-medium transition-all whitespace-nowrap ${
                   filter === f.key
-                    ? "bg-blue-50 text-blue-700 shadow-[inset_0_0_0_1px_var(--color-blue-200)]"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                    ? "bg-crm-primary-muted text-crm-primary shadow-[inset_0_0_0_1px_var(--color-crm-primary)]"
+                    : "text-crm-text-muted hover:text-crm-text hover:bg-crm-bg/40"
                 }`}
               >
-                {f.dot && <span className={`w-2 h-2 rounded-full ${f.dot}`} />}
+                {f.dot && <span className={`w-1.5 h-1.5 rounded-full ${f.dot}`} />}
                 {f.label}
-                <span className={`text-[0.68rem] tabular-nums ${
-                  filter === f.key ? "text-blue-500" : "text-slate-300"
+                <span className={`text-[0.6rem] sm:text-[0.65rem] tabular-nums ${
+                  filter === f.key ? "text-crm-primary" : "text-crm-border"
                 }`}>{f.count}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-y-auto overflow-x-auto flex-1 min-h-0">
           <table className="w-full">
             <thead>
-              <tr className="bg-slate-50/60">
-                <SortHeader field="name" className="pl-5 pr-3 text-left w-[180px]">Colour</SortHeader>
+              <tr className="border-b-2 border-crm-border">
+                <th
+                  onClick={() => toggleSort("name")}
+                  className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10 cursor-pointer select-none"
+                >
+                  <span className="inline-flex items-center gap-1">Colour <SortIcon field="name" /></span>
+                </th>
                 {CATEGORIES.map((cat) => (
-                  <SortHeader key={cat} field={cat} className="px-2 text-center">{cat}</SortHeader>
+                  <th
+                    key={cat}
+                    onClick={() => toggleSort(cat)}
+                    className="text-center px-3 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10 cursor-pointer select-none"
+                  >
+                    <span className="inline-flex items-center gap-1">{cat} <SortIcon field={cat} /></span>
+                  </th>
                 ))}
-                <SortHeader field="total" className="px-3 text-right w-[90px]">Total</SortHeader>
-                <SortHeader field="issues" className="px-5 text-center w-[110px]">Status</SortHeader>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row, idx) => (
-                <tr
-                  key={row.name}
-                  className={`border-b border-slate-50 transition-colors hover:bg-slate-50/60 ${
-                    idx % 2 !== 0 ? "bg-slate-50/25" : ""
-                  }`}
-                >
-                  {/* Colour name + swatch */}
-                  <td className="pl-5 pr-3 py-2">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-6 h-6 rounded-md shrink-0 shadow-sm ${LIGHT_HEXES.has(row.hex) ? "border border-slate-200" : ""}`}
-                        style={{ backgroundColor: row.hex }}
-                      />
-                      <span className="text-[0.82rem] font-semibold text-slate-800">{row.name}</span>
-                    </div>
-                  </td>
+              {filtered.map((row, idx) => {
+                const rowBase = idx % 2 === 0 ? "bg-crm-bg/30" : "bg-crm-card";
+                return (
+                  <tr
+                    key={row.name}
+                    className={`border-b border-crm-border/40 transition-colors hover:bg-crm-primary-muted/20 ${rowBase}`}
+                  >
+                    <td className="pl-5 pr-3 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-6 h-6 rounded-lg shrink-0 ${LIGHT_HEXES.has(row.hex) ? "border border-crm-border" : ""}`}
+                          style={{ backgroundColor: row.hex }}
+                        />
+                        <span className="text-[0.84rem] font-semibold text-crm-text">{row.name}</span>
+                      </div>
+                    </td>
 
-                  {/* Category cells with inline progress */}
-                  {CATEGORIES.map((cat) => {
-                    const item = row.stocks[cat];
-                    if (!item) return <td key={cat} className="px-2 py-2 text-center text-[0.78rem] text-slate-300">&mdash;</td>;
+                    {CATEGORIES.map((cat) => {
+                      const item = row.stocks[cat];
+                      if (!item) return <td key={cat} className="px-3 py-3 text-center text-[0.8rem] text-crm-border">&mdash;</td>;
 
-                    const pct = stockPct(item.currentStock, item.maxStock);
-                    const minPct = stockPct(item.minStock, item.maxStock);
-                    const deficit = item.currentStock < 0;
-                    const tag = statusTag(item);
+                      const pct = stockPct(item.currentStock, item.maxStock);
+                      const minPct = stockPct(item.minStock, item.maxStock);
+                      const tag = statusTag(item);
 
-                    return (
-                      <td key={cat} className={`px-2 py-2 ${cellBg(item)}`}>
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`text-[0.88rem] font-bold tabular-nums ${stockNumColor(item)}`}>
-                              {item.currentStock}
-                            </span>
-                            {tag && (
-                              <span className={`px-1.5 py-px rounded text-[0.55rem] font-bold uppercase tracking-wide ${tag.bg} ${tag.text}`}>
-                                {tag.label}
+                      return (
+                        <td key={cat} className="px-3 py-3">
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-[0.84rem] font-bold tabular-nums ${stockNumColor(item)}`}>
+                                {item.currentStock}
                               </span>
-                            )}
-                          </div>
-                          <div className="w-full max-w-[100px] relative h-1 rounded-full bg-slate-100 overflow-hidden">
-                            {deficit ? (
-                              <div className="absolute inset-0 rounded-full bg-red-400 animate-pulse" />
-                            ) : (
+                              {tag && (
+                                <span className={`px-1.5 py-px rounded text-[0.55rem] font-bold uppercase tracking-wide ${tag.cls}`}>
+                                  {tag.label}
+                                </span>
+                              )}
+                            </div>
+                            <div className="w-full max-w-[100px] relative h-1 rounded-full bg-crm-bg overflow-hidden">
                               <div
                                 className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${barFill(item)}`}
-                                style={{ width: `${pct}%` }}
+                                style={{ width: item.currentStock < 0 ? "100%" : `${pct}%` }}
                               />
-                            )}
-                            <div
-                              className="absolute top-0 bottom-0 w-px bg-slate-400/40"
-                              style={{ left: `${minPct}%` }}
-                            />
+                              <div
+                                className="absolute top-0 bottom-0 w-px bg-crm-border"
+                                style={{ left: `${minPct}%` }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between w-full max-w-[100px]">
+                              <span className="text-[0.58rem] text-crm-text-muted tabular-nums">{item.minStock}</span>
+                              <span className="text-[0.58rem] text-crm-text-muted tabular-nums">{item.maxStock}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between w-full max-w-[100px]">
-                            <span className="text-[0.6rem] text-slate-400 tabular-nums">{item.minStock}</span>
-                            <span className="text-[0.6rem] text-slate-400 tabular-nums">{item.maxStock}</span>
-                          </div>
-                        </div>
-                      </td>
-                    );
-                  })}
+                        </td>
+                      );
+                    })}
 
-                  {/* Total */}
-                  <td className={`px-3 py-2 text-right text-[0.88rem] font-bold tabular-nums ${
-                    row.totalStock < 0 ? "text-red-600" : "text-slate-800"
-                  }`}>
-                    {row.totalStock}
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-5 py-2 text-center">
-                    {row.issueCount === 0 ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 text-blue-600 text-[0.7rem] font-bold">
-                        <CircleCheck className="w-3 h-3" strokeWidth={2.2} />
-                        OK
-                      </span>
-                    ) : row.issueCount === CATEGORIES.length ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-red-50 text-red-600 text-[0.7rem] font-bold">
-                        <AlertTriangle className="w-3 h-3" strokeWidth={2.2} />
-                        All Low
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-50 text-amber-600 text-[0.7rem] font-bold">
-                        <AlertTriangle className="w-3 h-3" strokeWidth={2.2} />
-                        {row.issueCount}/{CATEGORIES.length}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
           {filtered.length === 0 && (
-            <div className="py-12 text-center">
-              <p className="text-[0.9rem] text-slate-400">No colours found</p>
+            <div className="py-14 text-center">
+              <Package className="w-8 h-8 text-crm-border mx-auto mb-2" strokeWidth={1.5} />
+              <p className="text-[0.9rem] text-crm-text-muted">No colours found</p>
+              <p className="text-[0.78rem] text-crm-border mt-1">Try a different filter</p>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile table */}
+        <div className="sm:hidden overflow-y-auto overflow-x-auto flex-1 min-h-0">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b-2 border-crm-border">
+                <th className="text-left pl-3 pr-1 py-2 text-[0.72rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10 w-8">#</th>
+                <th className="text-left px-2 py-2 text-[0.72rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">Colour</th>
+                <th className="text-center px-2 pr-3 py-2 text-[0.72rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">
+                  {catFilter !== "all" ? "Stock" : "Stock by Category"}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row, idx) => {
+                const rowBase = idx % 2 === 0 ? "bg-crm-bg/30" : "bg-crm-card";
+
+                return (
+                  <tr
+                    key={row.name}
+                    className={`border-b border-crm-border/40 transition-colors ${rowBase}`}
+                  >
+                    <td className="pl-3 pr-1 py-2 align-top">
+                      <div
+                        className={`w-7 h-7 rounded-lg shrink-0 mt-0.5 ${LIGHT_HEXES.has(row.hex) ? "border border-crm-border" : ""}`}
+                        style={{ backgroundColor: row.hex }}
+                      />
+                    </td>
+                    <td className="px-2 py-2 align-top">
+                      <span className="text-[0.78rem] font-semibold text-crm-text">{row.name}</span>
+                      {catFilter !== "all" && row.stocks[catFilter] && (
+                        <div className="relative h-1 rounded-full bg-crm-bg overflow-hidden mt-1 max-w-[100px]">
+                          <div
+                            className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${barFill(row.stocks[catFilter])}`}
+                            style={{ width: row.stocks[catFilter].currentStock < 0 ? "100%" : `${stockPct(row.stocks[catFilter].currentStock, row.stocks[catFilter].maxStock)}%` }}
+                          />
+                          <div
+                            className="absolute top-0 bottom-0 w-px bg-crm-border"
+                            style={{ left: `${stockPct(row.stocks[catFilter].minStock, row.stocks[catFilter].maxStock)}%` }}
+                          />
+                        </div>
+                      )}
+                    </td>
+
+                    <td className="px-2 pr-3 py-2 align-top">
+                      {catFilter !== "all" ? (
+                        <div className="text-center">
+                          {row.stocks[catFilter] ? (
+                            <span className={`text-[0.84rem] font-bold tabular-nums ${stockNumColor(row.stocks[catFilter])}`}>
+                              {row.stocks[catFilter].currentStock}
+                            </span>
+                          ) : (
+                            <span className="text-[0.78rem] text-crm-border">&mdash;</span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          {CATEGORIES.map((cat) => {
+                            const item = row.stocks[cat];
+                            return (
+                              <div key={cat} className="flex items-center gap-1.5">
+                                <span className="text-[0.62rem] text-crm-text-muted w-10 truncate">{cat}</span>
+                                {item ? (
+                                  <>
+                                    <div className="relative h-1 rounded-full bg-crm-bg overflow-hidden flex-1 min-w-[40px]">
+                                      <div
+                                        className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${barFill(item)}`}
+                                        style={{ width: item.currentStock < 0 ? "100%" : `${stockPct(item.currentStock, item.maxStock)}%` }}
+                                      />
+                                    </div>
+                                    <span className={`text-[0.68rem] font-bold tabular-nums w-6 text-right ${stockNumColor(item)}`}>
+                                      {item.currentStock}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="text-[0.68rem] text-crm-border">&mdash;</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {filtered.length === 0 && (
+            <div className="py-14 text-center">
+              <Package className="w-8 h-8 text-crm-border mx-auto mb-2" strokeWidth={1.5} />
+              <p className="text-[0.9rem] text-crm-text-muted">No colours found</p>
+              <p className="text-[0.78rem] text-crm-border mt-1">Try a different filter</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
-          <p className="text-[0.78rem] text-slate-400">
-            Showing <span className="font-semibold text-slate-600">{filtered.length}</span> of {baseRows.length} colours
-            {catFilter !== "all" && <span className="ml-1 text-slate-500">in {catFilter}</span>}
+        <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-t border-crm-border bg-crm-card shrink-0 gap-2">
+          <p className="text-[0.72rem] sm:text-[0.78rem] text-crm-text-muted shrink-0">
+            {filtered.length} of {baseRows.length}
+            {catFilter !== "all" && <span className="ml-1 font-semibold text-crm-text">in {catFilter}</span>}
           </p>
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-red-400" /> Deficit
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] text-crm-text-muted">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-400" /> Deficit
             </span>
-            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-slate-300" /> Empty
+            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] text-crm-text-muted">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-400" /> Low
             </span>
-            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-amber-400" /> Low
+            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] text-crm-text-muted">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-400" /> Good
             </span>
-            <span className="flex items-center gap-1.5 text-[0.65rem] text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-blue-400" /> Good
+            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] text-crm-text-muted">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400" /> Max
             </span>
           </div>
         </div>

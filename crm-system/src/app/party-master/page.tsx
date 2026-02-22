@@ -5,7 +5,8 @@ import { Plus, Search, Filter, ChevronDown, MapPin, Route, KeyRound, Eye, EyeOff
 import AddPartyModal from "@/components/AddPartyModal";
 import { subscribeParties, addParty, updateParty } from "@/lib/parties";
 import { subscribeColors } from "@/lib/colors";
-import type { Party, RateValues } from "@/lib/types";
+import { subscribeRoutes } from "@/lib/routes";
+import type { Party, RateValues, RouteDoc } from "@/lib/types";
 
 function getRateCount(rates: Party["rates"], categories: string[], materials: string[]): number {
   let count = 0;
@@ -41,6 +42,7 @@ export default function PartyMasterPage(): React.JSX.Element {
   const [editingRates, setEditingRates] = useState<Record<string, RateValues>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [routesList, setRoutesList] = useState<RouteDoc[]>([]);
 
   const totalRates = rateCategories.length * rateMaterials.length;
 
@@ -58,6 +60,10 @@ export default function PartyMasterPage(): React.JSX.Element {
       setRateMaterials([...new Set(colors.map((c) => c.subCategory).filter(Boolean))].sort());
     });
     return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    return subscribeRoutes(setRoutesList);
   }, []);
 
   useEffect(() => {
@@ -339,7 +345,7 @@ export default function PartyMasterPage(): React.JSX.Element {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl card-shadow overflow-x-auto">
+      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-x-auto">
         <table className="w-full table-fixed">
           <colgroup>
             <col className="w-10" />
@@ -351,18 +357,18 @@ export default function PartyMasterPage(): React.JSX.Element {
             <col style={{ width: "10%" }} />
           </colgroup>
           <thead>
-            <tr className="border-b border-slate-100">
+            <tr className="border-b-2 border-crm-border">
               <th></th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Name</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">ID</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Address</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Route</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Password</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Rates</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Name</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">ID</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Address</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Route</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Password</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Rates</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((party) => {
+            {filtered.map((party, i) => {
               const isExpanded = expandedId === party.id;
               const rateCount = getRateCount(party.rates, rateCategories, rateMaterials);
 
@@ -370,53 +376,53 @@ export default function PartyMasterPage(): React.JSX.Element {
                 <Fragment key={party.id}>
                   <tr
                     onClick={() => toggleExpand(party.id)}
-                    className={`border-b border-slate-50 cursor-pointer transition-colors ${
-                      isExpanded ? "bg-blue-50/50" : "hover:bg-slate-50"
+                    className={`border-b border-crm-border/40 cursor-pointer transition-colors hover:bg-crm-primary-muted/20 ${
+                      isExpanded ? "bg-crm-primary-muted/20" : i % 2 === 1 ? "bg-crm-bg/30" : "bg-crm-card"
                     }`}
                   >
-                    <td className="text-center py-3.5">
+                    <td className="text-center py-3">
                       <ChevronDown
-                        className={`w-4 h-4 text-slate-300 transition-transform duration-200 inline-block ${
+                        className={`w-4 h-4 text-crm-border transition-transform duration-200 inline-block ${
                           isExpanded ? "rotate-180" : ""
                         }`}
                         strokeWidth={1.8}
                       />
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-5 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[0.68rem] font-bold text-blue-700 shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-crm-primary-muted flex items-center justify-center text-[0.68rem] font-bold text-crm-primary shrink-0">
                           {party.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
                         </div>
-                        <p className="text-[0.84rem] font-medium text-slate-800 truncate">
+                        <p className="text-[0.84rem] font-medium text-crm-text truncate">
                           {party.name}
                         </p>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5">
-                      <span className="text-[0.78rem] font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
+                    <td className="px-5 py-3">
+                      <span className="text-[0.78rem] font-mono text-crm-primary bg-crm-primary-muted px-2 py-0.5 rounded-md">
                         {party.userId}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-5 py-3">
                       <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-slate-300 shrink-0" strokeWidth={1.8} />
-                        <span className="text-[0.82rem] text-slate-600 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-crm-border shrink-0" strokeWidth={1.8} />
+                        <span className="text-[0.84rem] text-crm-text truncate">
                           {party.address}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-5 py-3">
                       <div className="flex items-center gap-1.5">
-                        <Route className="w-3.5 h-3.5 text-slate-300 shrink-0" strokeWidth={1.8} />
-                        <span className="text-[0.82rem] text-slate-600">
+                        <Route className="w-3.5 h-3.5 text-crm-border shrink-0" strokeWidth={1.8} />
+                        <span className="text-[0.84rem] text-crm-text">
                           {party.route}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-5 py-3">
                       <div className="flex items-center gap-1.5">
-                        <KeyRound className="w-3.5 h-3.5 text-slate-300 shrink-0" strokeWidth={1.8} />
-                        <span className="text-[0.82rem] text-slate-500 font-mono">
+                        <KeyRound className="w-3.5 h-3.5 text-crm-border shrink-0" strokeWidth={1.8} />
+                        <span className="text-[0.84rem] text-crm-text-muted font-mono">
                           {showPassFor === party.id ? party.password : "••••••"}
                         </span>
                         <button
@@ -424,7 +430,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                             e.stopPropagation();
                             setShowPassFor((prev) => (prev === party.id ? null : party.id));
                           }}
-                          className="p-0.5 rounded hover:bg-slate-100 text-slate-300 hover:text-slate-500 transition-colors"
+                          className="p-0.5 rounded hover:bg-crm-primary-muted text-crm-border hover:text-crm-primary transition-colors"
                         >
                           {showPassFor === party.id ? (
                             <EyeOff className="w-3.5 h-3.5" strokeWidth={1.8} />
@@ -434,13 +440,13 @@ export default function PartyMasterPage(): React.JSX.Element {
                         </button>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-5 py-3">
                       <span className={`text-[0.7rem] font-medium px-2 py-0.5 rounded-full ${
                         rateCount === totalRates
-                          ? "bg-blue-50 text-blue-600"
+                          ? "bg-crm-primary-muted text-crm-primary"
                           : rateCount > 0
                             ? "bg-orange-400/10 text-orange-500"
-                            : "bg-slate-100 text-slate-400"
+                            : "bg-crm-bg text-crm-text-muted"
                       }`}>
                         {rateCount}/{totalRates}
                       </span>
@@ -453,33 +459,33 @@ export default function PartyMasterPage(): React.JSX.Element {
                     const isSaving = savingId === party.id;
                     const justSaved = savedId === party.id;
                     return (
-                      <tr className="border-b border-slate-50">
+                      <tr className="border-b border-crm-border/40">
                         <td></td>
-                        <td colSpan={6} className="px-4 py-4">
-                          <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden animate-[fadeIn_150ms_ease-out]">
+                        <td colSpan={6} className="px-5 py-4">
+                          <div className="bg-crm-bg/30 rounded-xl border border-crm-border overflow-hidden animate-[fadeIn_150ms_ease-out]">
                             <table className="w-full">
                               <thead>
-                                <tr className="border-b border-slate-100">
-                                  <th className="text-left px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-400 w-28">
+                                <tr className="border-b border-crm-border">
+                                  <th className="text-left px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-crm-text-muted w-28">
                                     Material
                                   </th>
                                   {rateCategories.map((cat) => (
-                                    <th key={cat} className="text-center px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-400">
+                                    <th key={cat} className="text-center px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-crm-text-muted">
                                       {cat}
                                     </th>
                                   ))}
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-100/60">
+                              <tbody className="divide-y divide-crm-border/40">
                                 {rateMaterials.map((mat) => (
-                                  <tr key={mat} className="hover:bg-slate-100/50 transition-colors">
-                                    <td className="px-4 py-1.5 text-[0.8rem] font-medium text-slate-700">
+                                  <tr key={mat} className="hover:bg-crm-primary-muted/30 transition-colors">
+                                    <td className="px-4 py-1.5 text-[0.8rem] font-medium text-crm-text">
                                       {mat}
                                     </td>
                                     {rateCategories.map((cat) => (
                                       <td key={cat} className="text-center px-3 py-1.5">
                                         <div className="relative inline-block">
-                                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.72rem] text-slate-300 pointer-events-none">₹</span>
+                                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.72rem] text-crm-border pointer-events-none">₹</span>
                                           <input
                                             type="number"
                                             step="0.01"
@@ -488,7 +494,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                                             value={rates[cat]?.[mat] ?? ""}
                                             onClick={(e) => e.stopPropagation()}
                                             onChange={(e) => setRate(party.id, party, cat, mat, e.target.value)}
-                                            className="w-24 h-8 pl-6 pr-2 rounded-lg bg-white border border-slate-100 text-[0.82rem] text-slate-800 text-center placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            className="w-24 h-8 pl-6 pr-2 rounded-lg bg-crm-card border border-crm-border text-[0.82rem] text-crm-text text-center placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                           />
                                         </div>
                                       </td>
@@ -497,7 +503,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                                 ))}
                               </tbody>
                             </table>
-                            <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-100 bg-slate-50">
+                            <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-crm-border bg-crm-bg/30">
                               {justSaved && (
                                 <span className="flex items-center gap-1.5 text-[0.78rem] font-medium text-blue-600">
                                   <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -530,8 +536,8 @@ export default function PartyMasterPage(): React.JSX.Element {
 
         {filtered.length === 0 && (
           <div className="py-12 text-center">
-            <p className="text-[0.9rem] text-slate-400">No parties found</p>
-            <p className="text-[0.78rem] text-slate-300 mt-1">
+            <p className="text-[0.9rem] text-crm-text-muted">No parties found</p>
+            <p className="text-[0.78rem] text-crm-border mt-1">
               {activeFilterCount > 0 ? "Try adjusting your filters" : "Try a different search term"}
             </p>
           </div>
@@ -542,6 +548,7 @@ export default function PartyMasterPage(): React.JSX.Element {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onAdd={handleAdd}
+        routes={routesList}
       />
     </div>
   );

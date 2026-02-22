@@ -22,65 +22,96 @@ import {
   X,
 } from "lucide-react";
 import { useSidebar } from "./SidebarContext";
+import type { LucideIcon } from "lucide-react";
 
-const masterNav = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+const masterNav: NavItem[] = [
   { label: "Party Master", href: "/party-master", icon: BookUser },
   { label: "Color Master", href: "/color-master", icon: Palette },
   { label: "Route Master", href: "/route-master", icon: Route },
   { label: "Rate Master", href: "/rate-master", icon: IndianRupee },
 ];
 
-const inventoryNav = [
+const inventoryNav: NavItem[] = [
   { label: "Stock Inventory", href: "/stock-inventory", icon: Warehouse },
   { label: "Inventory Report", href: "/inventory-report", icon: ClipboardList },
   { label: "Reports", href: "/reports", icon: BarChart3 },
 ];
 
-const adminNav = [
+const adminNav: NavItem[] = [
   { label: "Manage Sub Admin", href: "/manage-sub-admin", icon: ShieldCheck },
   { label: "Admin Profile", href: "/admin-profile", icon: UserCog },
 ];
 
-const bottomNav = [
+const bottomNav: NavItem[] = [
   { label: "Settings", href: "/settings", icon: Settings },
   { label: "Help", href: "#", icon: HelpCircle },
 ];
 
-function NavSection({ title, items, pathname }: { title: string; items: typeof masterNav; pathname: string | null }) {
+function NavLink({ item, pathname, expanded }: { item: NavItem; pathname: string | null; expanded: boolean }) {
+  const active = pathname === item.href || pathname?.startsWith(item.href + "/");
+  const Icon = item.icon;
+
+  return (
+    <li>
+      <Link
+        href={item.href}
+        title={!expanded ? item.label : undefined}
+        className={`
+          flex items-center gap-3 rounded-xl text-[0.85rem] font-medium
+          transition-all duration-200 ease-out
+          ${expanded ? "px-3 py-2" : "px-0 py-2 justify-center"}
+          ${
+            active
+              ? "bg-crm-sidebar-active text-white"
+              : "text-indigo-200 hover:bg-crm-sidebar-hover hover:text-white"
+          }
+        `}
+      >
+        <Icon
+          className={`w-[1.15rem] h-[1.15rem] shrink-0 ${active ? "text-white" : "text-indigo-300"}`}
+          strokeWidth={active ? 2.2 : 1.8}
+        />
+        {expanded && (
+          <>
+            <span className="truncate">{item.label}</span>
+            {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shrink-0" />}
+          </>
+        )}
+      </Link>
+    </li>
+  );
+}
+
+function NavSection({
+  title,
+  items,
+  pathname,
+  expanded,
+}: {
+  title: string;
+  items: NavItem[];
+  pathname: string | null;
+  expanded: boolean;
+}) {
   return (
     <div>
-      <p className="px-3 mb-1.5 text-[0.62rem] font-semibold uppercase tracking-widest text-slate-400">
-        {title}
-      </p>
+      {expanded ? (
+        <p className="px-3 mb-1 text-[0.58rem] font-semibold uppercase tracking-widest text-indigo-300">
+          {title}
+        </p>
+      ) : (
+        <div className="mx-auto w-5 border-t border-indigo-400/30 mb-1.5" />
+      )}
       <ul className="space-y-0.5">
-        {items.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href || pathname?.startsWith(href + "/");
-          return (
-            <li key={href}>
-              <Link
-                href={href}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-[0.9rem] font-medium
-                  transition-all duration-200 ease-out
-                  ${
-                    active
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                  }
-                `}
-              >
-                <Icon
-                  className={`w-[1.15rem] h-[1.15rem] ${active ? "text-white" : "text-slate-400"}`}
-                  strokeWidth={active ? 2.2 : 1.8}
-                />
-                {label}
-                {active && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
-                )}
-              </Link>
-            </li>
-          );
-        })}
+        {items.map((item) => (
+          <NavLink key={item.href} item={item} pathname={pathname} expanded={expanded} />
+        ))}
       </ul>
     </div>
   );
@@ -88,175 +119,118 @@ function NavSection({ title, items, pathname }: { title: string; items: typeof m
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { isOpen, close } = useSidebar();
-
-  const dashActive = pathname === "/dashboard" || pathname === "/";
+  const { isOpen, close, expanded, setExpanded } = useSidebar();
 
   return (
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-crm-sidebar/20 backdrop-blur-sm z-40 lg:hidden"
           onClick={close}
         />
       )}
-      <aside className={`
-        fixed left-0 top-0 bottom-0 w-[260px] bg-slate-800 flex flex-col z-50
-        transition-transform duration-300 ease-in-out
-        lg:translate-x-0
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-      `}>
-      <div className="px-7 pt-7 pb-5 flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center transition-transform group-hover:scale-105">
-            <Sprout className="w-5 h-5 text-white" strokeWidth={2.2} />
-          </div>
-          <span className="text-[1.2rem] font-semibold tracking-tight text-white">
-            Bloom
-          </span>
-        </Link>
-        <button
-          onClick={close}
-          className="lg:hidden p-2 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
-        >
-          <X className="w-5 h-5" strokeWidth={1.8} />
-        </button>
-      </div>
-
-      <nav className="flex-1 px-4 mt-1 space-y-5 overflow-y-auto">
-        <div>
-          <Link
-            href="/dashboard"
-            className={`
-              flex items-center gap-3 px-3 py-2.5 rounded-xl text-[0.9rem] font-medium
-              transition-all duration-200 ease-out
-              ${
-                dashActive
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-300 hover:bg-slate-700 hover:text-white"
-              }
-            `}
-          >
-            <LayoutDashboard
-              className={`w-[1.15rem] h-[1.15rem] ${dashActive ? "text-white" : "text-slate-400"}`}
-              strokeWidth={dashActive ? 2.2 : 1.8}
-            />
-            Dashboard
-            {dashActive && (
-              <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+      <aside
+        onMouseEnter={() => setExpanded(true)}
+        onMouseLeave={() => setExpanded(false)}
+        className={`
+          fixed left-0 top-0 bottom-0 bg-crm-sidebar flex flex-col z-50
+          transition-all duration-300 ease-in-out
+          ${expanded ? "w-[240px]" : "w-[68px]"}
+          lg:translate-x-0
+          ${isOpen ? "translate-x-0 !w-[240px]" : "-translate-x-full lg:translate-x-0"}
+        `}
+      >
+        <div className={`pt-5 pb-4 flex items-center ${expanded || isOpen ? "px-5 justify-between" : "px-0 justify-center"}`}>
+          <Link href="/dashboard" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-crm-accent flex items-center justify-center transition-transform group-hover:scale-105 shrink-0">
+              <Sprout className="w-4.5 h-4.5 text-white" strokeWidth={2.2} />
+            </div>
+            {(expanded || isOpen) && (
+              <span className="text-[1.1rem] font-semibold tracking-tight text-white">
+                Bloom
+              </span>
             )}
           </Link>
-
-          {(() => {
-            const roActive = pathname === "/running-orders";
-            return (
-              <Link
-                href="/running-orders"
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-[0.9rem] font-medium
-                  transition-all duration-200 ease-out
-                  ${
-                    roActive
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                  }
-                `}
-              >
-                <ListOrdered
-                  className={`w-[1.15rem] h-[1.15rem] ${roActive ? "text-white" : "text-slate-400"}`}
-                  strokeWidth={roActive ? 2.2 : 1.8}
-                />
-                Running Orders
-                {roActive && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
-                )}
-              </Link>
-            );
-          })()}
-
-          {(() => {
-            const ordActive = pathname === "/orders";
-            return (
-              <Link
-                href="/orders"
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-[0.9rem] font-medium
-                  transition-all duration-200 ease-out
-                  ${
-                    ordActive
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                  }
-                `}
-              >
-                <Package
-                  className={`w-[1.15rem] h-[1.15rem] ${ordActive ? "text-white" : "text-slate-400"}`}
-                  strokeWidth={ordActive ? 2.2 : 1.8}
-                />
-                Orders
-                {ordActive && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
-                )}
-              </Link>
-            );
-          })()}
-        </div>
-
-        <NavSection title="Masters" items={masterNav} pathname={pathname} />
-        <NavSection title="Inventory" items={inventoryNav} pathname={pathname} />
-        <NavSection title="Admin" items={adminNav} pathname={pathname} />
-      </nav>
-
-      <div className="px-4 pb-3">
-        <div className="border-t border-slate-700 pt-3 space-y-0.5">
-          {bottomNav.map(({ label, href, icon: Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={label}
-                href={href}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-[0.9rem] font-medium
-                  transition-all duration-200
-                  ${
-                    active
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                  }
-                `}
-              >
-                <Icon
-                  className="w-[1.15rem] h-[1.15rem] text-slate-400"
-                  strokeWidth={1.8}
-                />
-                {label}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="px-4 pb-5">
-        <div className="bg-slate-700 rounded-2xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
-              JD
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[0.82rem] font-semibold text-white truncate">
-                Jane Doe
-              </p>
-              <p className="text-[0.72rem] text-slate-400 truncate">
-                jane@bloom.io
-              </p>
-            </div>
-            <button className="p-1.5 rounded-lg hover:bg-slate-600 transition-colors text-slate-400 hover:text-orange-400">
-              <LogOut className="w-4 h-4" strokeWidth={1.8} />
+          {isOpen && (
+            <button
+              onClick={close}
+              className="lg:hidden p-2 rounded-lg hover:bg-crm-sidebar-hover text-indigo-300 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" strokeWidth={1.8} />
             </button>
+          )}
+        </div>
+
+        <nav className={`flex-1 mt-1 space-y-4 overflow-y-auto ${expanded || isOpen ? "px-3" : "px-2"}`}>
+          <ul className="space-y-0.5">
+            <NavLink
+              item={{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboard }}
+              pathname={pathname === "/" ? "/dashboard" : pathname}
+              expanded={expanded || isOpen}
+            />
+            <NavLink
+              item={{ label: "Running Orders", href: "/running-orders", icon: ListOrdered }}
+              pathname={pathname}
+              expanded={expanded || isOpen}
+            />
+            <NavLink
+              item={{ label: "Orders", href: "/orders", icon: Package }}
+              pathname={pathname}
+              expanded={expanded || isOpen}
+            />
+          </ul>
+
+          <NavSection title="Masters" items={masterNav} pathname={pathname} expanded={expanded || isOpen} />
+          <NavSection title="Inventory" items={inventoryNav} pathname={pathname} expanded={expanded || isOpen} />
+          <NavSection title="Admin" items={adminNav} pathname={pathname} expanded={expanded || isOpen} />
+        </nav>
+
+        <div className={`pb-2 ${expanded || isOpen ? "px-3" : "px-2"}`}>
+          <div className="border-t border-crm-sidebar-hover pt-2 space-y-0.5">
+            {bottomNav.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                title={!(expanded || isOpen) ? item.label : undefined}
+                className={`
+                  flex items-center gap-3 rounded-xl text-[0.85rem] font-medium
+                  transition-all duration-200
+                  ${expanded || isOpen ? "px-3 py-2" : "px-0 py-2 justify-center"}
+                  ${
+                    pathname === item.href
+                      ? "bg-crm-sidebar-active text-white"
+                      : "text-indigo-200 hover:bg-crm-sidebar-hover hover:text-white"
+                  }
+                `}
+              >
+                <item.icon className="w-[1.15rem] h-[1.15rem] text-indigo-300 shrink-0" strokeWidth={1.8} />
+                {(expanded || isOpen) && <span className="truncate">{item.label}</span>}
+              </Link>
+            ))}
           </div>
         </div>
-      </div>
-    </aside>
+
+        <div className={`pb-4 ${expanded || isOpen ? "px-3" : "px-2"}`}>
+          <div className={`bg-crm-sidebar-hover rounded-xl ${expanded || isOpen ? "p-3" : "p-2 flex justify-center"}`}>
+            <div className={`flex items-center ${expanded || isOpen ? "gap-2.5" : ""}`}>
+              <div className="w-8 h-8 rounded-full bg-crm-accent flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                JD
+              </div>
+              {(expanded || isOpen) && (
+                <>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[0.78rem] font-semibold text-white truncate">Jane Doe</p>
+                    <p className="text-[0.65rem] text-indigo-300 truncate">jane@bloom.io</p>
+                  </div>
+                  <button className="p-1.5 rounded-lg hover:bg-crm-sidebar-active transition-colors text-indigo-300 hover:text-crm-accent">
+                    <LogOut className="w-3.5 h-3.5" strokeWidth={1.8} />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </aside>
     </>
   );
 }

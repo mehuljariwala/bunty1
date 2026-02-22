@@ -265,7 +265,7 @@ export default function RouteMasterPage(): React.JSX.Element {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl card-shadow overflow-x-auto">
+      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-x-auto">
         <table className="w-full table-fixed">
           <colgroup>
             <col style={{ width: "16%" }} />
@@ -277,64 +277,66 @@ export default function RouteMasterPage(): React.JSX.Element {
             <col style={{ width: "12%" }} />
           </colgroup>
           <thead>
-            <tr className="border-b border-slate-100">
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Route Name</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Code</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Area / Zone</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Description</th>
-              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Parties</th>
-              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Status</th>
+            <tr className="border-b-2 border-crm-border">
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Route Name</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Code</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Area / Zone</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Description</th>
+              <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Parties</th>
+              <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Status</th>
               <th className="w-16"></th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((route) => (
-              <tr key={route.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                <td className="px-4 py-3">
-                  <p className="text-[0.84rem] font-medium text-slate-800 truncate">
+            {filtered.map((route, i) => (
+              <tr key={route.id} className={`border-b border-crm-border/40 transition-colors hover:bg-crm-primary-muted/20 ${
+                i % 2 === 1 ? "bg-crm-bg/30" : "bg-crm-card"
+              }`}>
+                <td className="px-5 py-3">
+                  <p className="text-[0.84rem] font-medium text-crm-text truncate">
                     {route.name}
                   </p>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-3">
                   {route.code ? (
-                    <span className="text-[0.78rem] font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
+                    <span className="text-[0.78rem] font-mono text-crm-primary bg-crm-primary-muted px-2 py-0.5 rounded-md">
                       {route.code}
                     </span>
                   ) : (
-                    <span className="text-[0.72rem] text-slate-300">—</span>
+                    <span className="text-[0.72rem] text-crm-border">—</span>
                   )}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-3">
                   {route.area ? (
                     <div className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-slate-300 shrink-0" strokeWidth={1.8} />
-                      <span className="text-[0.82rem] text-slate-600 truncate">{route.area}</span>
+                      <MapPin className="w-3.5 h-3.5 text-crm-border shrink-0" strokeWidth={1.8} />
+                      <span className="text-[0.84rem] text-crm-text truncate">{route.area}</span>
                     </div>
                   ) : (
-                    <span className="text-[0.72rem] text-slate-300">—</span>
+                    <span className="text-[0.72rem] text-crm-border">—</span>
                   )}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-3">
                   {route.description ? (
-                    <p className="text-[0.8rem] text-slate-400 truncate">{route.description}</p>
+                    <p className="text-[0.84rem] text-crm-text-muted truncate">{route.description}</p>
                   ) : (
-                    <span className="text-[0.72rem] text-slate-300">—</span>
+                    <span className="text-[0.72rem] text-crm-border">—</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-5 py-3 text-center">
                   <div className="flex items-center justify-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-slate-300" strokeWidth={1.8} />
-                    <span className="text-[0.82rem] font-semibold text-slate-700">{partyCountByRoute.get(route.name.toUpperCase()) || 0}</span>
+                    <Users className="w-3.5 h-3.5 text-crm-border" strokeWidth={1.8} />
+                    <span className="text-[0.84rem] font-semibold text-crm-text">{partyCountByRoute.get(route.name.toUpperCase()) || 0}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-5 py-3 text-center">
                   {route.active ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[0.7rem] font-medium">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-emerald-500 text-white text-[0.78rem] font-semibold">
                       <CircleCheck className="w-3 h-3" strokeWidth={2} />
                       Active
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 text-slate-400 text-[0.7rem] font-medium">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-crm-bg text-crm-text-muted text-[0.78rem] font-semibold">
                       <CircleMinus className="w-3 h-3" strokeWidth={2} />
                       Inactive
                     </span>
@@ -344,13 +346,13 @@ export default function RouteMasterPage(): React.JSX.Element {
                   <div className="flex items-center gap-0.5">
                     <button
                       onClick={() => handleEdit(route)}
-                      className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-300 hover:text-slate-600"
+                      className="p-1.5 rounded-lg hover:bg-crm-primary-muted transition-colors text-crm-border hover:text-crm-primary"
                     >
                       <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
                     </button>
                     <button
                       onClick={() => handleDelete(route.id)}
-                      className="p-1.5 rounded-lg hover:bg-orange-400/10 transition-colors text-slate-300 hover:text-orange-500"
+                      className="p-1.5 rounded-lg hover:bg-red-50 transition-colors text-crm-border hover:text-red-500"
                     >
                       <Trash2 className="w-3.5 h-3.5" strokeWidth={1.8} />
                     </button>
@@ -363,8 +365,8 @@ export default function RouteMasterPage(): React.JSX.Element {
 
         {filtered.length === 0 && (
           <div className="py-12 text-center">
-            <p className="text-[0.9rem] text-slate-400">No routes found</p>
-            <p className="text-[0.78rem] text-slate-300 mt-1">
+            <p className="text-[0.9rem] text-crm-text-muted">No routes found</p>
+            <p className="text-[0.78rem] text-crm-border mt-1">
               {activeFilterCount > 0 ? "Try adjusting your filters" : search ? "Try a different search term" : "Add your first route to get started"}
             </p>
           </div>
@@ -375,6 +377,7 @@ export default function RouteMasterPage(): React.JSX.Element {
         open={modalOpen}
         onClose={handleCloseModal}
         onAdd={handleSubmit}
+        existingCodes={routes.map((r) => r.code)}
         editData={editingRoute ? {
           name: editingRoute.name,
           code: editingRoute.code,

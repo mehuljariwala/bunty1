@@ -4,6 +4,8 @@ export interface Party {
   id: string;
   name: string;
   address: string;
+  addressGu?: string;
+  addressHi?: string;
   route: string;
   userId: string;
   password: string;

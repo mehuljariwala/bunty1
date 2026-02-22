@@ -117,9 +117,9 @@ export default function DashboardPage() {
     }));
 
     const statusData = [
-      { name: "Running", value: running, color: "#8faa6b" },
-      { name: "Complete", value: complete, color: "#8b8680" },
-      { name: "Pending", value: pending, color: "#f59e0b" },
+      { name: "Running", value: running, color: "#5b5fc7" },
+      { name: "Complete", value: complete, color: "#9b9ec9" },
+      { name: "Pending", value: pending, color: "#f5956b" },
     ];
 
     const routeChartData = [...routeBreakdown.entries()]
@@ -156,7 +156,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-crm-primary animate-spin" />
       </div>
     );
   }
@@ -168,27 +168,27 @@ export default function DashboardPage() {
     <div className="space-y-6">
 
       <div>
-        <h2 className="text-[1.35rem] font-bold tracking-tight text-slate-900">Dashboard</h2>
-        <p className="text-[0.82rem] text-slate-400 mt-0.5">Overview of your business</p>
+        <h2 className="text-[1.35rem] font-bold tracking-tight text-crm-text">Dashboard</h2>
+        <p className="text-[0.82rem] text-crm-text-muted mt-0.5">Overview of your business</p>
       </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
         {[
-          { label: "Total Orders", value: stats.totalOrders, icon: Package, accent: "bg-blue-50 text-blue-500", href: "/orders" },
-          { label: "Running", value: stats.running, icon: ListOrdered, accent: "bg-blue-50 text-blue-500", href: "/running-orders" },
-          { label: "Pending", value: stats.pending, icon: Clock, accent: "bg-amber-50 text-amber-500", href: "/running-orders" },
-          { label: "Parties", value: stats.totalParties, icon: BookUser, accent: "bg-purple-50 text-purple-500", href: "/party-master" },
+          { label: "Total Orders", value: stats.totalOrders, icon: Package, accent: "bg-crm-primary-muted text-crm-primary", href: "/orders" },
+          { label: "Running", value: stats.running, icon: ListOrdered, accent: "bg-crm-primary-muted text-crm-primary", href: "/running-orders" },
+          { label: "Pending", value: stats.pending, icon: Clock, accent: "bg-crm-accent-light text-crm-accent", href: "/running-orders" },
+          { label: "Parties", value: stats.totalParties, icon: BookUser, accent: "bg-[#ede8f8] text-[#7c5fc7]", href: "/party-master" },
         ].map((s) => (
           <Link key={s.label} href={s.href} className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4.5 card-shadow hover:card-shadow-hover transition-shadow group">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
               <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${s.accent}`}>
                 <s.icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" strokeWidth={1.8} />
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+              <ArrowRight className="w-3.5 h-3.5 text-crm-border opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
             </div>
-            <p className="text-[1.2rem] sm:text-[1.6rem] font-bold tracking-tight text-slate-900 leading-none tabular-nums">{s.value.toLocaleString()}</p>
-            <p className="text-[0.68rem] sm:text-[0.75rem] text-slate-400 font-medium mt-0.5 sm:mt-1">{s.label}</p>
+            <p className="text-[1.2rem] sm:text-[1.6rem] font-bold tracking-tight text-crm-text leading-none tabular-nums">{s.value.toLocaleString()}</p>
+            <p className="text-[0.68rem] sm:text-[0.75rem] text-crm-text-muted font-medium mt-0.5 sm:mt-1">{s.label}</p>
           </Link>
         ))}
       </div>
@@ -202,33 +202,33 @@ export default function DashboardPage() {
           { label: "Routes", value: stats.totalRoutes, sub: "active" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-lg sm:rounded-xl px-3 py-2.5 sm:px-4 sm:py-3.5 card-shadow">
-            <p className="text-[1rem] sm:text-[1.2rem] font-bold text-slate-800 tabular-nums">{s.value.toLocaleString()}</p>
-            <p className="text-[0.65rem] sm:text-[0.72rem] text-slate-400 mt-0.5">{s.label} <span className="text-slate-300 hidden sm:inline">&middot; {s.sub}</span></p>
+            <p className="text-[1rem] sm:text-[1.2rem] font-bold text-crm-text tabular-nums">{s.value.toLocaleString()}</p>
+            <p className="text-[0.65rem] sm:text-[0.72rem] text-crm-text-muted mt-0.5">{s.label} <span className="text-crm-border hidden sm:inline">&middot; {s.sub}</span></p>
           </div>
         ))}
       </div>
 
       {/* Orders Trend — Area Chart */}
       <div className="bg-white rounded-xl sm:rounded-2xl card-shadow p-4 sm:p-5">
-        <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-800 mb-4">Orders Trend — Last 30 Days</h3>
+        <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-crm-text mb-4">Orders Trend — Last 30 Days</h3>
         <div className="h-52 sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={stats.ordersTrend} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8faa6b" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#8faa6b" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor="#5b5fc7" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#5b5fc7" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 10, fill: "#8b8680" }}
+                tick={{ fontSize: 10, fill: "#6e6b99" }}
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fontSize: 10, fill: "#8b8680" }}
+                tick={{ fontSize: 10, fill: "#6e6b99" }}
                 axisLine={false}
                 tickLine={false}
                 allowDecimals={false}
@@ -236,17 +236,17 @@ export default function DashboardPage() {
               <Tooltip
                 contentStyle={{
                   background: "#fff",
-                  border: "1px solid #e8e4df",
+                  border: "1px solid #c8cce8",
                   borderRadius: "0.75rem",
                   fontSize: "0.75rem",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
                 }}
-                labelStyle={{ fontWeight: 700, color: "#3d3832" }}
+                labelStyle={{ fontWeight: 700, color: "#2d2b55" }}
               />
               <Area
                 type="monotone"
                 dataKey="count"
-                stroke="#8faa6b"
+                stroke="#5b5fc7"
                 strokeWidth={2}
                 fill="url(#areaFill)"
                 name="Orders"
@@ -261,7 +261,7 @@ export default function DashboardPage() {
 
         {/* Order Status — Donut */}
         <div className="lg:col-span-2 bg-white rounded-xl sm:rounded-2xl card-shadow p-4 sm:p-5">
-          <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-800 mb-3">Order Status</h3>
+          <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-crm-text mb-3">Order Status</h3>
           <div className="h-52 sm:h-60 relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -282,7 +282,7 @@ export default function DashboardPage() {
                 <Tooltip
                   contentStyle={{
                     background: "#fff",
-                    border: "1px solid #e8e4df",
+                    border: "1px solid #c8cce8",
                     borderRadius: "0.75rem",
                     fontSize: "0.75rem",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
@@ -291,18 +291,18 @@ export default function DashboardPage() {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-[1.5rem] sm:text-[1.8rem] font-bold text-slate-900 tabular-nums leading-none">
+              <span className="text-[1.5rem] sm:text-[1.8rem] font-bold text-crm-text tabular-nums leading-none">
                 {stats.totalOrders.toLocaleString()}
               </span>
-              <span className="text-[0.65rem] text-slate-400 mt-0.5">Total</span>
+              <span className="text-[0.65rem] text-crm-text-muted mt-0.5">Total</span>
             </div>
           </div>
           <div className="flex items-center justify-center gap-4 mt-2">
             {stats.statusData.map((s) => (
               <div key={s.name} className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                <span className="text-[0.68rem] text-slate-500 font-medium">
-                  {s.name} <span className="font-bold text-slate-700 tabular-nums">{s.value}</span>
+                <span className="text-[0.68rem] text-crm-text-muted font-medium">
+                  {s.name} <span className="font-bold text-crm-text tabular-nums">{s.value}</span>
                 </span>
               </div>
             ))}
@@ -312,8 +312,8 @@ export default function DashboardPage() {
         {/* Orders by Route — Horizontal Bar */}
         <div className="lg:col-span-3 bg-white rounded-xl sm:rounded-2xl card-shadow p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-800">Orders by Route</h3>
-            <MapPin className="w-3.5 h-3.5 text-slate-300" />
+            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-crm-text">Orders by Route</h3>
+            <MapPin className="w-3.5 h-3.5 text-crm-border" />
           </div>
           <div className="h-52 sm:h-60">
             <ResponsiveContainer width="100%" height="100%">
@@ -324,7 +324,7 @@ export default function DashboardPage() {
               >
                 <XAxis
                   type="number"
-                  tick={{ fontSize: 10, fill: "#8b8680" }}
+                  tick={{ fontSize: 10, fill: "#6e6b99" }}
                   axisLine={false}
                   tickLine={false}
                   allowDecimals={false}
@@ -332,7 +332,7 @@ export default function DashboardPage() {
                 <YAxis
                   type="category"
                   dataKey="route"
-                  tick={{ fontSize: 11, fill: "#5c5650" }}
+                  tick={{ fontSize: 11, fill: "#2d2b55" }}
                   axisLine={false}
                   tickLine={false}
                   width={80}
@@ -340,7 +340,7 @@ export default function DashboardPage() {
                 <Tooltip
                   contentStyle={{
                     background: "#fff",
-                    border: "1px solid #e8e4df",
+                    border: "1px solid #c8cce8",
                     borderRadius: "0.75rem",
                     fontSize: "0.75rem",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
@@ -348,7 +348,7 @@ export default function DashboardPage() {
                 />
                 <Bar
                   dataKey="count"
-                  fill="#8faa6b"
+                  fill="#5b5fc7"
                   radius={[0, 6, 6, 0]}
                   name="Orders"
                   barSize={18}
@@ -363,18 +363,18 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
 
         {/* Pending Deliveries */}
-        <div className="bg-white rounded-xl sm:rounded-2xl card-shadow p-3.5 sm:p-4.5 border-l-[3px] border-amber-400">
+        <div className="bg-white rounded-xl sm:rounded-2xl card-shadow p-3.5 sm:p-4.5 border-l-[3px] border-crm-accent">
           <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-              <Truck className="w-4 h-4 text-amber-500" strokeWidth={1.8} />
+            <div className="w-8 h-8 rounded-lg bg-crm-accent-light flex items-center justify-center">
+              <Truck className="w-4 h-4 text-crm-accent" strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-[0.78rem] font-bold text-slate-800">Pending Deliveries</p>
-              <p className="text-[0.62rem] text-slate-400">Items not fully delivered</p>
+              <p className="text-[0.78rem] font-bold text-crm-text">Pending Deliveries</p>
+              <p className="text-[0.62rem] text-crm-text-muted">Items not fully delivered</p>
             </div>
           </div>
-          <p className="text-[1.4rem] font-bold text-amber-600 tabular-nums leading-none">{stats.pending}</p>
-          <p className="text-[0.62rem] text-slate-400 mt-1">orders with remaining qty</p>
+          <p className="text-[1.4rem] font-bold text-crm-accent tabular-nums leading-none">{stats.pending}</p>
+          <p className="text-[0.62rem] text-crm-text-muted mt-1">orders with remaining qty</p>
         </div>
 
         {/* Low Stock Colors */}
@@ -384,67 +384,67 @@ export default function DashboardPage() {
               <Palette className="w-4 h-4 text-red-500" strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-[0.78rem] font-bold text-slate-800">Low Stock Colors</p>
-              <p className="text-[0.62rem] text-slate-400">Below minimum level</p>
+              <p className="text-[0.78rem] font-bold text-crm-text">Low Stock Colors</p>
+              <p className="text-[0.62rem] text-crm-text-muted">Below minimum level</p>
             </div>
           </div>
           <p className="text-[1.4rem] font-bold text-red-500 tabular-nums leading-none">{stats.lowStockColors.length}</p>
           {stats.lowStockColors.length > 0 && (
-            <p className="text-[0.62rem] text-slate-400 mt-1 truncate">
+            <p className="text-[0.62rem] text-crm-text-muted mt-1 truncate">
               {stats.lowStockColors.slice(0, 3).map((c) => c.name).join(", ")}
               {stats.lowStockColors.length > 3 && ` +${stats.lowStockColors.length - 3} more`}
             </p>
           )}
           {stats.lowStockColors.length === 0 && (
-            <p className="text-[0.62rem] text-blue-500 mt-1">All colors stocked</p>
+            <p className="text-[0.62rem] text-crm-primary mt-1">All colors stocked</p>
           )}
         </div>
 
         {/* This Week Activity */}
-        <div className="bg-white rounded-xl sm:rounded-2xl card-shadow p-3.5 sm:p-4.5 border-l-[3px] border-blue-400">
+        <div className="bg-white rounded-xl sm:rounded-2xl card-shadow p-3.5 sm:p-4.5 border-l-[3px] border-crm-primary">
           <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-              <Activity className="w-4 h-4 text-blue-500" strokeWidth={1.8} />
+            <div className="w-8 h-8 rounded-lg bg-crm-primary-muted flex items-center justify-center">
+              <Activity className="w-4 h-4 text-crm-primary" strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-[0.78rem] font-bold text-slate-800">This Week</p>
-              <p className="text-[0.62rem] text-slate-400">vs last week</p>
+              <p className="text-[0.78rem] font-bold text-crm-text">This Week</p>
+              <p className="text-[0.62rem] text-crm-text-muted">vs last week</p>
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <p className="text-[1.4rem] font-bold text-blue-600 tabular-nums leading-none">{stats.thisWeekOrders}</p>
-            <div className={`flex items-center gap-0.5 ${weekUp ? "text-blue-500" : "text-red-400"}`}>
+            <p className="text-[1.4rem] font-bold text-crm-primary tabular-nums leading-none">{stats.thisWeekOrders}</p>
+            <div className={`flex items-center gap-0.5 ${weekUp ? "text-crm-primary" : "text-red-400"}`}>
               {weekUp ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
               <span className="text-[0.68rem] font-bold tabular-nums">{weekUp ? "+" : ""}{weekDiff}</span>
             </div>
           </div>
-          <p className="text-[0.62rem] text-slate-400 mt-1">new orders this week</p>
+          <p className="text-[0.62rem] text-crm-text-muted mt-1">new orders this week</p>
         </div>
 
         {/* Route Load */}
-        <div className="bg-white rounded-xl sm:rounded-2xl card-shadow p-3.5 sm:p-4.5 border-l-[3px] border-blue-400">
+        <div className="bg-white rounded-xl sm:rounded-2xl card-shadow p-3.5 sm:p-4.5 border-l-[3px] border-crm-primary">
           <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-              <Route className="w-4 h-4 text-blue-500" strokeWidth={1.8} />
+            <div className="w-8 h-8 rounded-lg bg-crm-primary-muted flex items-center justify-center">
+              <Route className="w-4 h-4 text-crm-primary" strokeWidth={1.8} />
             </div>
             <div>
-              <p className="text-[0.78rem] font-bold text-slate-800">Route Load</p>
-              <p className="text-[0.62rem] text-slate-400">Concentration check</p>
+              <p className="text-[0.78rem] font-bold text-crm-text">Route Load</p>
+              <p className="text-[0.62rem] text-crm-text-muted">Concentration check</p>
             </div>
           </div>
           {stats.heavyRoute ? (
             <>
-              <p className="text-[1.4rem] font-bold text-blue-500 tabular-nums leading-none">
+              <p className="text-[1.4rem] font-bold text-crm-primary tabular-nums leading-none">
                 {Math.round((stats.heavyRoute[1] / stats.running) * 100)}%
               </p>
-              <p className="text-[0.62rem] text-blue-500 font-medium mt-1 truncate">
+              <p className="text-[0.62rem] text-crm-primary font-medium mt-1 truncate">
                 {stats.heavyRoute[0]} has {stats.heavyRoute[1]} of {stats.running} running
               </p>
             </>
           ) : (
             <>
-              <p className="text-[1.4rem] font-bold text-slate-400 tabular-nums leading-none">OK</p>
-              <p className="text-[0.62rem] text-blue-500 mt-1">Load evenly distributed</p>
+              <p className="text-[1.4rem] font-bold text-crm-text-muted tabular-nums leading-none">OK</p>
+              <p className="text-[0.62rem] text-crm-primary mt-1">Load evenly distributed</p>
             </>
           )}
         </div>
@@ -455,26 +455,26 @@ export default function DashboardPage() {
 
         <div className="lg:col-span-3 bg-white rounded-xl sm:rounded-2xl card-shadow overflow-hidden">
           <div className="flex items-center justify-between px-4 sm:px-5 pt-3 sm:pt-4 pb-2 sm:pb-3">
-            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-800">Recent Orders</h3>
-            <Link href="/orders" className="text-[0.7rem] sm:text-[0.72rem] font-medium text-blue-500 hover:text-blue-600 flex items-center gap-1">
+            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-crm-text">Recent Orders</h3>
+            <Link href="/orders" className="text-[0.7rem] sm:text-[0.72rem] font-medium text-crm-primary hover:text-crm-primary flex items-center gap-1">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-crm-border/30">
             {stats.recentOrders.map((o) => (
-              <div key={o.id} className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 hover:bg-slate-50/50 transition-colors">
-                <div className={`w-2 h-2 rounded-full shrink-0 ${o.type === "Running" ? "bg-blue-400" : "bg-slate-300"}`} />
+              <div key={o.id} className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 hover:bg-crm-primary-muted/30 transition-colors">
+                <div className={`w-2 h-2 rounded-full shrink-0 ${o.type === "Running" ? "bg-crm-primary" : "bg-crm-border"}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[0.78rem] sm:text-[0.82rem] font-semibold text-slate-800 truncate">{o.partyName}</p>
-                  <p className="text-[0.65rem] sm:text-[0.7rem] text-slate-400 truncate">{o.partyAddress}</p>
+                  <p className="text-[0.78rem] sm:text-[0.82rem] font-semibold text-crm-text truncate">{o.partyName}</p>
+                  <p className="text-[0.65rem] sm:text-[0.7rem] text-crm-text-muted truncate">{o.partyAddress}</p>
                 </div>
                 <div className="text-right shrink-0">
                   <span className={`text-[0.6rem] sm:text-[0.65rem] font-bold px-1.5 sm:px-2 py-0.5 rounded-full ${
-                    o.type === "Running" ? "bg-blue-50 text-blue-600" : "bg-slate-100 text-slate-500"
+                    o.type === "Running" ? "bg-crm-primary-muted text-crm-primary" : "bg-crm-bg text-crm-text-muted"
                   }`}>
                     {o.type}
                   </span>
-                  <p className="text-[0.6rem] sm:text-[0.65rem] text-slate-300 mt-1 tabular-nums">{o.orderDate}</p>
+                  <p className="text-[0.6rem] sm:text-[0.65rem] text-crm-border mt-1 tabular-nums">{o.orderDate}</p>
                 </div>
               </div>
             ))}
@@ -483,17 +483,17 @@ export default function DashboardPage() {
 
         <div className="lg:col-span-2 bg-white rounded-xl sm:rounded-2xl card-shadow overflow-hidden">
           <div className="flex items-center justify-between px-4 sm:px-5 pt-3 sm:pt-4 pb-2 sm:pb-3">
-            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-slate-800">Top Parties</h3>
-            <TrendingUp className="w-3.5 h-3.5 text-slate-300" />
+            <h3 className="text-[0.82rem] sm:text-[0.88rem] font-bold text-crm-text">Top Parties</h3>
+            <TrendingUp className="w-3.5 h-3.5 text-crm-border" />
           </div>
           <div className="px-4 sm:px-5 pb-3 sm:pb-4 space-y-2">
             {stats.topPartiesList.map(([name, count], i) => (
               <div key={name} className="flex items-center gap-3">
-                <span className="text-[0.65rem] font-bold text-slate-300 w-4 tabular-nums">{i + 1}</span>
+                <span className="text-[0.65rem] font-bold text-crm-border w-4 tabular-nums">{i + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[0.75rem] sm:text-[0.78rem] font-medium text-slate-700 truncate">{name}</p>
+                  <p className="text-[0.75rem] sm:text-[0.78rem] font-medium text-crm-text truncate">{name}</p>
                 </div>
-                <span className="text-[0.7rem] sm:text-[0.72rem] font-bold text-slate-500 tabular-nums">{count}</span>
+                <span className="text-[0.7rem] sm:text-[0.72rem] font-bold text-crm-text-muted tabular-nums">{count}</span>
               </div>
             ))}
           </div>

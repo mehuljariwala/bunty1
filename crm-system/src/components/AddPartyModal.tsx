@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, UserPlus } from "lucide-react";
-import type { Party, RateValues } from "@/lib/types";
+import { X, Check } from "lucide-react";
+import type { Party, RateValues, RouteDoc } from "@/lib/types";
 
 const RATE_MATERIALS = ["Celtionic", "Litchy", "Polyester", "Multy"] as const;
 const RATE_CATEGORIES = ["3 TAR", "5 TAR", "Yarn"] as const;
@@ -10,6 +10,8 @@ const RATE_CATEGORIES = ["3 TAR", "5 TAR", "Yarn"] as const;
 interface PartyFormData {
   name: string;
   address: string;
+  addressGu: string;
+  addressHi: string;
   route: string;
   userId: string;
   password: string;
@@ -20,6 +22,7 @@ interface AddPartyModalProps {
   open: boolean;
   onClose: () => void;
   onAdd: (party: Omit<Party, "id">) => Promise<void>;
+  routes?: RouteDoc[];
 }
 
 function buildEmptyRates(): RateValues {
@@ -36,23 +39,33 @@ function buildEmptyRates(): RateValues {
 const EMPTY_FORM: PartyFormData = {
   name: "",
   address: "",
+  addressGu: "",
+  addressHi: "",
   route: "",
   userId: "",
   password: "",
   rates: buildEmptyRates(),
 };
 
-export default function AddPartyModal({ open, onClose, onAdd }: AddPartyModalProps) {
+const ADDRESS_LANGS = [
+  { key: "address" as const, lang: "en", label: "English", placeholder: "Full address in English" },
+  { key: "addressGu" as const, lang: "gu", label: "ગુજરાતી", placeholder: "સંપૂર્ણ સરનામું ગુજરાતીમાં" },
+  { key: "addressHi" as const, lang: "hi", label: "हिन्दी", placeholder: "पूरा पता हिंदी में" },
+] as const;
+
+export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: AddPartyModalProps) {
+  const activeRoutes = routes.filter((r) => r.active);
   const [form, setForm] = useState<PartyFormData>(EMPTY_FORM);
   const [activeTab, setActiveTab] = useState<string>(RATE_CATEGORIES[0]);
+  const [addressTab, setAddressTab] = useState(0);
 
   if (!open) return null;
 
-  function updateField(field: keyof Omit<PartyFormData, "rates">, value: string) {
+  function updateField(field: keyof Omit<PartyFormData, "rates">, value: string): void {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function updateRate(category: string, material: string, value: string) {
+  function updateRate(category: string, material: string, value: string): void {
     setForm((prev) => ({
       ...prev,
       rates: {
@@ -76,133 +89,235 @@ export default function AddPartyModal({ open, onClose, onAdd }: AddPartyModalPro
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
+        className="absolute inset-0 bg-crm-sidebar/30 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
         onClick={onClose}
       />
 
-      <div className="relative bg-white rounded-2xl w-full max-w-[620px] mx-4 shadow-2xl animate-[slideUp_250ms_ease-out]">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-              <UserPlus className="w-4 h-4 text-blue-500" strokeWidth={1.8} />
-            </div>
-            <h2 className="text-[0.95rem] font-semibold text-slate-900">
-              Add New Party
-            </h2>
-          </div>
+      <div className="relative bg-crm-card rounded-2xl w-full max-w-[620px] mx-4 shadow-2xl animate-[slideUp_250ms_ease-out] max-h-[92vh] flex flex-col">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 shrink-0">
+          <h2 className="text-[1rem] font-bold text-crm-text tracking-tight">
+            Add New Party
+          </h2>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-crm-text-muted hover:text-crm-text hover:bg-crm-primary-muted transition-colors"
           >
-            <X className="w-4 h-4" strokeWidth={1.8} />
+            <X className="w-4 h-4" strokeWidth={2} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-5 pb-5">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 mb-4">
-            <SectionLabel className="col-span-2">Basic Info</SectionLabel>
-            <Input label="Name" placeholder="Party name" value={form.name} onChange={(v) => updateField("name", v)} required />
-            <Input label="Route" placeholder="Route code" value={form.route} onChange={(v) => updateField("route", v)} required />
-            <div className="col-span-2">
-              <Input label="Address" placeholder="Full address" value={form.address} onChange={(v) => updateField("address", v)} required />
-            </div>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-4">
 
-            <SectionLabel className="col-span-2 mt-1">Authentication</SectionLabel>
-            <Input label="User ID" placeholder="Party User ID" value={form.userId} onChange={(v) => updateField("userId", v)} required />
-            <Input label="Password" placeholder="Set password" value={form.password} onChange={(v) => updateField("password", v)} type="password" required />
-          </div>
-
-          <SectionLabel>Rate Card</SectionLabel>
-          <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
-            <div className="flex border-b border-slate-100">
-              {RATE_CATEGORIES.map((cat) => {
-                const filled = RATE_MATERIALS.filter(
-                  (m) => form.rates[cat]?.[m] !== ""
-                ).length;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setActiveTab(cat)}
-                    className={`flex-1 py-2 text-[0.78rem] font-medium transition-all relative flex items-center justify-center gap-1.5 ${
-                      activeTab === cat
-                        ? "text-blue-700 bg-white"
-                        : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                    }`}
+            {/* Section 1: Party Details */}
+            <section className="rounded-xl border border-crm-border p-4">
+              <SectionTitle>Party Details</SectionTitle>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <FieldInput
+                  label="Name"
+                  placeholder="Party name"
+                  value={form.name}
+                  onChange={(v) => updateField("name", v)}
+                  required
+                />
+                <div>
+                  <label className="block text-[0.78rem] font-semibold text-crm-text mb-1.5">
+                    Route
+                  </label>
+                  <select
+                    value={form.route}
+                    onChange={(e) => updateField("route", e.target.value)}
+                    required
+                    className="w-full h-10 px-3.5 rounded-xl bg-crm-bg/50 border border-crm-border text-crm-text text-[0.84rem] focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary focus:bg-crm-card transition-all appearance-none cursor-pointer"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236e6b99' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 12px center",
+                    }}
                   >
-                    {cat}
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        filled === RATE_MATERIALS.length
-                          ? "bg-blue-400"
-                          : filled > 0
-                            ? "bg-orange-400"
-                            : "bg-slate-200"
-                      }`}
-                    />
-                    {activeTab === cat && (
-                      <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-blue-500 rounded-full" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-3 gap-y-2 p-3">
-              {RATE_MATERIALS.map((material) => (
-                <div key={material} className="flex items-center gap-2">
-                  <span className="w-[72px] text-[0.76rem] font-medium text-slate-600 shrink-0">
-                    {material}
-                  </span>
-                  <div className="relative flex-1">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.74rem] text-slate-300">
-                      ₹
-                    </span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00"
-                      value={form.rates[activeTab]?.[material] ?? ""}
-                      onChange={(e) => updateRate(activeTab, material, e.target.value)}
-                      className="w-full h-8 pl-6 pr-2 rounded-lg bg-white border border-slate-100 text-[0.82rem] text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all"
-                    />
-                  </div>
+                    <option value="" disabled>Select route</option>
+                    {activeRoutes.map((r) => (
+                      <option key={r.id} value={r.name}>
+                        {r.code} — {r.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              ))}
-            </div>
+                <div className="col-span-2">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-[0.78rem] font-semibold text-crm-text">
+                      Address
+                    </label>
+                    <div className="flex items-center gap-0.5 bg-crm-bg/70 rounded-lg p-0.5 border border-crm-border">
+                      {ADDRESS_LANGS.map((lang, i) => {
+                        const hasValue = form[lang.key].trim().length > 0;
+                        return (
+                          <button
+                            key={lang.key}
+                            type="button"
+                            onClick={() => setAddressTab(i)}
+                            className={`px-2.5 py-1 rounded-md text-[0.72rem] font-semibold transition-all flex items-center gap-1.5 ${
+                              addressTab === i
+                                ? "bg-crm-primary text-white shadow-sm"
+                                : "text-crm-text-muted hover:text-crm-text hover:bg-crm-primary-muted/50"
+                            }`}
+                          >
+                            {lang.label}
+                            {hasValue && addressTab !== i && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-crm-primary shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <textarea
+                    lang={ADDRESS_LANGS[addressTab].lang}
+                    placeholder={ADDRESS_LANGS[addressTab].placeholder}
+                    value={form[ADDRESS_LANGS[addressTab].key]}
+                    onChange={(e) => updateField(ADDRESS_LANGS[addressTab].key, e.target.value)}
+                    required={addressTab === 0}
+                    rows={2}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-crm-bg/50 border border-crm-border text-crm-text text-[0.84rem] placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary focus:bg-crm-card transition-all resize-none"
+                  />
+                  {addressTab === 0 && (
+                    <p className="text-[0.68rem] text-crm-text-muted mt-1">
+                      English is required. Gujarati and Hindi are optional.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* Section 2: Authentication */}
+            <section className="rounded-xl border border-crm-border p-4">
+              <SectionTitle>Authentication</SectionTitle>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <FieldInput
+                  label="User ID"
+                  placeholder="Party user ID"
+                  value={form.userId}
+                  onChange={(v) => updateField("userId", v)}
+                  required
+                />
+                <FieldInput
+                  label="Password"
+                  placeholder="Set password"
+                  value={form.password}
+                  onChange={(v) => updateField("password", v)}
+                  type="password"
+                  required
+                />
+              </div>
+            </section>
+
+            {/* Section 3: Rate Card */}
+            <section className="rounded-xl border border-crm-border p-4">
+              <SectionTitle>Rate Card</SectionTitle>
+
+              {/* Category tabs */}
+              <div className="flex rounded-lg bg-crm-bg/50 border border-crm-border overflow-hidden mb-3">
+                {RATE_CATEGORIES.map((cat) => {
+                  const filled = RATE_MATERIALS.filter(
+                    (m) => form.rates[cat]?.[m] !== ""
+                  ).length;
+                  const isActive = activeTab === cat;
+
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setActiveTab(cat)}
+                      className={`flex-1 py-2 text-[0.78rem] font-semibold transition-all relative flex items-center justify-center gap-1.5 ${
+                        isActive
+                          ? "bg-crm-primary-muted text-crm-primary"
+                          : "text-crm-text-muted hover:text-crm-text hover:bg-crm-primary-muted/40"
+                      }`}
+                    >
+                      {cat}
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                          filled === RATE_MATERIALS.length
+                            ? "bg-crm-primary"
+                            : filled > 0
+                              ? "bg-crm-accent"
+                              : "bg-crm-border"
+                        }`}
+                      />
+                      {isActive && (
+                        <span className="absolute bottom-0 left-4 right-4 h-[2px] bg-crm-primary rounded-full" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Rate inputs grid */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                {RATE_MATERIALS.map((material) => (
+                  <div key={material} className="flex items-center gap-2">
+                    <span className="w-[70px] text-[0.76rem] font-semibold text-crm-text-muted shrink-0">
+                      {material}
+                    </span>
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[0.76rem] text-crm-text-muted/60 select-none">
+                        ₹
+                      </span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        value={form.rates[activeTab]?.[material] ?? ""}
+                        onChange={(e) => updateRate(activeTab, material, e.target.value)}
+                        className="w-full h-9 pl-6 pr-2.5 rounded-xl bg-crm-bg/50 border border-crm-border text-[0.82rem] text-crm-text placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary transition-all"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
           </div>
 
-          <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-9 px-4 rounded-xl text-[0.82rem] font-medium text-slate-600 hover:bg-slate-100 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="h-9 px-5 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors shadow-sm"
-            >
-              Add Party
-            </button>
+          {/* Footer */}
+          <div className="px-6 pt-3 pb-5 shrink-0 border-t border-crm-border mt-1">
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-11 rounded-xl border border-crm-border text-crm-text-muted font-semibold text-[0.84rem] hover:bg-crm-primary-muted hover:text-crm-primary hover:border-crm-primary/30 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="h-11 rounded-xl bg-crm-primary text-white font-semibold text-[0.84rem] hover:bg-crm-primary-light active:opacity-90 transition-colors flex items-center justify-center gap-2 shadow-sm"
+              >
+                <Check className="w-4 h-4" strokeWidth={2.5} />
+                Create Party
+              </button>
+            </div>
           </div>
         </form>
+
       </div>
     </div>
   );
 }
 
-function SectionLabel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className={`text-[0.65rem] font-semibold uppercase tracking-widest text-slate-400 mb-2 ${className}`}>
+    <p className="text-crm-primary text-[0.68rem] font-bold tracking-widest uppercase mb-3">
       {children}
     </p>
   );
 }
 
-function Input({
+function FieldInput({
   label,
   placeholder,
   value,
@@ -219,7 +334,7 @@ function Input({
 }) {
   return (
     <div>
-      <label className="block text-[0.74rem] font-medium text-slate-600 mb-1">
+      <label className="block text-[0.78rem] font-semibold text-crm-text mb-1.5">
         {label}
       </label>
       <input
@@ -228,7 +343,7 @@ function Input({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
-        className="w-full h-9 px-3 rounded-lg bg-slate-50 border border-slate-100 text-[0.82rem] text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 focus:bg-white transition-all"
+        className="w-full h-10 px-3.5 rounded-xl bg-crm-bg/50 border border-crm-border text-crm-text text-[0.84rem] placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary focus:bg-crm-card transition-all"
       />
     </div>
   );

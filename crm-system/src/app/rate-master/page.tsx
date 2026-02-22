@@ -60,33 +60,33 @@ function RateGrid({
   onChange: (cat: string, mat: string, value: string) => void;
 }): React.JSX.Element {
   return (
-    <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-x-auto">
+    <div className="bg-crm-bg/30 rounded-xl border border-crm-border overflow-x-auto">
       <table className="w-full min-w-[500px]">
         <thead>
-          <tr className="border-b border-slate-100">
-            <th className="text-left px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-400 w-32">
+          <tr className="border-b border-crm-border">
+            <th className="text-left px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-crm-text-muted w-32">
               Material
             </th>
             {categories.map((cat) => (
               <th
                 key={cat}
-                className="text-center px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-slate-400"
+                className="text-center px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-crm-text-muted"
               >
                 {cat}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100/60">
+        <tbody className="divide-y divide-crm-border/40">
           {materials.map((mat) => (
-            <tr key={mat} className="hover:bg-slate-100/50 transition-colors">
-              <td className="px-4 py-2 text-[0.82rem] font-medium text-slate-700">
+            <tr key={mat} className="hover:bg-crm-primary-muted/30 transition-colors">
+              <td className="px-4 py-2 text-[0.82rem] font-medium text-crm-text">
                 {mat}
               </td>
               {categories.map((cat) => (
                 <td key={cat} className="text-center px-3 py-2">
                   <div className="relative inline-block">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.72rem] text-slate-300 pointer-events-none">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.72rem] text-crm-border pointer-events-none">
                       ₹
                     </span>
                     <input
@@ -97,7 +97,7 @@ function RateGrid({
                       value={rates[cat]?.[mat] ?? ""}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => onChange(cat, mat, e.target.value)}
-                      className="w-24 h-8 pl-6 pr-2 rounded-lg bg-white border border-slate-100 text-[0.82rem] text-slate-800 text-center placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-24 h-8 pl-6 pr-2 rounded-lg bg-crm-card border border-crm-border text-[0.82rem] text-crm-text text-center placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 </td>
@@ -172,66 +172,78 @@ function ApplyRateModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl card-shadow w-full max-w-xl mx-4 animate-[fadeIn_150ms_ease-out]">
-        <div className="flex items-center justify-between px-6 pt-5 pb-3">
+      <div className="absolute inset-0 bg-crm-sidebar/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-crm-card rounded-2xl card-shadow w-full max-w-xl mx-4 animate-[fadeIn_150ms_ease-out]">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4">
           <div>
-            <h3 className="text-[0.95rem] font-semibold text-slate-800">
+            <h3 className="text-[1.1rem] font-bold text-crm-text">
               Apply Custom Rates
             </h3>
-            <p className="text-[0.78rem] text-slate-400 mt-0.5">
+            <p className="text-[0.78rem] text-crm-text-muted mt-0.5">
               Set rates for {selectedParties.length} selected{" "}
               {selectedParties.length === 1 ? "party" : "parties"}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-crm-primary-muted text-crm-text-muted hover:text-crm-text transition-colors"
           >
             <X className="w-4.5 h-4.5" strokeWidth={1.8} />
           </button>
         </div>
 
-        <div className="px-6 pb-2">
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {selectedParties.map((p) => (
-              <span
-                key={p.id}
-                className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-[0.72rem] font-medium text-blue-700"
-              >
-                {p.name}
-              </span>
-            ))}
+        <div className="px-6 pb-2 space-y-4">
+          <div className="rounded-xl border border-crm-border p-4">
+            <p className="text-crm-primary text-[0.68rem] font-bold uppercase tracking-widest mb-3">
+              Selected Parties
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {selectedParties.map((p) => (
+                <span
+                  key={p.id}
+                  className="px-2.5 py-1 rounded-lg bg-crm-primary-muted border border-crm-border text-[0.72rem] font-medium text-crm-primary"
+                >
+                  {p.name}
+                </span>
+              ))}
+            </div>
           </div>
 
-          <RateGrid rates={modalRates} categories={categories} materials={materials} onChange={setModalRate} />
+          <div className="rounded-xl border border-crm-border p-4">
+            <p className="text-crm-primary text-[0.68rem] font-bold uppercase tracking-widest mb-3">
+              Rate Card
+            </p>
+            <RateGrid rates={modalRates} categories={categories} materials={materials} onChange={setModalRate} />
+          </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 mt-3">
+        <div className="px-6 py-5">
           {result && (
-            <span className="flex items-center gap-1.5 text-[0.78rem] font-medium text-blue-600 animate-[fadeIn_150ms_ease-out]">
+            <p className="flex items-center justify-center gap-1.5 text-[0.78rem] font-medium text-crm-primary mb-3 animate-[fadeIn_150ms_ease-out]">
               <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
               Applied to {result.success}/{result.total} parties
-            </span>
+            </p>
           )}
-          <button
-            onClick={onClose}
-            className="h-9 px-4 rounded-xl border border-slate-200 text-[0.82rem] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleApply}
-            disabled={filled === 0 || applying}
-            className="flex items-center gap-2 h-9 px-5 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {applying ? (
-              <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
-            ) : (
-              <IndianRupee className="w-4 h-4" strokeWidth={2} />
-            )}
-            {applying ? "Applying..." : "Apply Rates"}
-          </button>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={onClose}
+              className="h-11 rounded-xl border border-crm-border text-[0.82rem] font-semibold text-crm-text-muted hover:bg-crm-primary-muted transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleApply}
+              disabled={filled === 0 || applying}
+              className="flex items-center justify-center gap-2 h-11 rounded-xl bg-crm-primary text-white text-[0.82rem] font-semibold hover:bg-[#4845a2] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {applying ? (
+                <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
+              ) : (
+                <IndianRupee className="w-4 h-4" strokeWidth={2} />
+              )}
+              {applying ? "Applying..." : "Apply Rates"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -429,11 +441,11 @@ export default function RateMasterPage(): React.JSX.Element {
   return (
     <div className="space-y-6">
       {/* Common Rate Card — applies to ALL parties */}
-      <div className="bg-white rounded-2xl card-shadow">
+      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border">
         <div className="flex items-center justify-between px-6 pt-5 pb-4">
           <div>
-            <h2 className="text-[0.95rem] font-semibold text-slate-800">Common Rate Card</h2>
-            <p className="text-[0.78rem] text-slate-400 mt-0.5">
+            <h2 className="text-[0.95rem] font-semibold text-crm-text">Common Rate Card</h2>
+            <p className="text-[0.78rem] text-crm-text-muted mt-0.5">
               Set rates and apply across all {parties.length} parties at once
             </p>
           </div>
@@ -469,13 +481,13 @@ export default function RateMasterPage(): React.JSX.Element {
       </div>
 
       {/* Party List — select specific parties, apply custom rates via modal */}
-      <div className="bg-white rounded-2xl card-shadow">
+      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border">
         <div className="px-6 pt-5 pb-4 space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:justify-between">
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={toggleSelectAll}
-                className="flex items-center gap-2 text-[0.82rem] font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                className="flex items-center gap-2 text-[0.82rem] font-medium text-crm-text hover:text-crm-text transition-colors"
               >
                 {allSelected ? (
                   <CheckSquare className="w-4.5 h-4.5 text-blue-500" strokeWidth={1.8} />
@@ -544,22 +556,22 @@ export default function RateMasterPage(): React.JSX.Element {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-y border-slate-100">
+              <tr className="border-b-2 border-crm-border">
                 <th className="w-12"></th>
-                <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">
+                <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">
                   Party Name
                 </th>
-                <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400 w-36">
+                <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text w-36">
                   Route
                 </th>
-                <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400 w-32">
+                <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text w-32">
                   Rate Status
                 </th>
                 <th className="w-10"></th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((party) => {
+              {filtered.map((party, i) => {
                 const isExpanded = expandedId === party.id;
                 const isSelected = selectedIds.has(party.id);
                 const rateCount = getRateCount(party.rates, rateCategories, rateMaterials);
@@ -567,8 +579,8 @@ export default function RateMasterPage(): React.JSX.Element {
                 return (
                   <Fragment key={party.id}>
                     <tr
-                      className={`border-b border-slate-50 cursor-pointer transition-colors ${
-                        isExpanded ? "bg-blue-50/50" : "hover:bg-slate-50"
+                      className={`border-b border-crm-border/40 cursor-pointer transition-colors hover:bg-crm-primary-muted/20 ${
+                        isExpanded ? "bg-crm-primary-muted/20" : i % 2 === 1 ? "bg-crm-bg/30" : "bg-crm-card"
                       }`}
                     >
                       <td className="text-center py-3.5">
@@ -587,50 +599,50 @@ export default function RateMasterPage(): React.JSX.Element {
                         </button>
                       </td>
                       <td
-                        className="px-4 py-3.5"
+                        className="px-5 py-3"
                         onClick={() => setExpandedId(isExpanded ? null : party.id)}
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[0.68rem] font-bold text-blue-700 shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-crm-primary-muted flex items-center justify-center text-[0.68rem] font-bold text-crm-primary shrink-0">
                             {party.name
                               .split(" ")
                               .map((w) => w[0])
                               .join("")
                               .slice(0, 2)}
                           </div>
-                          <p className="text-[0.84rem] font-medium text-slate-800 truncate">
+                          <p className="text-[0.84rem] font-medium text-crm-text truncate">
                             {party.name}
                           </p>
                         </div>
                       </td>
                       <td
-                        className="px-4 py-3.5"
+                        className="px-5 py-3"
                         onClick={() => setExpandedId(isExpanded ? null : party.id)}
                       >
-                        <span className="text-[0.82rem] text-slate-600">{party.route}</span>
+                        <span className="text-[0.84rem] text-crm-text">{party.route}</span>
                       </td>
                       <td
-                        className="px-4 py-3.5"
+                        className="px-5 py-3"
                         onClick={() => setExpandedId(isExpanded ? null : party.id)}
                       >
                         <span
                           className={`text-[0.7rem] font-medium px-2 py-0.5 rounded-full ${
                             rateCount === totalRates
-                              ? "bg-blue-50 text-blue-600"
+                              ? "bg-crm-primary-muted text-crm-primary"
                               : rateCount > 0
                                 ? "bg-orange-400/10 text-orange-500"
-                                : "bg-slate-100 text-slate-400"
+                                : "bg-crm-bg text-crm-text-muted"
                           }`}
                         >
                           {rateCount}/{totalRates}
                         </span>
                       </td>
                       <td
-                        className="text-center py-3.5 pr-2"
+                        className="text-center py-3 pr-2"
                         onClick={() => setExpandedId(isExpanded ? null : party.id)}
                       >
                         <ChevronDown
-                          className={`w-4 h-4 text-slate-300 transition-transform duration-200 inline-block ${
+                          className={`w-4 h-4 text-crm-border transition-transform duration-200 inline-block ${
                             isExpanded ? "rotate-180" : ""
                           }`}
                           strokeWidth={1.8}
@@ -645,9 +657,9 @@ export default function RateMasterPage(): React.JSX.Element {
                         const isSaving = savingId === party.id;
                         const justSaved = savedId === party.id;
                         return (
-                          <tr className="border-b border-slate-50">
+                          <tr className="border-b border-crm-border/40">
                             <td></td>
-                            <td colSpan={4} className="px-4 py-4">
+                            <td colSpan={4} className="px-5 py-4">
                               <div className="animate-[fadeIn_150ms_ease-out]">
                                 <RateGrid
                                   rates={rates}
@@ -696,8 +708,8 @@ export default function RateMasterPage(): React.JSX.Element {
 
           {filtered.length === 0 && (
             <div className="py-12 text-center">
-              <p className="text-[0.9rem] text-slate-400">No parties found</p>
-              <p className="text-[0.78rem] text-slate-300 mt-1">
+              <p className="text-[0.9rem] text-crm-text-muted">No parties found</p>
+              <p className="text-[0.78rem] text-crm-border mt-1">
                 Try a different search or route filter
               </p>
             </div>

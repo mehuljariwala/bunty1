@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Plus, Search, Filter, X, Pencil, Trash2, CircleCheck, ArrowDown, ArrowUp, Loader2, ChevronRight, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Plus, Search, Filter, X, Pencil, Trash2, Loader2 } from "lucide-react";
 import AddColorModal, { type ColorFormData } from "@/components/AddColorModal";
 import { subscribeColors, addColor, updateColor, deleteColor } from "@/lib/colors";
 import type { Color } from "@/lib/types";
@@ -20,38 +20,6 @@ interface ColorRow {
   createdAt: string;
 }
 
-interface ColorGroup {
-  key: string;
-  name: string;
-  hex: string;
-  subCategory: string;
-  hasRunning: boolean;
-  variants: Map<string, ColorRow>;
-}
-
-function stockStatus(current: string, min: string, max: string): "low" | "ok" | "high" {
-  const c = Number(current), mn = Number(min), mx = Number(max);
-  if (c <= mn) return "low";
-  if (c >= mx * 0.9) return "high";
-  return "ok";
-}
-
-const STOCK_STYLES = {
-  low: "bg-red-50 text-red-600",
-  ok: "bg-blue-50 text-blue-600",
-  high: "bg-sky-50 text-sky-600",
-};
-
-const STOCK_DOT = {
-  low: "bg-red-400",
-  ok: "bg-blue-400",
-  high: "bg-sky-400",
-};
-
-const STOCK_LABEL = { low: "Low", ok: "OK", high: "Full" };
-
-const CATEGORY_ORDER = ["5 Tar", "3 Tar", "Yarn"] as const;
-
 type FilterState = {
   categories: string[];
   runningOnly: boolean;
@@ -59,6 +27,14 @@ type FilterState = {
 };
 
 const EMPTY_FILTERS: FilterState = { categories: [], runningOnly: false, stockFilter: "all" };
+const STOCK_LABEL: Record<string, string> = { low: "Low", ok: "OK", high: "High" };
+
+function stockStatus(current: number | string, min: number | string, max: number | string): "low" | "ok" | "high" {
+  const c = Number(current), mn = Number(min), mx = Number(max);
+  if (c >= mx) return "high";
+  if (c <= mn) return "low";
+  return "ok";
+}
 
 function colorToRow(c: Color): ColorRow {
   return {
@@ -76,19 +52,6 @@ function colorToRow(c: Color): ColorRow {
   };
 }
 
-function StockBadge({ variant }: { variant: ColorRow | undefined }): React.JSX.Element {
-  if (!variant) {
-    return <span className="text-[0.72rem] text-slate-300">—</span>;
-  }
-  const status = stockStatus(variant.currentStock, variant.minStock, variant.maxStock);
-  return (
-    <div className="flex items-center justify-center gap-1.5">
-      <span className="text-[0.78rem] font-medium text-slate-700">{variant.currentStock}</span>
-      <span className={`w-2 h-2 rounded-full ${STOCK_DOT[status]}`} />
-    </div>
-  );
-}
-
 export default function ColorMasterPage(): React.JSX.Element {
   const [colors, setColors] = useState<ColorRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +59,6 @@ export default function ColorMasterPage(): React.JSX.Element {
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [editingColor, setEditingColor] = useState<ColorRow | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -151,38 +113,6 @@ export default function ColorMasterPage(): React.JSX.Element {
       return matchesSearch && matchesCat && matchesRunning && matchesStock;
     });
   }, [colors, search, filters]);
-
-  const groupedColors = useMemo(() => {
-    const map = new Map<string, ColorGroup>();
-    for (const c of filtered) {
-      const key = `${c.name}::${c.hex}`;
-      let group = map.get(key);
-      if (!group) {
-        group = {
-          key,
-          name: c.name,
-          hex: c.hex,
-          subCategory: c.subCategory,
-          hasRunning: false,
-          variants: new Map(),
-        };
-        map.set(key, group);
-      }
-      group.variants.set(c.category, c);
-      if (c.runningColor) group.hasRunning = true;
-      if (c.subCategory && !group.subCategory) group.subCategory = c.subCategory;
-    }
-    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }, [filtered]);
-
-  const toggleGroup = useCallback((key: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }, []);
 
   async function handleSubmit(data: ColorFormData): Promise<void> {
     if (editingColor) {
@@ -257,9 +187,8 @@ export default function ColorMasterPage(): React.JSX.Element {
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:justify-between">
-        <p className="text-[0.85rem] text-slate-400">
-          {groupedColors.length} colors{" "}
-          <span className="text-slate-300">({filtered.length} entries)</span>
+        <p className="text-[0.85rem] text-crm-text-muted">
+          {filtered.length} colours
         </p>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-initial">
@@ -393,48 +322,76 @@ export default function ColorMasterPage(): React.JSX.Element {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl card-shadow overflow-x-auto">
-        <table className="w-full table-fixed">
-          <colgroup>
-            <col style={{ width: "22%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "18%" }} />
-            <col style={{ width: "18%" }} />
-            <col style={{ width: "18%" }} />
-            <col style={{ width: "10%" }} />
-          </colgroup>
+      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-x-auto">
+        <table className="w-full">
           <thead>
-            <tr className="border-b border-slate-100">
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Color Name</th>
-              <th className="text-left px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Sub Cat.</th>
-              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">5 Tar</th>
-              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">3 Tar</th>
-              <th className="text-center px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400">Yarn</th>
-              <th className="w-16"></th>
+            <tr className="border-b-2 border-crm-border">
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text w-16">Id</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Category</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Sub Category</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Colour Name</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Colour Code</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Colour Stock</th>
+              <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Status</th>
+              <th className="w-20"></th>
             </tr>
           </thead>
           <tbody>
-            {groupedColors.map((group) => {
-              const isExpanded = expandedGroups.has(group.key);
-
-              return (
-                <GroupRows
-                  key={group.key}
-                  group={group}
-                  isExpanded={isExpanded}
-                  onToggle={() => toggleGroup(group.key)}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              );
-            })}
+            {filtered.map((c, i) => (
+              <tr
+                key={c.id}
+                className={`border-b border-crm-border/40 transition-colors hover:bg-crm-primary-muted/20 ${
+                  i % 2 === 1 ? "bg-crm-bg/30" : "bg-crm-card"
+                }`}
+              >
+                <td className="px-5 py-3 text-[0.84rem] font-medium text-crm-text-muted">{i + 1}</td>
+                <td className="px-5 py-3 text-[0.84rem] text-crm-text">{c.category}</td>
+                <td className="px-5 py-3 text-[0.84rem] text-crm-text">{c.subCategory}</td>
+                <td className="px-5 py-3">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-4 h-4 rounded shrink-0 border border-crm-border"
+                      style={{ backgroundColor: c.hex }}
+                    />
+                    <span className="text-[0.84rem] font-medium text-crm-text">{c.name}</span>
+                  </div>
+                </td>
+                <td className="px-5 py-3 text-[0.84rem] font-mono text-crm-text-muted">{c.hex}</td>
+                <td className="px-5 py-3 text-[0.84rem] font-medium text-crm-text">{c.currentStock}</td>
+                <td className="px-5 py-3">
+                  <span className={`inline-block px-3 py-1 rounded-md text-[0.78rem] font-semibold ${
+                    c.runningColor
+                      ? "bg-emerald-500 text-white"
+                      : "bg-crm-bg text-crm-text-muted"
+                  }`}>
+                    {c.runningColor ? "Enable" : "Disable"}
+                  </span>
+                </td>
+                <td className="px-3 py-3">
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => handleEdit(c)}
+                      className="p-1.5 rounded-lg hover:bg-crm-primary-muted transition-colors text-crm-border hover:text-crm-primary"
+                    >
+                      <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(c.id)}
+                      className="p-1.5 rounded-lg hover:bg-red-50 transition-colors text-crm-border hover:text-red-500"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" strokeWidth={1.8} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
-        {groupedColors.length === 0 && (
+        {filtered.length === 0 && (
           <div className="py-12 text-center">
-            <p className="text-[0.9rem] text-slate-400">No colors found</p>
-            <p className="text-[0.78rem] text-slate-300 mt-1">
+            <p className="text-[0.9rem] text-crm-text-muted">No colours found</p>
+            <p className="text-[0.78rem] text-crm-border mt-1">
               {activeFilterCount > 0 ? "Try adjusting your filters" : "Try a different search term"}
             </p>
           </div>
@@ -463,139 +420,3 @@ export default function ColorMasterPage(): React.JSX.Element {
   );
 }
 
-function GroupRows({
-  group,
-  isExpanded,
-  onToggle,
-  onEdit,
-  onDelete,
-}: {
-  group: ColorGroup;
-  isExpanded: boolean;
-  onToggle: () => void;
-  onEdit: (variant: ColorRow) => void;
-  onDelete: (id: string) => void;
-}): React.JSX.Element {
-  return (
-    <>
-      <tr
-        onClick={onToggle}
-        className={`border-b border-slate-50 cursor-pointer transition-colors ${
-          isExpanded ? "bg-slate-50" : "hover:bg-slate-50"
-        }`}
-      >
-        <td className="px-4 py-3">
-          <div className="flex items-center gap-2">
-            {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" strokeWidth={1.8} />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" strokeWidth={1.8} />
-            )}
-            <span
-              className="w-5 h-5 rounded-md shrink-0 border border-slate-100"
-              style={{ backgroundColor: group.hex }}
-            />
-            <p className="text-[0.84rem] font-medium text-slate-800 truncate">
-              {group.name}
-            </p>
-            {group.hasRunning && (
-              <CircleCheck className="w-3.5 h-3.5 text-blue-500 shrink-0" strokeWidth={2} />
-            )}
-          </div>
-        </td>
-        <td className="px-4 py-3 text-[0.82rem] text-slate-500">
-          {group.subCategory}
-        </td>
-        {CATEGORY_ORDER.map((cat) => (
-          <td key={cat} className="px-4 py-3 text-center">
-            <StockBadge variant={group.variants.get(cat)} />
-          </td>
-        ))}
-        <td className="px-3 py-3">
-          <span className="text-[0.72rem] text-slate-300">
-            {group.variants.size} var{group.variants.size !== 1 && "s"}
-          </span>
-        </td>
-      </tr>
-
-      {isExpanded &&
-        CATEGORY_ORDER.map((cat) => {
-          const variant = group.variants.get(cat);
-          if (!variant) return null;
-
-          const status = stockStatus(variant.currentStock, variant.minStock, variant.maxStock);
-          const pct = Number(variant.maxStock) > 0
-            ? Math.min(100, Math.round((Number(variant.currentStock) / Number(variant.maxStock)) * 100))
-            : 0;
-
-          return (
-            <tr
-              key={variant.id}
-              className="border-b border-slate-50 bg-slate-50/50"
-            >
-              <td className="px-4 py-2.5 pl-14">
-                <span className="text-[0.76rem] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                  {variant.category}
-                </span>
-              </td>
-              <td className="px-4 py-2.5">
-                <span className="text-[0.78rem] font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
-                  {variant.code}
-                </span>
-              </td>
-              <td className="px-4 py-2.5" colSpan={3}>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1">
-                    <ArrowDown className="w-3 h-3 text-slate-300" strokeWidth={1.8} />
-                    <span className="text-[0.78rem] text-slate-500">{variant.minStock}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <ArrowUp className="w-3 h-3 text-slate-300" strokeWidth={1.8} />
-                    <span className="text-[0.78rem] text-slate-500">{variant.maxStock}</span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-1 max-w-[200px]">
-                    <span className="text-[0.8rem] font-semibold text-slate-800 w-8 text-right">
-                      {variant.currentStock}
-                    </span>
-                    <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          status === "low" ? "bg-red-400" : status === "high" ? "bg-sky-400" : "bg-blue-400"
-                        }`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-                  <span className={`text-[0.7rem] font-medium px-2 py-0.5 rounded-full ${STOCK_STYLES[status]}`}>
-                    {STOCK_LABEL[status]}
-                  </span>
-                </div>
-              </td>
-              <td className="px-3 py-2.5">
-                <div className="flex items-center gap-0.5">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(variant);
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-300 hover:text-slate-600"
-                  >
-                    <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(variant.id);
-                    }}
-                    className="p-1.5 rounded-lg hover:bg-orange-400/10 transition-colors text-slate-300 hover:text-orange-500"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" strokeWidth={1.8} />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          );
-        })}
-    </>
-  );
-}

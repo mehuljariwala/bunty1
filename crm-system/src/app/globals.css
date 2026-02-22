@@ -1,8 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Inter", system-ui, sans-serif;
-  --font-body: "Inter", system-ui, sans-serif;
+  --font-display: "DM Sans", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+
+  --color-crm-bg: #dce3f9;
+  --color-crm-bg-deep: #c8d2f0;
+  --color-crm-sidebar: #2d2b6b;
+  --color-crm-sidebar-hover: #3a3880;
+  --color-crm-sidebar-active: #4845a2;
+  --color-crm-primary: #5b5fc7;
+  --color-crm-primary-light: #7b7fd4;
+  --color-crm-primary-muted: #e8e9f8;
+  --color-crm-accent: #f5956b;
+  --color-crm-accent-light: #fde8df;
+  --color-crm-text: #2d2b55;
+  --color-crm-text-muted: #6e6b99;
+  --color-crm-border: #c8cce8;
+  --color-crm-card: #ffffff;
 }
 
 @layer base {
@@ -13,31 +28,31 @@
 
   body {
     font-family: var(--font-body);
-    background-color: var(--color-slate-100);
-    color: var(--color-slate-900);
+    background-color: var(--color-crm-bg);
+    color: var(--color-crm-text);
   }
 
   ::selection {
-    background-color: var(--color-blue-200);
-    color: var(--color-blue-900);
+    background-color: #b8bcec;
+    color: var(--color-crm-sidebar);
   }
 }
 
 @layer utilities {
   .sidebar-shadow {
-    box-shadow: 1px 0 0 0 var(--color-slate-200);
+    box-shadow: 2px 0 24px rgba(45, 43, 107, 0.15);
   }
 
   .card-shadow {
     box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.1),
-      0 1px 2px -1px rgba(0, 0, 0, 0.1);
+      0 1px 3px rgba(45, 43, 107, 0.06),
+      0 4px 16px rgba(45, 43, 107, 0.04);
   }
 
   .card-shadow-hover {
     box-shadow:
-      0 4px 12px rgba(0, 0, 0, 0.08),
-      0 1px 3px rgba(0, 0, 0, 0.06);
+      0 4px 20px rgba(91, 95, 199, 0.1),
+      0 1px 3px rgba(45, 43, 107, 0.06);
   }
 }
 
