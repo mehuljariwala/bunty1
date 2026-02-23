@@ -76,10 +76,10 @@ export default function AddRouteModal({ open, onClose, onAdd, editData, existing
         onClick={onClose}
       />
 
-      <div className="relative bg-crm-card rounded-2xl w-full max-w-[440px] mx-4 shadow-2xl animate-[slideUp_250ms_ease-out]">
+      <div className="relative bg-crm-card rounded-2xl w-full max-w-[440px] mx-3 sm:mx-4 shadow-2xl animate-[slideUp_250ms_ease-out] max-h-[92vh] flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-4">
+        <div className="flex items-center justify-between px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4 shrink-0">
           <h2 className="text-[1.1rem] font-bold text-crm-text">
             {isEdit ? "Edit Route" : "Add New Route"}
           </h2>
@@ -91,7 +91,7 @@ export default function AddRouteModal({ open, onClose, onAdd, editData, existing
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-5 pb-5 flex flex-col gap-3">
+        <form onSubmit={handleSubmit} className="px-4 sm:px-5 pb-4 sm:pb-5 flex flex-col gap-3 overflow-y-auto">
 
           {/* Section 1 — Route Details */}
           <div className="rounded-xl border border-crm-border p-4">

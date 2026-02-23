@@ -93,10 +93,10 @@ export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: Add
         onClick={onClose}
       />
 
-      <div className="relative bg-crm-card rounded-2xl w-full max-w-[620px] mx-4 shadow-2xl animate-[slideUp_250ms_ease-out] max-h-[92vh] flex flex-col">
+      <div className="relative bg-crm-card rounded-2xl w-full max-w-[620px] mx-3 sm:mx-4 shadow-2xl animate-[slideUp_250ms_ease-out] max-h-[92vh] flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 shrink-0">
           <h2 className="text-[1rem] font-bold text-crm-text tracking-tight">
             Add New Party
           </h2>
@@ -110,12 +110,12 @@ export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: Add
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-4">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-2 space-y-4">
 
             {/* Section 1: Party Details */}
             <section className="rounded-xl border border-crm-border p-4">
               <SectionTitle>Party Details</SectionTitle>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                 <FieldInput
                   label="Name"
                   placeholder="Party name"
@@ -146,7 +146,7 @@ export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: Add
                     ))}
                   </select>
                 </div>
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-[0.78rem] font-semibold text-crm-text">
                       Address
@@ -195,7 +195,7 @@ export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: Add
             {/* Section 2: Authentication */}
             <section className="rounded-xl border border-crm-border p-4">
               <SectionTitle>Authentication</SectionTitle>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                 <FieldInput
                   label="User ID"
                   placeholder="Party user ID"
@@ -284,7 +284,7 @@ export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: Add
           </div>
 
           {/* Footer */}
-          <div className="px-6 pt-3 pb-5 shrink-0 border-t border-crm-border mt-1">
+          <div className="px-4 sm:px-6 pt-3 pb-4 sm:pb-5 shrink-0 border-t border-crm-border mt-1">
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"

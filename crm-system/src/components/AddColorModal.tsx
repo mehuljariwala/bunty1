@@ -83,10 +83,10 @@ export default function AddColorModal({
         onClick={onClose}
       />
 
-      <div className="relative bg-crm-card rounded-2xl w-full max-w-[500px] mx-4 shadow-2xl animate-[slideUp_250ms_ease-out]">
+      <div className="relative bg-crm-card rounded-2xl w-full max-w-[500px] mx-3 sm:mx-4 shadow-2xl animate-[slideUp_250ms_ease-out] max-h-[92vh] flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 shrink-0">
           <h2 className="text-[1.1rem] font-bold text-crm-text">
             {isEdit ? "Edit Color" : "Add New Color"}
           </h2>
@@ -99,15 +99,15 @@ export default function AddColorModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 pb-6 flex flex-col gap-3">
+        <form onSubmit={handleSubmit} className="px-4 sm:px-6 pb-4 sm:pb-6 flex flex-col gap-3 overflow-y-auto">
 
           {/* Section 1 — Color Details */}
           <div className="rounded-xl border border-crm-border p-4">
             <p className={SECTION_TITLE_CLS}>Color Details</p>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-3">
 
               {/* Name — full width */}
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <FieldLabel text="Color Name" />
                 <input
                   type="text"
@@ -120,7 +120,7 @@ export default function AddColorModal({
               </div>
 
               {/* Code + color picker */}
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <FieldLabel text="Color Code" />
                 <div className="flex gap-2">
                   <input
@@ -189,7 +189,7 @@ export default function AddColorModal({
           {/* Section 2 — Stock Details */}
           <div className="rounded-xl border border-crm-border p-4">
             <p className={SECTION_TITLE_CLS}>Stock Details</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
 
               <div>
                 <FieldLabel text="Min Stock" />

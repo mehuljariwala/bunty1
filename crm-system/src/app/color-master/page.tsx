@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Plus, Search, Filter, X, Pencil, Trash2, Loader2 } from "lucide-react";
 import AddColorModal, { type ColorFormData } from "@/components/AddColorModal";
 import { subscribeColors, addColor, updateColor, deleteColor } from "@/lib/colors";
+import { useTracker } from "@/lib/activity-tracker-context";
 import type { Color } from "@/lib/types";
 
 interface ColorRow {
@@ -53,6 +54,7 @@ function colorToRow(c: Color): ColorRow {
 }
 
 export default function ColorMasterPage(): React.JSX.Element {
+  const { trackColorAdded, trackColorEdited, trackColorDeleted } = useTracker();
   const [colors, setColors] = useState<ColorRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -127,6 +129,7 @@ export default function ColorMasterPage(): React.JSX.Element {
         currentStock: Number(data.currentStock) || 0,
         runningColor: data.runningColor,
       });
+      trackColorEdited({ colorName: data.name, category: data.category });
       setEditingColor(null);
     } else {
       const now = new Date().toISOString().slice(0, 10);
@@ -143,6 +146,7 @@ export default function ColorMasterPage(): React.JSX.Element {
         sortOrder: 999,
         createdAt: now,
       });
+      trackColorAdded({ colorName: data.name, category: data.category });
     }
   }
 
@@ -157,7 +161,11 @@ export default function ColorMasterPage(): React.JSX.Element {
   }
 
   async function handleDelete(id: string): Promise<void> {
+    const color = colors.find((c) => c.id === id);
     await deleteColor(id);
+    if (color) {
+      trackColorDeleted({ colorName: color.name, category: color.category });
+    }
   }
 
   function toggleCategory(cat: string) {
@@ -290,10 +298,10 @@ export default function ColorMasterPage(): React.JSX.Element {
 
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 h-9 px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm"
+            className="flex items-center gap-2 h-9 px-3 sm:px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm"
           >
-            <Plus className="w-4 h-4" strokeWidth={2.2} />
-            Add Color
+            <Plus className="w-4 h-4 shrink-0" strokeWidth={2.2} />
+            <span className="hidden sm:inline">Add Color</span>
           </button>
         </div>
       </div>
@@ -322,7 +330,84 @@ export default function ColorMasterPage(): React.JSX.Element {
         </div>
       )}
 
-      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-x-auto">
+      {/* Mobile card layout */}
+      <div className="md:hidden space-y-2">
+        {filtered.map((c) => {
+          const status = stockStatus(c.currentStock, c.minStock, c.maxStock);
+          const current = Number(c.currentStock) || 0;
+          const max = Number(c.maxStock) || 1;
+          const pct = Math.min(Math.round((current / max) * 100), 100);
+          const barColor = status === "low" ? "bg-red-500" : status === "high" ? "bg-emerald-500" : "bg-crm-primary";
+
+          return (
+            <div key={c.id} className="bg-crm-card rounded-xl card-shadow border border-crm-border px-3 py-2.5">
+              <div className="flex items-center gap-2.5">
+                <span
+                  className="w-7 h-7 rounded-md shrink-0 border border-crm-border"
+                  style={{ backgroundColor: c.hex }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[0.8rem] font-medium text-crm-text truncate">{c.name}</p>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className={`px-1.5 py-px rounded text-[0.62rem] font-semibold ${
+                        c.runningColor
+                          ? "bg-emerald-500/10 text-emerald-600"
+                          : "bg-crm-bg text-crm-text-muted"
+                      }`}>
+                        {c.runningColor ? "ON" : "OFF"}
+                      </span>
+                      <button
+                        onClick={() => handleEdit(c)}
+                        className="p-1 rounded-md hover:bg-crm-primary-muted transition-colors text-crm-border hover:text-crm-primary"
+                      >
+                        <Pencil className="w-3 h-3" strokeWidth={1.8} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="p-1 rounded-md hover:bg-red-50 transition-colors text-crm-border hover:text-red-500"
+                      >
+                        <Trash2 className="w-3 h-3" strokeWidth={1.8} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[0.68rem] text-crm-text-muted">{c.category}</span>
+                    <span className="text-[0.55rem] text-crm-border">•</span>
+                    <span className="text-[0.68rem] text-crm-text-muted">{c.subCategory}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-2 flex items-center gap-2.5">
+                <div className="flex-1 h-1.5 rounded-full bg-crm-border/30 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${barColor}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <span className={`text-[0.68rem] font-semibold tabular-nums shrink-0 ${
+                  status === "low" ? "text-red-500" : status === "high" ? "text-emerald-600" : "text-crm-text"
+                }`}>
+                  {c.currentStock}<span className="text-crm-text-muted font-normal">/{c.maxStock}</span>
+                </span>
+              </div>
+            </div>
+          );
+        })}
+
+        {filtered.length === 0 && (
+          <div className="py-12 text-center">
+            <p className="text-[0.9rem] text-crm-text-muted">No colours found</p>
+            <p className="text-[0.78rem] text-crm-border mt-1">
+              {activeFilterCount > 0 ? "Try adjusting your filters" : "Try a different search term"}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop table layout */}
+      <div className="hidden md:block bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b-2 border-crm-border">

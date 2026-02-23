@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import TopBar from "@/components/TopBar";
 import { SidebarProvider } from "@/components/SidebarContext";
-import CommandPalette from "@/components/CommandPalette";
-import MainContent from "@/components/MainContent";
+import { AuthProvider } from "@/lib/auth-context";
+import AuthGate from "@/components/AuthGate";
 
 export const metadata: Metadata = {
   title: "Bloom CRM",
@@ -32,14 +30,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-crm-bg text-crm-text">
         <SidebarProvider>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <MainContent>
-              <TopBar />
-              <main className="flex-1 p-4 lg:p-8">{children}</main>
-            </MainContent>
-          </div>
-          <CommandPalette />
+          <AuthProvider>
+            <AuthGate>{children}</AuthGate>
+          </AuthProvider>
         </SidebarProvider>
       </body>
     </html>

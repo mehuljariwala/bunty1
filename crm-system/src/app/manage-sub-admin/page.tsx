@@ -141,16 +141,17 @@ export default function ManageSubAdminPage(): React.JSX.Element {
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 h-9 px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors shadow-sm w-full sm:w-auto"
+          className="flex items-center justify-center gap-2 h-9 px-3 sm:px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors shadow-sm w-full sm:w-auto"
         >
-          <UserPlus className="w-4 h-4" strokeWidth={2.2} />
-          Add Sub Admin
+          <UserPlus className="w-4 h-4 shrink-0" strokeWidth={2.2} />
+          <span className="hidden sm:inline">Add Sub Admin</span>
+          <span className="sm:hidden">Add</span>
         </button>
       </div>
 
-      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-x-auto">
+      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border">
 
-        <div className="px-5 pt-4 pb-3 border-b border-crm-border">
+        <div className="px-4 sm:px-5 pt-4 pb-3 border-b border-crm-border">
           <div className="relative max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-crm-text-muted" strokeWidth={1.8} />
             <input
@@ -163,7 +164,85 @@ export default function ManageSubAdminPage(): React.JSX.Element {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile card layout */}
+        <div className="md:hidden px-4 py-3 space-y-2">
+          {filtered.map((admin) => {
+            const pwVisible = visiblePasswords.has(admin.id);
+            return (
+              <div key={admin.id} className="rounded-xl border border-crm-border px-3 py-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-crm-primary-muted flex items-center justify-center text-crm-primary text-[0.65rem] font-bold shrink-0">
+                    {admin.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[0.82rem] font-semibold text-crm-text truncate">{admin.name}</p>
+                      <span className="text-[0.65rem] font-bold text-crm-primary bg-crm-primary-muted px-1.5 py-px rounded tabular-nums shrink-0">
+                        #{admin.csvId}
+                      </span>
+                    </div>
+                    <p className="text-[0.72rem] text-crm-text-muted truncate">{admin.email}</p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => openEdit(admin)}
+                      className="p-1 rounded-md text-crm-border hover:text-crm-primary hover:bg-crm-primary-muted transition-colors"
+                    >
+                      <Pencil className="w-3 h-3" strokeWidth={1.8} />
+                    </button>
+                    {deleteConfirm === admin.id ? (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleDelete(admin.id)}
+                          className="px-1.5 py-0.5 rounded bg-red-500 text-white text-[0.6rem] font-bold"
+                        >
+                          Yes
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(null)}
+                          className="px-1.5 py-0.5 rounded bg-crm-bg text-crm-text-muted text-[0.6rem] font-bold"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDeleteConfirm(admin.id)}
+                        className="p-1 rounded-md text-crm-border hover:text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3" strokeWidth={1.8} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 mt-1.5 ml-[42px]">
+                  <span className="text-[0.72rem] text-crm-text-muted font-mono tabular-nums">
+                    {pwVisible ? admin.password : "••••••••"}
+                  </span>
+                  <button
+                    onClick={() => togglePasswordVisibility(admin.id)}
+                    className="p-0.5 rounded text-crm-border hover:text-crm-primary transition-colors"
+                  >
+                    {pwVisible
+                      ? <EyeOff className="w-3 h-3" strokeWidth={1.8} />
+                      : <Eye className="w-3 h-3" strokeWidth={1.8} />
+                    }
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          {filtered.length === 0 && (
+            <div className="py-12 text-center">
+              <p className="text-[0.9rem] text-crm-text-muted">No sub admins found</p>
+              <p className="text-[0.78rem] text-crm-border mt-1">Try a different search or add a new sub admin</p>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop table layout */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b-2 border-crm-border">
@@ -266,7 +345,7 @@ export default function ManageSubAdminPage(): React.JSX.Element {
           )}
         </div>
 
-        <div className="px-5 py-3 border-t border-crm-border bg-crm-card">
+        <div className="px-4 sm:px-5 py-3 border-t border-crm-border bg-crm-card">
           <p className="text-[0.78rem] text-crm-text-muted">
             Showing <span className="font-semibold text-crm-text">{filtered.length}</span> of {admins.length} sub admins
           </p>
@@ -276,9 +355,9 @@ export default function ManageSubAdminPage(): React.JSX.Element {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-crm-sidebar/30 backdrop-blur-sm" onClick={closeModal} />
-          <div className="relative bg-crm-card rounded-2xl shadow-2xl w-full max-w-md mx-4 animate-[fadeIn_150ms_ease-out]">
+          <div className="relative bg-crm-card rounded-2xl shadow-2xl w-full max-w-md mx-3 sm:mx-4 animate-[fadeIn_150ms_ease-out] max-h-[92vh] flex flex-col">
 
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-crm-border/50">
+            <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-crm-border/50 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-crm-primary-muted flex items-center justify-center">
                   {editingAdmin
@@ -298,7 +377,7 @@ export default function ManageSubAdminPage(): React.JSX.Element {
               </button>
             </div>
 
-            <div className="px-6 py-5">
+            <div className="px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto">
               <div className="rounded-xl border border-crm-border p-4 space-y-4">
                 <p className="text-crm-primary text-[0.68rem] font-bold uppercase tracking-widest mb-3">Admin Details</p>
 
@@ -358,7 +437,7 @@ export default function ManageSubAdminPage(): React.JSX.Element {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 px-6 pb-5 pt-2">
+            <div className="flex items-center justify-end gap-2 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 shrink-0">
               <button
                 onClick={closeModal}
                 className="h-11 px-4 rounded-xl border border-crm-border text-[0.82rem] font-semibold text-crm-text-muted hover:bg-crm-primary-muted transition-colors"

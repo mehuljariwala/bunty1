@@ -301,10 +301,10 @@ export default function PartyMasterPage(): React.JSX.Element {
 
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 h-9 px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm"
+            className="flex items-center gap-2 h-9 px-3 sm:px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm"
           >
-            <Plus className="w-4 h-4" strokeWidth={2.2} />
-            Add Party
+            <Plus className="w-4 h-4 shrink-0" strokeWidth={2.2} />
+            <span className="hidden sm:inline">Add Party</span>
           </button>
         </div>
       </div>
@@ -345,7 +345,151 @@ export default function PartyMasterPage(): React.JSX.Element {
         </div>
       )}
 
-      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-x-auto">
+      {/* Mobile card layout */}
+      <div className="md:hidden space-y-3">
+        {filtered.map((party) => {
+          const isExpanded = expandedId === party.id;
+          const rateCount = getRateCount(party.rates, rateCategories, rateMaterials);
+
+          return (
+            <div key={party.id} className="bg-crm-card rounded-xl card-shadow border border-crm-border overflow-hidden">
+              <button
+                onClick={() => toggleExpand(party.id)}
+                className="w-full text-left px-4 py-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-crm-primary-muted flex items-center justify-center text-[0.68rem] font-bold text-crm-primary shrink-0">
+                      {party.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[0.84rem] font-medium text-crm-text truncate">{party.name}</p>
+                      <span className="text-[0.72rem] font-mono text-crm-primary bg-crm-primary-muted px-1.5 py-0.5 rounded">
+                        {party.userId}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`text-[0.68rem] font-medium px-2 py-0.5 rounded-full ${
+                      rateCount === totalRates
+                        ? "bg-crm-primary-muted text-crm-primary"
+                        : rateCount > 0
+                          ? "bg-orange-400/10 text-orange-500"
+                          : "bg-crm-bg text-crm-text-muted"
+                    }`}>
+                      {rateCount}/{totalRates}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-crm-border transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                      strokeWidth={1.8}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <MapPin className="w-3 h-3 text-crm-border shrink-0" strokeWidth={1.8} />
+                    <span className="text-[0.78rem] text-crm-text-muted truncate">{party.address}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Route className="w-3 h-3 text-crm-border shrink-0" strokeWidth={1.8} />
+                    <span className="text-[0.78rem] text-crm-text-muted">{party.route}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 col-span-2">
+                    <KeyRound className="w-3 h-3 text-crm-border shrink-0" strokeWidth={1.8} />
+                    <span className="text-[0.78rem] text-crm-text-muted font-mono">
+                      {showPassFor === party.id ? party.password : "••••••"}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowPassFor((prev) => (prev === party.id ? null : party.id));
+                      }}
+                      className="p-0.5 rounded hover:bg-crm-primary-muted text-crm-border hover:text-crm-primary transition-colors"
+                    >
+                      {showPassFor === party.id ? (
+                        <EyeOff className="w-3.5 h-3.5" strokeWidth={1.8} />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5" strokeWidth={1.8} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </button>
+
+              {isExpanded && (() => {
+                const rates = getEditingRates(party);
+                const changed = hasRateChanges(party);
+                const isSaving = savingId === party.id;
+                const justSaved = savedId === party.id;
+                return (
+                  <div className="border-t border-crm-border bg-crm-bg/30 px-4 py-3 animate-[fadeIn_150ms_ease-out]">
+                    <div className="space-y-3">
+                      {rateMaterials.map((mat) => (
+                        <div key={mat}>
+                          <p className="text-[0.72rem] font-semibold text-crm-text-muted uppercase tracking-wider mb-1.5">{mat}</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {rateCategories.map((cat) => (
+                              <div key={cat}>
+                                <label className="block text-[0.65rem] text-crm-text-muted mb-0.5">{cat}</label>
+                                <div className="relative">
+                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[0.72rem] text-crm-border pointer-events-none">₹</span>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="—"
+                                    value={rates[cat]?.[mat] ?? ""}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={(e) => setRate(party.id, party, cat, mat, e.target.value)}
+                                    className="w-full h-8 pl-5 pr-1.5 rounded-lg bg-crm-card border border-crm-border text-[0.78rem] text-crm-text text-center placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-crm-border">
+                      {justSaved && (
+                        <span className="flex items-center gap-1.5 text-[0.78rem] font-medium text-blue-600">
+                          <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                          Saved
+                        </span>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); saveRates(party); }}
+                        disabled={!changed || isSaving}
+                        className="flex items-center gap-2 h-8 px-4 rounded-lg bg-blue-500 text-white text-[0.78rem] font-medium hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {isSaving ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2} />
+                        ) : (
+                          <Save className="w-3.5 h-3.5" strokeWidth={2} />
+                        )}
+                        {isSaving ? "Saving..." : "Save Rates"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          );
+        })}
+
+        {filtered.length === 0 && (
+          <div className="py-12 text-center">
+            <p className="text-[0.9rem] text-crm-text-muted">No parties found</p>
+            <p className="text-[0.78rem] text-crm-border mt-1">
+              {activeFilterCount > 0 ? "Try adjusting your filters" : "Try a different search term"}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop table layout */}
+      <div className="hidden md:block bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-x-auto">
         <table className="w-full table-fixed">
           <colgroup>
             <col className="w-10" />

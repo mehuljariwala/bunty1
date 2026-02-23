@@ -13,6 +13,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { subscribeColors, updateColor } from "@/lib/colors";
+import { useTracker } from "@/lib/activity-tracker-context";
 import type { Color } from "@/lib/types";
 
 interface StockItem {
@@ -219,6 +220,7 @@ function SummaryModal({
 }
 
 export default function StockInventoryPage(): React.JSX.Element {
+  const { trackStockUpdate } = useTracker();
   const [dbStock, setDbStock] = useState<StockItem[]>([]);
   const [localStock, setLocalStock] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -340,6 +342,17 @@ export default function StockInventoryPage(): React.JSX.Element {
     );
 
     const successCount = results.filter(Boolean).length;
+
+    if (successCount > 0) {
+      const changes = entries.map(([, change]) => ({
+        colorName: change.name,
+        category: change.category,
+        previousStock: change.original,
+        newStock: change.updated,
+      }));
+      trackStockUpdate({ changes, totalUpdated: successCount });
+    }
+
     setPendingChanges(new Map());
     setLastTouchedId(null);
     setSummaryOpen(false);

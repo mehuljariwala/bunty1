@@ -239,10 +239,10 @@ export default function RouteMasterPage(): React.JSX.Element {
 
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 h-9 px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm"
+            className="flex items-center gap-2 h-9 px-3 sm:px-4 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm"
           >
-            <Plus className="w-4 h-4" strokeWidth={2.2} />
-            Add Route
+            <Plus className="w-4 h-4 shrink-0" strokeWidth={2.2} />
+            <span className="hidden sm:inline">Add Route</span>
           </button>
         </div>
       </div>
@@ -265,7 +265,79 @@ export default function RouteMasterPage(): React.JSX.Element {
         </div>
       )}
 
-      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-x-auto">
+      {/* Mobile card layout */}
+      <div className="md:hidden space-y-2">
+        {filtered.map((route) => {
+          const count = partyCountByRoute.get(route.name.toUpperCase()) || 0;
+          return (
+            <div key={route.id} className="bg-crm-card rounded-xl card-shadow border border-crm-border px-3 py-2.5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-[0.82rem] font-medium text-crm-text truncate">{route.name}</p>
+                    {route.code && (
+                      <span className="text-[0.68rem] font-mono text-crm-primary bg-crm-primary-muted px-1.5 py-px rounded shrink-0">
+                        {route.code}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {route.area && (
+                      <>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-2.5 h-2.5 text-crm-border" strokeWidth={1.8} />
+                          <span className="text-[0.68rem] text-crm-text-muted">{route.area}</span>
+                        </div>
+                        <span className="text-[0.55rem] text-crm-border">•</span>
+                      </>
+                    )}
+                    <div className="flex items-center gap-1">
+                      <Users className="w-2.5 h-2.5 text-crm-border" strokeWidth={1.8} />
+                      <span className="text-[0.68rem] text-crm-text-muted">{count} parties</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className={`px-1.5 py-px rounded text-[0.62rem] font-semibold ${
+                    route.active
+                      ? "bg-emerald-500/10 text-emerald-600"
+                      : "bg-crm-bg text-crm-text-muted"
+                  }`}>
+                    {route.active ? "Active" : "Off"}
+                  </span>
+                  <button
+                    onClick={() => handleEdit(route)}
+                    className="p-1 rounded-md hover:bg-crm-primary-muted transition-colors text-crm-border hover:text-crm-primary"
+                  >
+                    <Pencil className="w-3 h-3" strokeWidth={1.8} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(route.id)}
+                    className="p-1 rounded-md hover:bg-red-50 transition-colors text-crm-border hover:text-red-500"
+                  >
+                    <Trash2 className="w-3 h-3" strokeWidth={1.8} />
+                  </button>
+                </div>
+              </div>
+              {route.description && (
+                <p className="text-[0.7rem] text-crm-text-muted mt-1.5 line-clamp-1">{route.description}</p>
+              )}
+            </div>
+          );
+        })}
+
+        {filtered.length === 0 && (
+          <div className="py-12 text-center">
+            <p className="text-[0.9rem] text-crm-text-muted">No routes found</p>
+            <p className="text-[0.78rem] text-crm-border mt-1">
+              {activeFilterCount > 0 ? "Try adjusting your filters" : search ? "Try a different search term" : "Add your first route to get started"}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop table layout */}
+      <div className="hidden md:block bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-x-auto">
         <table className="w-full table-fixed">
           <colgroup>
             <col style={{ width: "16%" }} />
@@ -398,9 +470,9 @@ function SummaryCard({ label, value, accent }: { label: string; value: number; a
   };
 
   return (
-    <div className={`rounded-2xl border px-5 py-4 ${styles[accent]}`}>
-      <p className="text-[0.72rem] font-semibold uppercase tracking-widest opacity-60 mb-1">{label}</p>
-      <p className="text-2xl font-bold">{value}</p>
+    <div className={`rounded-xl sm:rounded-2xl border px-3.5 sm:px-5 py-3 sm:py-4 ${styles[accent]}`}>
+      <p className="text-[0.65rem] sm:text-[0.72rem] font-semibold uppercase tracking-widest opacity-60 mb-0.5 sm:mb-1">{label}</p>
+      <p className="text-xl sm:text-2xl font-bold">{value}</p>
     </div>
   );
 }

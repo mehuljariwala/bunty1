@@ -60,35 +60,18 @@ function RateGrid({
   onChange: (cat: string, mat: string, value: string) => void;
 }): React.JSX.Element {
   return (
-    <div className="bg-crm-bg/30 rounded-xl border border-crm-border overflow-x-auto">
-      <table className="w-full min-w-[500px]">
-        <thead>
-          <tr className="border-b border-crm-border">
-            <th className="text-left px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-crm-text-muted w-32">
-              Material
-            </th>
-            {categories.map((cat) => (
-              <th
-                key={cat}
-                className="text-center px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-crm-text-muted"
-              >
-                {cat}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-crm-border/40">
-          {materials.map((mat) => (
-            <tr key={mat} className="hover:bg-crm-primary-muted/30 transition-colors">
-              <td className="px-4 py-2 text-[0.82rem] font-medium text-crm-text">
-                {mat}
-              </td>
+    <>
+      {/* Mobile: stacked layout */}
+      <div className="md:hidden bg-crm-bg/30 rounded-xl border border-crm-border p-3 space-y-3">
+        {materials.map((mat) => (
+          <div key={mat}>
+            <p className="text-[0.72rem] font-semibold text-crm-text-muted uppercase tracking-wider mb-1.5">{mat}</p>
+            <div className="grid grid-cols-3 gap-2">
               {categories.map((cat) => (
-                <td key={cat} className="text-center px-3 py-2">
-                  <div className="relative inline-block">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.72rem] text-crm-border pointer-events-none">
-                      ₹
-                    </span>
+                <div key={cat}>
+                  <label className="block text-[0.62rem] text-crm-text-muted mb-0.5">{cat}</label>
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[0.72rem] text-crm-border pointer-events-none">₹</span>
                     <input
                       type="number"
                       step="0.01"
@@ -97,16 +80,65 @@ function RateGrid({
                       value={rates[cat]?.[mat] ?? ""}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => onChange(cat, mat, e.target.value)}
-                      className="w-24 h-8 pl-6 pr-2 rounded-lg bg-crm-card border border-crm-border text-[0.82rem] text-crm-text text-center placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-full h-8 pl-5 pr-1.5 rounded-lg bg-crm-card border border-crm-border text-[0.78rem] text-crm-text text-center placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
-                </td>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: table layout */}
+      <div className="hidden md:block bg-crm-bg/30 rounded-xl border border-crm-border overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-crm-border">
+              <th className="text-left px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-crm-text-muted w-32">
+                Material
+              </th>
+              {categories.map((cat) => (
+                <th
+                  key={cat}
+                  className="text-center px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-wider text-crm-text-muted"
+                >
+                  {cat}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-crm-border/40">
+            {materials.map((mat) => (
+              <tr key={mat} className="hover:bg-crm-primary-muted/30 transition-colors">
+                <td className="px-4 py-2 text-[0.82rem] font-medium text-crm-text">
+                  {mat}
+                </td>
+                {categories.map((cat) => (
+                  <td key={cat} className="text-center px-3 py-2">
+                    <div className="relative inline-block">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[0.72rem] text-crm-border pointer-events-none">
+                        ₹
+                      </span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="--"
+                        value={rates[cat]?.[mat] ?? ""}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => onChange(cat, mat, e.target.value)}
+                        className="w-24 h-8 pl-6 pr-2 rounded-lg bg-crm-card border border-crm-border text-[0.82rem] text-crm-text text-center placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
@@ -173,8 +205,8 @@ function ApplyRateModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-crm-sidebar/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-crm-card rounded-2xl card-shadow w-full max-w-xl mx-4 animate-[fadeIn_150ms_ease-out]">
-        <div className="flex items-center justify-between px-6 pt-5 pb-4">
+      <div className="relative bg-crm-card rounded-2xl card-shadow w-full max-w-xl mx-3 sm:mx-4 animate-[fadeIn_150ms_ease-out] max-h-[92vh] flex flex-col">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 shrink-0">
           <div>
             <h3 className="text-[1.1rem] font-bold text-crm-text">
               Apply Custom Rates
@@ -192,7 +224,7 @@ function ApplyRateModal({
           </button>
         </div>
 
-        <div className="px-6 pb-2 space-y-4">
+        <div className="px-4 sm:px-6 pb-2 space-y-4 overflow-y-auto">
           <div className="rounded-xl border border-crm-border p-4">
             <p className="text-crm-primary text-[0.68rem] font-bold uppercase tracking-widest mb-3">
               Selected Parties
@@ -217,7 +249,7 @@ function ApplyRateModal({
           </div>
         </div>
 
-        <div className="px-6 py-5">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 shrink-0">
           {result && (
             <p className="flex items-center justify-center gap-1.5 text-[0.78rem] font-medium text-crm-primary mb-3 animate-[fadeIn_150ms_ease-out]">
               <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -442,25 +474,25 @@ export default function RateMasterPage(): React.JSX.Element {
     <div className="space-y-6">
       {/* Common Rate Card — applies to ALL parties */}
       <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border">
-        <div className="flex items-center justify-between px-6 pt-5 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4">
           <div>
-            <h2 className="text-[0.95rem] font-semibold text-crm-text">Common Rate Card</h2>
-            <p className="text-[0.78rem] text-crm-text-muted mt-0.5">
-              Set rates and apply across all {parties.length} parties at once
+            <h2 className="text-[0.9rem] sm:text-[0.95rem] font-semibold text-crm-text">Common Rate Card</h2>
+            <p className="text-[0.74rem] sm:text-[0.78rem] text-crm-text-muted mt-0.5">
+              Set rates and apply across all {parties.length} parties
             </p>
           </div>
           {rateCardFilled > 0 && (
-            <span className="text-[0.72rem] font-medium px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
+            <span className="text-[0.72rem] font-medium px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 self-start sm:self-auto">
               {rateCardFilled}/{totalRates} filled
             </span>
           )}
         </div>
-        <div className="px-6 pb-0">
+        <div className="px-4 sm:px-6 pb-0">
           <RateGrid rates={rateCard} categories={rateCategories} materials={rateMaterials} onChange={setRateCardValue} />
         </div>
-        <div className="flex items-center justify-end gap-3 px-6 py-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4">
           {commonResult && (
-            <span className="flex items-center gap-1.5 text-[0.78rem] font-medium text-blue-600 animate-[fadeIn_150ms_ease-out]">
+            <span className="flex items-center justify-center gap-1.5 text-[0.78rem] font-medium text-blue-600 animate-[fadeIn_150ms_ease-out]">
               <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
               Applied to {commonResult.success}/{commonResult.total} parties
             </span>
@@ -468,26 +500,26 @@ export default function RateMasterPage(): React.JSX.Element {
           <button
             onClick={applyCommonToAll}
             disabled={rateCardFilled === 0 || commonApplying}
-            className="flex items-center gap-2 h-9 px-5 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 h-9 px-5 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {commonApplying ? (
               <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
             ) : (
               <Save className="w-4 h-4" strokeWidth={2} />
             )}
-            {commonApplying ? "Applying to all..." : `Apply to All ${parties.length} Parties`}
+            {commonApplying ? "Applying..." : `Apply to All ${parties.length}`}
           </button>
         </div>
       </div>
 
       {/* Party List — select specific parties, apply custom rates via modal */}
       <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border">
-        <div className="px-6 pt-5 pb-4 space-y-4">
+        <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 space-y-3 sm:space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:justify-between">
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={toggleSelectAll}
-                className="flex items-center gap-2 text-[0.82rem] font-medium text-crm-text hover:text-crm-text transition-colors"
+                className="flex items-center gap-2 text-[0.82rem] font-medium text-crm-text hover:text-crm-text transition-colors shrink-0"
               >
                 {allSelected ? (
                   <CheckSquare className="w-4.5 h-4.5 text-blue-500" strokeWidth={1.8} />
@@ -496,9 +528,8 @@ export default function RateMasterPage(): React.JSX.Element {
                 ) : (
                   <Square className="w-4.5 h-4.5 text-slate-300" strokeWidth={1.8} />
                 )}
-                {selectedIds.size > 0
-                  ? `${selectedIds.size} selected`
-                  : "Select All"}
+                <span className="hidden sm:inline">{selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select All"}</span>
+                <span className="sm:hidden">{selectedIds.size > 0 ? selectedIds.size : "All"}</span>
               </button>
 
               <div className="relative flex-1 sm:flex-initial">
@@ -519,29 +550,29 @@ export default function RateMasterPage(): React.JSX.Element {
             <button
               onClick={() => setModalOpen(true)}
               disabled={selectedIds.size === 0}
-              className="flex items-center gap-2 h-9 px-5 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 h-9 px-4 sm:px-5 rounded-xl bg-blue-500 text-white text-[0.82rem] font-medium hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto"
             >
               <IndianRupee className="w-4 h-4" strokeWidth={2} />
               Apply Rate
             </button>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <button
               onClick={() => setActiveRoute(null)}
-              className={`px-3 py-1.5 rounded-lg text-[0.78rem] font-medium transition-colors ${
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[0.72rem] sm:text-[0.78rem] font-medium transition-colors ${
                 activeRoute === null
                   ? "bg-blue-500 text-white"
                   : "bg-slate-50 text-slate-600 hover:bg-slate-100"
               }`}
             >
-              All Routes
+              All
             </button>
             {uniqueRoutes.map((route) => (
               <button
                 key={route}
                 onClick={() => setActiveRoute(activeRoute === route ? null : route)}
-                className={`px-3 py-1.5 rounded-lg text-[0.78rem] font-medium transition-colors ${
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[0.72rem] sm:text-[0.78rem] font-medium transition-colors ${
                   activeRoute === route
                     ? "bg-blue-500 text-white"
                     : "bg-slate-50 text-slate-600 hover:bg-slate-100"
@@ -553,7 +584,105 @@ export default function RateMasterPage(): React.JSX.Element {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile card layout */}
+        <div className="md:hidden px-4 pb-4 space-y-2">
+          {filtered.map((party) => {
+            const isExpanded = expandedId === party.id;
+            const isSelected = selectedIds.has(party.id);
+            const rateCount = getRateCount(party.rates, rateCategories, rateMaterials);
+
+            return (
+              <div key={party.id} className={`rounded-xl border overflow-hidden ${isSelected ? "border-blue-300 bg-blue-50/30" : "border-crm-border"}`}>
+                <div className="flex items-center gap-2.5 px-3 py-2.5">
+                  <button
+                    onClick={() => toggleSelect(party.id)}
+                    className="p-0.5 shrink-0"
+                  >
+                    {isSelected ? (
+                      <CheckSquare className="w-4 h-4 text-blue-500" strokeWidth={1.8} />
+                    ) : (
+                      <Square className="w-4 h-4 text-slate-300" strokeWidth={1.8} />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : party.id)}
+                    className="flex-1 flex items-center gap-2.5 min-w-0 text-left"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-crm-primary-muted flex items-center justify-center text-[0.6rem] font-bold text-crm-primary shrink-0">
+                      {party.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[0.8rem] font-medium text-crm-text truncate">{party.name}</p>
+                      <span className="text-[0.68rem] text-crm-text-muted">{party.route}</span>
+                    </div>
+                  </button>
+                  <span className={`text-[0.65rem] font-medium px-1.5 py-0.5 rounded-full shrink-0 ${
+                    rateCount === totalRates
+                      ? "bg-crm-primary-muted text-crm-primary"
+                      : rateCount > 0
+                        ? "bg-orange-400/10 text-orange-500"
+                        : "bg-crm-bg text-crm-text-muted"
+                  }`}>
+                    {rateCount}/{totalRates}
+                  </span>
+                  <button onClick={() => setExpandedId(isExpanded ? null : party.id)} className="shrink-0">
+                    <ChevronDown
+                      className={`w-4 h-4 text-crm-border transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                      strokeWidth={1.8}
+                    />
+                  </button>
+                </div>
+
+                {isExpanded && (() => {
+                  const rates = getEditingRates(party);
+                  const changed = hasRateChanges(party);
+                  const isSaving = savingId === party.id;
+                  const justSaved = savedId === party.id;
+                  return (
+                    <div className="border-t border-crm-border px-3 py-3 animate-[fadeIn_150ms_ease-out]">
+                      <RateGrid
+                        rates={rates}
+                        categories={rateCategories}
+                        materials={rateMaterials}
+                        onChange={(cat, mat, value) => setPartyRate(party.id, party, cat, mat, value)}
+                      />
+                      <div className="flex items-center justify-end gap-2 mt-3">
+                        {justSaved && (
+                          <span className="flex items-center gap-1.5 text-[0.78rem] font-medium text-blue-600">
+                            <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            Saved
+                          </span>
+                        )}
+                        <button
+                          onClick={() => savePartyRates(party)}
+                          disabled={!changed || isSaving}
+                          className="flex items-center gap-2 h-8 px-4 rounded-lg bg-blue-500 text-white text-[0.78rem] font-medium hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {isSaving ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2} />
+                          ) : (
+                            <Check className="w-3.5 h-3.5" strokeWidth={2} />
+                          )}
+                          {isSaving ? "Saving..." : "Save Rates"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          })}
+
+          {filtered.length === 0 && (
+            <div className="py-12 text-center">
+              <p className="text-[0.9rem] text-crm-text-muted">No parties found</p>
+              <p className="text-[0.78rem] text-crm-border mt-1">Try a different search or route filter</p>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop table layout */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b-2 border-crm-border">

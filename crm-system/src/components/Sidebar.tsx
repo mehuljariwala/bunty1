@@ -15,11 +15,9 @@ import {
   UserCog,
   ListOrdered,
   Package,
-  Settings,
   Sprout,
-  LogOut,
-  HelpCircle,
   X,
+  Activity,
 } from "lucide-react";
 import { useSidebar } from "./SidebarContext";
 import type { LucideIcon } from "lucide-react";
@@ -43,14 +41,13 @@ const inventoryNav: NavItem[] = [
   { label: "Reports", href: "/reports", icon: BarChart3 },
 ];
 
+const analyticsNav: NavItem[] = [
+  { label: "User Activity", href: "/user-activity", icon: Activity },
+];
+
 const adminNav: NavItem[] = [
   { label: "Manage Sub Admin", href: "/manage-sub-admin", icon: ShieldCheck },
   { label: "Admin Profile", href: "/admin-profile", icon: UserCog },
-];
-
-const bottomNav: NavItem[] = [
-  { label: "Settings", href: "/settings", icon: Settings },
-  { label: "Help", href: "#", icon: HelpCircle },
 ];
 
 function NavLink({ item, pathname, expanded }: { item: NavItem; pathname: string | null; expanded: boolean }) {
@@ -182,54 +179,9 @@ export default function Sidebar() {
 
           <NavSection title="Masters" items={masterNav} pathname={pathname} expanded={expanded || isOpen} />
           <NavSection title="Inventory" items={inventoryNav} pathname={pathname} expanded={expanded || isOpen} />
+          <NavSection title="Analytics" items={analyticsNav} pathname={pathname} expanded={expanded || isOpen} />
           <NavSection title="Admin" items={adminNav} pathname={pathname} expanded={expanded || isOpen} />
         </nav>
-
-        <div className={`pb-2 ${expanded || isOpen ? "px-3" : "px-2"}`}>
-          <div className="border-t border-crm-sidebar-hover pt-2 space-y-0.5">
-            {bottomNav.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                title={!(expanded || isOpen) ? item.label : undefined}
-                className={`
-                  flex items-center gap-3 rounded-xl text-[0.85rem] font-medium
-                  transition-all duration-200
-                  ${expanded || isOpen ? "px-3 py-2" : "px-0 py-2 justify-center"}
-                  ${
-                    pathname === item.href
-                      ? "bg-crm-sidebar-active text-white"
-                      : "text-indigo-200 hover:bg-crm-sidebar-hover hover:text-white"
-                  }
-                `}
-              >
-                <item.icon className="w-[1.15rem] h-[1.15rem] text-indigo-300 shrink-0" strokeWidth={1.8} />
-                {(expanded || isOpen) && <span className="truncate">{item.label}</span>}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className={`pb-4 ${expanded || isOpen ? "px-3" : "px-2"}`}>
-          <div className={`bg-crm-sidebar-hover rounded-xl ${expanded || isOpen ? "p-3" : "p-2 flex justify-center"}`}>
-            <div className={`flex items-center ${expanded || isOpen ? "gap-2.5" : ""}`}>
-              <div className="w-8 h-8 rounded-full bg-crm-accent flex items-center justify-center text-white text-xs font-semibold shrink-0">
-                JD
-              </div>
-              {(expanded || isOpen) && (
-                <>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[0.78rem] font-semibold text-white truncate">Jane Doe</p>
-                    <p className="text-[0.65rem] text-indigo-300 truncate">jane@bloom.io</p>
-                  </div>
-                  <button className="p-1.5 rounded-lg hover:bg-crm-sidebar-active transition-colors text-indigo-300 hover:text-crm-accent">
-                    <LogOut className="w-3.5 h-3.5" strokeWidth={1.8} />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
       </aside>
     </>
   );
