@@ -445,7 +445,7 @@ export default function OrdersPage() {
           </div>
         ) : (
           <div>
-            <div className="grid grid-cols-[60px_1fr_80px_40px] md:grid-cols-[80px_1fr_1fr_120px_100px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_100px_60px] gap-4 px-5 py-3.5 border-b-2 border-crm-border sticky top-0 z-10 bg-crm-card">
+            <div className="grid grid-cols-[60px_1fr_90px_40px] md:grid-cols-[80px_1fr_1fr_120px_120px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_60px] gap-4 px-5 py-3.5 border-b-2 border-crm-border sticky top-0 z-10 bg-crm-card">
               <div className="text-[0.8rem] font-bold text-crm-text">
                 ID
               </div>
@@ -458,12 +458,9 @@ export default function OrdersPage() {
               <div className="text-[0.8rem] font-bold text-crm-text hidden md:block">
                 Route
               </div>
-              <div className="text-[0.8rem] font-bold text-crm-text flex items-center gap-1 hidden md:block">
+              <div className="text-[0.8rem] font-bold text-crm-text flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
                 Date
-              </div>
-              <div className="text-[0.8rem] font-bold text-crm-text">
-                Type
               </div>
               <div />
             </div>
@@ -487,7 +484,7 @@ export default function OrdersPage() {
                   return (
                     <div
                       key={order.id}
-                      className={`grid grid-cols-[60px_1fr_80px_40px] md:grid-cols-[80px_1fr_1fr_120px_100px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_100px_60px] gap-4 px-5 items-center absolute top-0 left-0 w-full transition-colors hover:bg-crm-primary-muted/20 ${
+                      className={`grid grid-cols-[60px_1fr_90px_40px] md:grid-cols-[80px_1fr_1fr_120px_120px_60px] lg:grid-cols-[80px_1fr_1.5fr_120px_130px_60px] gap-4 px-5 items-center absolute top-0 left-0 w-full transition-colors hover:bg-crm-primary-muted/20 ${
                         isEven ? "bg-crm-card" : "bg-crm-bg/30"
                       }`}
                       style={{
@@ -507,19 +504,8 @@ export default function OrdersPage() {
                       <div className="text-[0.84rem] text-crm-text font-medium hidden md:block">
                         {order.route}
                       </div>
-                      <div className="text-[0.84rem] text-crm-text-muted hidden md:block">
+                      <div className="text-[0.82rem] text-crm-text-muted">
                         {formatDate(order.orderDate)}
-                      </div>
-                      <div>
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-md text-[0.78rem] font-semibold ${
-                            order.type === "Running"
-                              ? "bg-emerald-500 text-white"
-                              : "bg-crm-bg text-crm-text-muted"
-                          }`}
-                        >
-                          {order.type}
-                        </span>
                       </div>
                       <div className="flex justify-center">
                         <button

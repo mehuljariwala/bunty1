@@ -63,7 +63,7 @@ export default function AuthGate({ children }: { children: ReactNode }): React.R
         <Sidebar />
         <MainContent>
           <TopBar />
-          <main className="flex-1 p-4 lg:p-8">{children}</main>
+          <main className="flex-1 p-2 sm:p-3 lg:p-4">{children}</main>
         </MainContent>
       </div>
       <CommandPalette />

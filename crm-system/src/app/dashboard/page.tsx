@@ -29,6 +29,8 @@ import {
   Pie,
   Cell,
   ReferenceLine,
+  AreaChart,
+  Area,
 } from "recharts";
 import { subscribeOrders } from "@/lib/orders";
 import { subscribeParties } from "@/lib/parties";
@@ -37,6 +39,11 @@ import { subscribeRoutes } from "@/lib/routes";
 import type { Order, Color, Party, RouteDoc } from "@/lib/types";
 
 const CHART_COLORS = ["#5b5fc7", "#f5956b", "#36b49f", "#e8b838", "#9b59b6", "#3498db"];
+const FIXED_CATEGORY_COLORS: Record<string, string> = {
+  "3 Tar": "#5b5fc7",
+  "5 Tar": "#f5956b",
+  "Yarn": "#36b49f",
+};
 const TOOLTIP_STYLE = {
   background: "#fff",
   border: "1px solid #c8cce8",
@@ -50,7 +57,7 @@ function buildCategoryColorMap(categories: string[]): Record<string, string> {
   const palette = [...CHART_COLORS];
   const map: Record<string, string> = {};
   categories.forEach((cat, i) => {
-    map[cat] = palette[i % palette.length];
+    map[cat] = FIXED_CATEGORY_COLORS[cat] ?? palette[i % palette.length];
   });
   return map;
 }
@@ -266,6 +273,31 @@ function buildLowStockList(colors: Color[]): Color[] {
     .slice(0, 6);
 }
 
+function buildDayWiseData(orders: Order[], dateFrom: string, dateTo: string): { day: string; orders: number }[] {
+  const from = new Date(dateFrom + "T00:00:00");
+  const to = new Date(dateTo + "T00:00:00");
+  const now = new Date();
+  const end = to > now ? now : to;
+
+  const countByDay = new Map<string, number>();
+  const d = new Date(from);
+  while (d <= end) {
+    const key = d.toISOString().split("T")[0];
+    countByDay.set(key, 0);
+    d.setDate(d.getDate() + 1);
+  }
+
+  for (const o of orders) {
+    if (o.orderDate >= dateFrom && o.orderDate <= dateTo && countByDay.has(o.orderDate)) {
+      countByDay.set(o.orderDate, (countByDay.get(o.orderDate) ?? 0) + 1);
+    }
+  }
+
+  return Array.from(countByDay.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([day, orders]) => ({ day, orders }));
+}
+
 type DatePreset = "1y" | "6m" | "3m" | "1m";
 
 const DATE_PRESETS: { key: DatePreset; label: string; months: number }[] = [
@@ -455,6 +487,8 @@ export default function DashboardPage() {
     [orders]
   );
 
+  const dayWiseData = useMemo(() => buildDayWiseData(orders, dateFrom, dateTo), [orders, dateFrom, dateTo]);
+
   const topParties = useMemo(() => {
     const map = new Map<string, number>();
     for (const o of orders) {
@@ -474,25 +508,14 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5">
 
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h2 className="text-[1.35rem] font-bold tracking-tight text-crm-text">Dashboard</h2>
-          <p className="text-[0.82rem] text-crm-text-muted mt-0.5">Overview of your business</p>
-        </div>
-        {hasActiveFilters && (
-          <p className="text-[0.72rem] text-crm-primary font-medium">
-            Showing filtered results ({orders.length} of {allOrders.length} orders)
-          </p>
-        )}
-      </div>
-
-      <div className="bg-white rounded-2xl card-shadow px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="flex items-center gap-2 text-crm-text-muted shrink-0">
-          <Filter className="w-4 h-4" strokeWidth={1.8} />
-          <span className="text-[0.78rem] font-semibold">Filters</span>
+      <div className="bg-white rounded-2xl card-shadow px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="flex items-center gap-3 shrink-0">
+          <h2 className="text-[1.1rem] font-bold tracking-tight text-crm-text">Dashboard</h2>
+          <div className="w-px h-5 bg-crm-border" />
+          <Filter className="w-3.5 h-3.5 text-crm-text-muted" strokeWidth={1.8} />
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+        <div className="flex flex-wrap items-center gap-3 flex-1">
           <div className="flex items-center gap-1.5">
             {DATE_PRESETS.map((p) => (
               <button
@@ -632,120 +655,94 @@ export default function DashboardPage() {
           <Link
             key={card.label}
             href={card.href}
-            className="bg-white rounded-2xl card-shadow p-4 sm:p-5 hover:shadow-md transition-shadow group"
+            className="bg-white rounded-xl card-shadow px-3 py-2.5 hover:shadow-md transition-shadow group flex items-center gap-3"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.accent}`}>
-                <card.icon className="w-4.5 h-4.5" strokeWidth={1.8} />
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-crm-border opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${card.accent}`}>
+              <card.icon className="w-4 h-4" strokeWidth={1.8} />
             </div>
-            <p className="text-[1.6rem] font-bold tracking-tight text-crm-text leading-none tabular-nums">
-              {card.value.toLocaleString()}
-            </p>
-            <p className="text-[0.75rem] text-crm-text-muted font-medium mt-1">{card.label}</p>
-            <p className="text-[0.65rem] text-crm-border mt-0.5">{card.sub}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2">
+                <p className="text-[1.25rem] font-bold tracking-tight text-crm-text leading-none tabular-nums">
+                  {card.value.toLocaleString()}
+                </p>
+                <p className="text-[0.72rem] text-crm-text-muted font-medium truncate">{card.label}</p>
+              </div>
+              <p className="text-[0.62rem] text-crm-border mt-0.5">{card.sub}</p>
+            </div>
           </Link>
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl card-shadow p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[0.88rem] font-bold text-crm-text">Stock Health</h3>
-          <Link href="/color-master" className="text-[0.72rem] font-medium text-crm-primary flex items-center gap-1 hover:underline">
-            Manage <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <div className="bg-crm-bg/60 rounded-xl px-3.5 py-3 text-center">
-            <p className="text-[1.2rem] font-bold text-crm-text tabular-nums">{stockSummary.overallPct}%</p>
-            <p className="text-[0.68rem] text-crm-text-muted font-medium mt-0.5">Overall Stock</p>
-          </div>
-          <div className="bg-emerald-50/60 rounded-xl px-3.5 py-3 text-center">
-            <p className="text-[1.2rem] font-bold text-emerald-600 tabular-nums">{stockSummary.healthy}</p>
-            <p className="text-[0.68rem] text-crm-text-muted font-medium mt-0.5">Healthy</p>
-          </div>
-          <div className="bg-red-50/60 rounded-xl px-3.5 py-3 text-center">
-            <p className="text-[1.2rem] font-bold text-red-500 tabular-nums">{stockSummary.critical}</p>
-            <p className="text-[0.68rem] text-crm-text-muted font-medium mt-0.5">Critical</p>
-          </div>
-          <div className="bg-amber-50/60 rounded-xl px-3.5 py-3 text-center">
-            <p className="text-[1.2rem] font-bold text-amber-600 tabular-nums">{stockSummary.overstock}</p>
-            <p className="text-[0.68rem] text-crm-text-muted font-medium mt-0.5">Overstock</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div>
-            <h4 className="text-[0.78rem] font-bold text-crm-text mb-3">Category Stock Levels</h4>
-            <div className="space-y-3">
-              {stockSummary.categoryBreakdown.map((cat) => {
-                const catColor = categoryColorMap[cat.category] ?? "#999";
-                return (
-                  <div key={cat.category}>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-sm" style={{ background: catColor }} />
-                        <span className="text-[0.75rem] font-medium text-crm-text">{cat.category}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {cat.critical > 0 && (
-                          <span className="text-[0.62rem] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-500">
-                            {cat.critical} critical
-                          </span>
-                        )}
-                        <span className="text-[0.72rem] font-bold tabular-nums" style={{ color: cat.pct <= 30 ? "#ef4444" : cat.pct <= 60 ? "#e8b838" : "#36b49f" }}>
-                          {cat.pct}%
-                        </span>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-crm-bg rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(cat.pct, 100)}%`, backgroundColor: catColor }} />
-                    </div>
-                  </div>
-                );
-              })}
+      {(() => {
+        const fromLabel = new Date(dateFrom + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+        const toLabel = new Date(dateTo + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+        return (
+          <div className="bg-white rounded-2xl card-shadow p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-[0.88rem] font-bold text-crm-text">
+                  Orders — Day Wise
+                </h3>
+                <p className="text-[0.72rem] text-crm-text-muted mt-0.5">
+                  {fromLabel} — {toLabel}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-crm-primary-muted">
+                <TrendingUp className="w-3.5 h-3.5 text-crm-primary" strokeWidth={2} />
+                <span className="text-[0.72rem] font-semibold text-crm-primary">
+                  {dayWiseData.reduce((s, d) => s + d.orders, 0)} orders
+                </span>
+              </div>
+            </div>
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dayWiseData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="dayWiseGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#5b5fc7" stopOpacity={0.22} />
+                      <stop offset="95%" stopColor="#5b5fc7" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 10, fill: "#9ca3b0" }}
+                    axisLine={false}
+                    tickLine={false}
+                    interval={Math.max(0, Math.ceil(dayWiseData.length / 12) - 1)}
+                    tickFormatter={(v: string) => {
+                      const d = new Date(v + "T00:00:00");
+                      return `${d.getDate()} ${MONTH_LABELS[d.getMonth()]}`;
+                    }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "#9ca3b0" }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    contentStyle={TOOLTIP_STYLE}
+                    formatter={(value: number | undefined) => [value ?? 0, "Orders"]}
+                    labelFormatter={(label: unknown) => {
+                      const d = new Date(String(label) + "T00:00:00");
+                      return `${d.getDate()} ${MONTH_LABELS[d.getMonth()]} ${d.getFullYear()}`;
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="orders"
+                    stroke="#5b5fc7"
+                    strokeWidth={2.5}
+                    fill="url(#dayWiseGradient)"
+                    dot={false}
+                    activeDot={{ r: 5, fill: "#5b5fc7", strokeWidth: 0 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
-
-          <div>
-            <div className="flex items-center gap-1.5 mb-3">
-              <AlertTriangle className="w-3.5 h-3.5 text-red-500" strokeWidth={1.8} />
-              <h4 className="text-[0.78rem] font-bold text-crm-text">Critical Stock</h4>
-            </div>
-            {lowStockList.length === 0 ? (
-              <div className="flex items-center gap-2 py-4 px-3 bg-emerald-50/60 rounded-xl">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" strokeWidth={2} />
-                <span className="text-[0.75rem] text-emerald-700 font-medium">All colors well stocked</span>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {lowStockList.map((c) => {
-                  const pct = c.maxStock > 0 ? Math.round((c.currentStock / c.maxStock) * 100) : 0;
-                  return (
-                    <div key={c.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-red-50/40">
-                      <div className="w-3 h-3 rounded-full shrink-0 border border-black/10" style={{ backgroundColor: c.hex || "#ccc" }} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[0.75rem] font-medium text-crm-text truncate">{c.name}</span>
-                          <span className="text-[0.68rem] text-crm-text-muted tabular-nums shrink-0 ml-2">{c.currentStock} / {c.maxStock}</span>
-                        </div>
-                        <div className="h-1.5 bg-white rounded-full overflow-hidden mt-1">
-                          <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: pct <= 15 ? "#ef4444" : "#f5956b" }} />
-                        </div>
-                      </div>
-                      <span className={`text-[0.62rem] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${pct <= 15 ? "bg-red-100 text-red-600" : "bg-orange-100 text-orange-600"}`}>
-                        {pct}%
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-2 bg-white rounded-2xl card-shadow p-5">
@@ -1140,6 +1137,104 @@ export default function DashboardPage() {
           </div>
         );
       })()}
+
+      <div className="bg-white rounded-2xl card-shadow px-4 py-3">
+        <div className="flex items-center justify-between mb-2.5">
+          <h3 className="text-[0.84rem] font-bold text-crm-text">Stock Health</h3>
+          <Link href="/color-master" className="text-[0.68rem] font-medium text-crm-primary flex items-center gap-1 hover:underline">
+            Manage <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          <div className="bg-crm-bg/60 rounded-lg px-2.5 py-2 text-center">
+            <p className="text-[1rem] font-bold text-crm-text tabular-nums leading-none">{stockSummary.overallPct}%</p>
+            <p className="text-[0.62rem] text-crm-text-muted font-medium mt-0.5">Overall</p>
+          </div>
+          <div className="bg-emerald-50/60 rounded-lg px-2.5 py-2 text-center">
+            <p className="text-[1rem] font-bold text-emerald-600 tabular-nums leading-none">{stockSummary.healthy}</p>
+            <p className="text-[0.62rem] text-crm-text-muted font-medium mt-0.5">Healthy</p>
+          </div>
+          <div className="bg-red-50/60 rounded-lg px-2.5 py-2 text-center">
+            <p className="text-[1rem] font-bold text-red-500 tabular-nums leading-none">{stockSummary.critical}</p>
+            <p className="text-[0.62rem] text-crm-text-muted font-medium mt-0.5">Critical</p>
+          </div>
+          <div className="bg-amber-50/60 rounded-lg px-2.5 py-2 text-center">
+            <p className="text-[1rem] font-bold text-amber-600 tabular-nums leading-none">{stockSummary.overstock}</p>
+            <p className="text-[0.62rem] text-crm-text-muted font-medium mt-0.5">Overstock</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-[0.74rem] font-bold text-crm-text mb-2">Category Stock Levels</h4>
+            <div className="space-y-2">
+              {stockSummary.categoryBreakdown.map((cat) => {
+                const catColor = categoryColorMap[cat.category] ?? "#999";
+                return (
+                  <div key={cat.category}>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-sm" style={{ background: catColor }} />
+                        <span className="text-[0.72rem] font-medium text-crm-text">{cat.category}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {cat.critical > 0 && (
+                          <span className="text-[0.6rem] font-bold px-1 py-0.5 rounded bg-red-50 text-red-500">
+                            {cat.critical} critical
+                          </span>
+                        )}
+                        <span className="text-[0.68rem] font-bold tabular-nums" style={{ color: cat.pct <= 30 ? "#ef4444" : cat.pct <= 60 ? "#e8b838" : "#36b49f" }}>
+                          {cat.pct}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-1.5 bg-crm-bg rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(cat.pct, 100)}%`, backgroundColor: catColor }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <AlertTriangle className="w-3 h-3 text-red-500" strokeWidth={1.8} />
+              <h4 className="text-[0.74rem] font-bold text-crm-text">Critical Stock</h4>
+            </div>
+            {lowStockList.length === 0 ? (
+              <div className="flex items-center gap-2 py-3 px-2.5 bg-emerald-50/60 rounded-lg">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+                <span className="text-[0.72rem] text-emerald-700 font-medium">All colors well stocked</span>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {lowStockList.map((c) => {
+                  const pct = c.maxStock > 0 ? Math.round((c.currentStock / c.maxStock) * 100) : 0;
+                  return (
+                    <div key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-red-50/40">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0 border border-black/10" style={{ backgroundColor: c.hex || "#ccc" }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[0.72rem] font-medium text-crm-text truncate">{c.name}</span>
+                          <span className="text-[0.64rem] text-crm-text-muted tabular-nums shrink-0 ml-2">{c.currentStock}/{c.maxStock}</span>
+                        </div>
+                        <div className="h-1 bg-white rounded-full overflow-hidden mt-0.5">
+                          <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: pct <= 15 ? "#ef4444" : "#f5956b" }} />
+                        </div>
+                      </div>
+                      <span className={`text-[0.6rem] font-bold px-1 py-0.5 rounded-md shrink-0 ${pct <= 15 ? "bg-red-100 text-red-600" : "bg-orange-100 text-orange-600"}`}>
+                        {pct}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       <div className="bg-white rounded-2xl card-shadow p-5">
         <h3 className="text-[0.88rem] font-bold text-crm-text mb-4">Stock Levels by Category</h3>

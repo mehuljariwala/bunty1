@@ -3,7 +3,7 @@
 import { Fragment, Suspense, useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Minus, Plus, Loader2 } from "lucide-react";
-import { collection, addDoc, doc, writeBatch } from "firebase/firestore";
+import { collection, addDoc, doc, writeBatch, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { subscribeParties } from "@/lib/parties";
 import { subscribeColors } from "@/lib/colors";
@@ -20,12 +20,31 @@ interface SelectedColor {
 }
 
 const LIGHT_HEXES = new Set([
-  "#ffffff", "#fffdd0", "#fff700", "#f1f359", "#fff04d", "#ffb6c1",
-  "#68ffd1", "#00ffff", "#9ecc1f", "#6cf205", "#fc97a7", "#afaffa",
-  "#ffc400", "#ffcba4", "#93c572", "#71bce1",
+  "#ffffff",
+  "#fffdd0",
+  "#fff700",
+  "#f1f359",
+  "#fff04d",
+  "#ffb6c1",
+  "#68ffd1",
+  "#00ffff",
+  "#9ecc1f",
+  "#6cf205",
+  "#fc97a7",
+  "#afaffa",
+  "#ffc400",
+  "#ffcba4",
+  "#93c572",
+  "#71bce1",
 ]);
 
-const SUB_CAT_ORDER = ["Celtionic", "Litchy", "Polyester", "Multy", "Rani multy"];
+const SUB_CAT_ORDER = [
+  "Celtionic",
+  "Litchy",
+  "Polyester",
+  "Multy",
+  "Rani multy",
+];
 
 function colorKey(c: SelectedColor): string {
   return `${c.category}::${c.subCategory}::${c.colour}`;
@@ -43,7 +62,10 @@ export default function CreateOrderPageWrapper() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-crm-primary animate-spin" strokeWidth={1.8} />
+          <Loader2
+            className="w-8 h-8 text-crm-primary animate-spin"
+            strokeWidth={1.8}
+          />
         </div>
       }
     >
@@ -61,7 +83,13 @@ function CreateOrderPage() {
   const [colors, setColors] = useState<Color[]>([]);
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
   const [formDate, setFormDate] = useState(
-    new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }).replace(/\//g, "-")
+    new Date()
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replace(/\//g, "-"),
   );
   const [activeCat, setActiveCat] = useState("");
   const [selectedColors, setSelectedColors] = useState<SelectedColor[]>([]);
@@ -87,7 +115,22 @@ function CreateOrderPage() {
     if (match) setSelectedParty(match);
   }, [partyIdFromUrl, parties]);
 
-  const categories = useMemo(() => [...new Set(colors.map((c) => c.category))], [colors]);
+  useEffect(() => {
+    const raw = sessionStorage.getItem("ai-order-prefill");
+    if (!raw) return;
+    sessionStorage.removeItem("ai-order-prefill");
+    try {
+      const items = JSON.parse(raw) as SelectedColor[];
+      if (Array.isArray(items) && items.length > 0) {
+        setSelectedColors(items);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const categories = useMemo(
+    () => [...new Set(colors.map((c) => c.category))],
+    [colors],
+  );
 
   useEffect(() => {
     if (categories.length > 0 && !categories.includes(activeCat)) {
@@ -97,7 +140,7 @@ function CreateOrderPage() {
 
   const currentCatColors = useMemo(
     () => colors.filter((c) => c.category === activeCat),
-    [colors, activeCat]
+    [colors, activeCat],
   );
 
   const colorsBySubCat = useMemo(() => {
@@ -128,7 +171,7 @@ function CreateOrderPage() {
 
   const totalSelectedQty = useMemo(
     () => selectedColors.reduce((s, c) => s + c.quantity, 0),
-    [selectedColors]
+    [selectedColors],
   );
 
   function addColor(color: Color) {
@@ -136,7 +179,9 @@ function CreateOrderPage() {
     setSelectedColors((prev) => {
       const idx = prev.findIndex((c) => colorKey(c) === key);
       if (idx >= 0) {
-        return prev.map((c, i) => (i === idx ? { ...c, quantity: c.quantity + 1 } : c));
+        return prev.map((c, i) =>
+          i === idx ? { ...c, quantity: c.quantity + 1, deliveredQty: c.deliveredQty + 1 } : c,
+        );
       }
       return [
         ...prev,
@@ -146,7 +191,7 @@ function CreateOrderPage() {
           category: color.category,
           subCategory: color.subCategory,
           quantity: 1,
-          deliveredQty: 0,
+          deliveredQty: 1,
           currentStock: color.currentStock,
         },
       ];
@@ -165,18 +210,22 @@ function CreateOrderPage() {
       return;
     }
     setSelectedColors((prev) =>
-      prev.map((c) => (colorKey(c) === key ? { ...c, quantity: qty } : c))
+      prev.map((c) => (colorKey(c) === key ? { ...c, quantity: qty, deliveredQty: qty } : c)),
     );
   }
 
   function updateDeliveryQty(key: string, qty: number) {
     if (qty < 0) return;
     setSelectedColors((prev) =>
-      prev.map((c) => (colorKey(c) === key ? { ...c, deliveredQty: qty, quantity: qty } : c))
+      prev.map((c) =>
+        colorKey(c) === key ? { ...c, deliveredQty: qty } : c,
+      ),
     );
   }
 
-  async function saveOrder(type: "Running" | "Complete"): Promise<string | null> {
+  async function saveOrder(
+    type: "Running" | "Complete",
+  ): Promise<string | null> {
     if (!selectedParty || saving) return null;
     setSaving(true);
 
@@ -192,7 +241,14 @@ function CreateOrderPage() {
       const grandTotalOrdered = items.reduce((s, i) => s + i.orderedQty, 0);
       const grandTotalDelivered = items.reduce((s, i) => s + i.deliveredQty, 0);
 
+      const lastOrderSnap = await getDocs(
+        query(collection(db, "orders"), orderBy("csvId", "desc"), limit(1)),
+      );
+      const lastCsvId = lastOrderSnap.empty ? 0 : (lastOrderSnap.docs[0].data().csvId as number) ?? 0;
+      const nextCsvId = lastCsvId + 1;
+
       const ref = await addDoc(collection(db, "orders"), {
+        csvId: nextCsvId,
         partyName: selectedParty.name,
         partyAddress: selectedParty.address,
         route: selectedParty.route,
@@ -207,7 +263,10 @@ function CreateOrderPage() {
       const batch = writeBatch(db);
       for (const sc of selectedColors) {
         const colorDoc = colors.find(
-          (c) => c.name === sc.colour && c.category === sc.category && c.subCategory === sc.subCategory
+          (c) =>
+            c.name === sc.colour &&
+            c.category === sc.category &&
+            c.subCategory === sc.subCategory,
         );
         if (colorDoc) {
           batch.update(doc(db, "colors", colorDoc.id), {
@@ -243,7 +302,10 @@ function CreateOrderPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-crm-primary animate-spin" strokeWidth={1.8} />
+          <Loader2
+            className="w-8 h-8 text-crm-primary animate-spin"
+            strokeWidth={1.8}
+          />
           <p className="text-[0.85rem] text-crm-text-muted">Loading...</p>
         </div>
       </div>
@@ -316,8 +378,15 @@ function CreateOrderPage() {
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
             {Array.from(colorsBySubCat.entries()).map(([subCat, subColors]) => (
               <div key={subCat}>
-                <h3 className="text-[0.88rem] font-bold text-crm-text mb-2.5">{subCat} :-</h3>
-                <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))" }}>
+                <h3 className="text-[0.88rem] font-bold text-crm-text mb-2.5">
+                  {subCat} :-
+                </h3>
+                <div
+                  className="grid gap-2"
+                  style={{
+                    gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
+                  }}
+                >
                   {subColors.map((color) => {
                     const qty = getQtyForColor(color);
                     const adjustedStock = color.currentStock - qty;
@@ -343,7 +412,9 @@ function CreateOrderPage() {
                             <p className="text-[0.78rem] font-semibold text-crm-primary truncate leading-tight">
                               {color.name}
                             </p>
-                            <p className={`text-[0.88rem] font-bold tabular-nums mt-0.5 ${stockColor(adjustedStock)}`}>
+                            <p
+                              className={`text-[0.88rem] font-bold tabular-nums mt-0.5 ${stockColor(adjustedStock)}`}
+                            >
                               {adjustedStock}
                             </p>
                           </div>
@@ -351,7 +422,10 @@ function CreateOrderPage() {
                         <div className="flex items-center border-t border-crm-border bg-crm-bg/30">
                           <button
                             onClick={() =>
-                              updateQty(`${color.category}::${color.subCategory}::${color.name}`, qty - 1)
+                              updateQty(
+                                `${color.category}::${color.subCategory}::${color.name}`,
+                                qty - 1,
+                              )
                             }
                             className="flex items-center justify-center w-9 h-7 text-crm-text-muted hover:text-crm-primary hover:bg-crm-primary-muted transition-colors"
                           >
@@ -377,7 +451,12 @@ function CreateOrderPage() {
               {categories.map((cat) => {
                 const catColors = summaryByCat[cat] ?? [];
                 const catTotal = catColors.reduce((s, c) => s + c.quantity, 0);
-                const catDelivered = catColors.reduce((s, c) => s + c.deliveredQty, 0);
+                const catDelivered = catColors.reduce(
+                  (s, c) => s + c.deliveredQty,
+                  0,
+                );
+                const CATEGORY_COLORS: Record<string, string> = { "3 Tar": "#5b5fc7", "5 Tar": "#f5956b", "Yarn": "#36b49f" };
+                const headerBg = CATEGORY_COLORS[cat] ?? "#5b5fc7";
                 return (
                   <div key={cat}>
                     <h4 className="text-[0.84rem] font-bold text-crm-text mb-1.5">
@@ -385,18 +464,34 @@ function CreateOrderPage() {
                     </h4>
                     <table className="w-full border-collapse">
                       <thead>
-                        <tr className="bg-crm-sidebar text-white">
-                          <th className="text-[0.68rem] font-semibold py-1.5 px-2 text-left w-7">#</th>
-                          <th className="text-[0.68rem] font-semibold py-1.5 px-2 text-left">Color</th>
-                          <th className="text-[0.68rem] font-semibold py-1.5 px-2 text-center w-12">Req.</th>
-                          <th className="text-[0.68rem] font-semibold py-1.5 px-2 text-center w-16">Delivery</th>
-                          <th className="text-[0.68rem] font-semibold py-1.5 px-2 text-center w-12">Add</th>
+                        <tr
+                          className="text-white"
+                          style={{ backgroundColor: headerBg }}
+                        >
+                          <th className="text-[0.68rem] font-semibold py-1.5 px-2 text-left w-7">
+                            #
+                          </th>
+                          <th className="text-[0.68rem] font-semibold py-1.5 px-2 text-left">
+                            Color
+                          </th>
+                          <th className="text-[0.68rem] font-semibold py-1.5 px-2 text-center w-12">
+                            Req.
+                          </th>
+                          <th className="text-[0.68rem] font-semibold py-1.5 px-2 text-center w-16">
+                            Delivery
+                          </th>
+                          <th className="text-[0.68rem] font-semibold py-1.5 px-2 text-center w-12">
+                            Add
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {catColors.length === 0 ? (
                           <tr className="border-b border-crm-border/50">
-                            <td colSpan={5} className="py-2 px-2 text-center text-[0.72rem] text-crm-text-muted">
+                            <td
+                              colSpan={5}
+                              className="py-2 px-2 text-center text-[0.72rem] text-crm-text-muted"
+                            >
                               —
                             </td>
                           </tr>
@@ -404,15 +499,22 @@ function CreateOrderPage() {
                           catColors.map((c, i) => {
                             const key = colorKey(c);
                             return (
-                              <tr key={key} className="border-b border-crm-border/50 hover:bg-crm-bg/30 transition-colors">
-                                <td className="py-1.5 px-2 text-[0.72rem] text-crm-text-muted">{i + 1}</td>
+                              <tr
+                                key={key}
+                                className="border-b border-crm-border/50 hover:bg-crm-bg/30 transition-colors"
+                              >
+                                <td className="py-1.5 px-2 text-[0.72rem] text-crm-text-muted">
+                                  {i + 1}
+                                </td>
                                 <td className="py-1.5 px-2">
                                   <div className="flex items-center gap-1.5">
                                     <div
                                       className={`w-3 h-3 rounded-sm shrink-0 ${LIGHT_HEXES.has(c.hex) ? "border border-crm-border" : ""}`}
                                       style={{ backgroundColor: c.hex }}
                                     />
-                                    <span className="text-[0.74rem] font-medium text-crm-text truncate">{c.colour}</span>
+                                    <span className="text-[0.74rem] font-medium text-crm-text truncate">
+                                      {c.colour}
+                                    </span>
                                   </div>
                                 </td>
                                 <td className="py-1.5 px-2 text-center text-[0.74rem] font-bold tabular-nums text-crm-text">
@@ -424,16 +526,32 @@ function CreateOrderPage() {
                                 <td className="py-1.5 px-2">
                                   <div className="flex items-center justify-center gap-0.5">
                                     <button
-                                      onClick={() => updateDeliveryQty(key, c.deliveredQty - 1)}
+                                      onClick={() =>
+                                        updateDeliveryQty(
+                                          key,
+                                          c.deliveredQty - 1,
+                                        )
+                                      }
                                       className="w-5 h-5 rounded bg-crm-bg flex items-center justify-center text-crm-text-muted hover:text-crm-primary hover:bg-crm-primary-muted transition-colors"
                                     >
-                                      <Minus className="w-2.5 h-2.5" strokeWidth={2.5} />
+                                      <Minus
+                                        className="w-2.5 h-2.5"
+                                        strokeWidth={2.5}
+                                      />
                                     </button>
                                     <button
-                                      onClick={() => updateDeliveryQty(key, c.deliveredQty + 1)}
+                                      onClick={() =>
+                                        updateDeliveryQty(
+                                          key,
+                                          c.deliveredQty + 1,
+                                        )
+                                      }
                                       className="w-5 h-5 rounded bg-crm-bg flex items-center justify-center text-crm-text-muted hover:text-crm-primary hover:bg-crm-primary-muted transition-colors"
                                     >
-                                      <Plus className="w-2.5 h-2.5" strokeWidth={2.5} />
+                                      <Plus
+                                        className="w-2.5 h-2.5"
+                                        strokeWidth={2.5}
+                                      />
                                     </button>
                                   </div>
                                 </td>
@@ -442,7 +560,10 @@ function CreateOrderPage() {
                           })
                         )}
                         <tr className="bg-crm-bg/60">
-                          <td colSpan={2} className="py-1.5 px-2 text-[0.72rem] font-bold text-crm-text">
+                          <td
+                            colSpan={2}
+                            className="py-1.5 px-2 text-[0.72rem] font-bold text-crm-text"
+                          >
                             Total
                           </td>
                           <td className="py-1.5 px-2 text-center text-[0.74rem] font-bold tabular-nums text-crm-text">
@@ -465,7 +586,9 @@ function CreateOrderPage() {
               <div className="flex justify-center gap-3">
                 <button
                   onClick={handleHold}
-                  disabled={!selectedParty || selectedColors.length === 0 || saving}
+                  disabled={
+                    !selectedParty || selectedColors.length === 0 || saving
+                  }
                   className="h-9 px-6 rounded-lg bg-crm-primary text-white text-[0.82rem] font-semibold hover:bg-crm-sidebar-active transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {saving ? "..." : "Hold"}
@@ -479,7 +602,9 @@ function CreateOrderPage() {
                 </button>
                 <button
                   onClick={handleBill}
-                  disabled={!selectedParty || selectedColors.length === 0 || saving}
+                  disabled={
+                    !selectedParty || selectedColors.length === 0 || saving
+                  }
                   className="h-9 px-6 rounded-lg bg-crm-sidebar text-white text-[0.82rem] font-semibold hover:bg-crm-sidebar-hover transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {saving ? "..." : "Bill"}

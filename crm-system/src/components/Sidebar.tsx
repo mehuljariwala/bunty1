@@ -18,6 +18,7 @@ import {
   Sprout,
   X,
   Activity,
+  Sparkles,
 } from "lucide-react";
 import { useSidebar } from "./SidebarContext";
 import type { LucideIcon } from "lucide-react";
@@ -172,6 +173,11 @@ export default function Sidebar() {
             />
             <NavLink
               item={{ label: "Orders", href: "/orders", icon: Package }}
+              pathname={pathname}
+              expanded={expanded || isOpen}
+            />
+            <NavLink
+              item={{ label: "AI Order", href: "/ai-order", icon: Sparkles }}
               pathname={pathname}
               expanded={expanded || isOpen}
             />

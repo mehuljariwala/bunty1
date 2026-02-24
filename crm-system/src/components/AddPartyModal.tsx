@@ -57,7 +57,6 @@ export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: Add
   const activeRoutes = routes.filter((r) => r.active);
   const [form, setForm] = useState<PartyFormData>(EMPTY_FORM);
   const [activeTab, setActiveTab] = useState<string>(RATE_CATEGORIES[0]);
-  const [addressTab, setAddressTab] = useState(0);
 
   if (!open) return null;
 
@@ -146,49 +145,25 @@ export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: Add
                     ))}
                   </select>
                 </div>
-                <div className="sm:col-span-2">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-[0.78rem] font-semibold text-crm-text">
-                      Address
+                {ADDRESS_LANGS.map((lang) => (
+                  <div key={lang.key} className="sm:col-span-2">
+                    <label className="block text-[0.78rem] font-semibold text-crm-text mb-1.5">
+                      {lang.label === "English" ? "Address (English)" : `Address (${lang.label})`}
+                      {lang.key !== "address" && (
+                        <span className="text-[0.68rem] font-normal text-crm-text-muted ml-1.5">Optional</span>
+                      )}
                     </label>
-                    <div className="flex items-center gap-0.5 bg-crm-bg/70 rounded-lg p-0.5 border border-crm-border">
-                      {ADDRESS_LANGS.map((lang, i) => {
-                        const hasValue = form[lang.key].trim().length > 0;
-                        return (
-                          <button
-                            key={lang.key}
-                            type="button"
-                            onClick={() => setAddressTab(i)}
-                            className={`px-2.5 py-1 rounded-md text-[0.72rem] font-semibold transition-all flex items-center gap-1.5 ${
-                              addressTab === i
-                                ? "bg-crm-primary text-white shadow-sm"
-                                : "text-crm-text-muted hover:text-crm-text hover:bg-crm-primary-muted/50"
-                            }`}
-                          >
-                            {lang.label}
-                            {hasValue && addressTab !== i && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-crm-primary shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <textarea
+                      lang={lang.lang}
+                      placeholder={lang.placeholder}
+                      value={form[lang.key]}
+                      onChange={(e) => updateField(lang.key, e.target.value)}
+                      required={lang.key === "address"}
+                      rows={2}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-crm-bg/50 border border-crm-border text-crm-text text-[0.84rem] placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary focus:bg-crm-card transition-all resize-none"
+                    />
                   </div>
-                  <textarea
-                    lang={ADDRESS_LANGS[addressTab].lang}
-                    placeholder={ADDRESS_LANGS[addressTab].placeholder}
-                    value={form[ADDRESS_LANGS[addressTab].key]}
-                    onChange={(e) => updateField(ADDRESS_LANGS[addressTab].key, e.target.value)}
-                    required={addressTab === 0}
-                    rows={2}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-crm-bg/50 border border-crm-border text-crm-text text-[0.84rem] placeholder:text-crm-text-muted/50 focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary focus:bg-crm-card transition-all resize-none"
-                  />
-                  {addressTab === 0 && (
-                    <p className="text-[0.68rem] text-crm-text-muted mt-1">
-                      English is required. Gujarati and Hindi are optional.
-                    </p>
-                  )}
-                </div>
+                ))}
               </div>
             </section>
 

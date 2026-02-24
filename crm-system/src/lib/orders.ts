@@ -3,6 +3,8 @@ import {
   query,
   orderBy,
   onSnapshot,
+  doc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type { Order, OrderItem } from "./types";
@@ -29,4 +31,8 @@ export function subscribeOrders(callback: (orders: Order[]) => void): () => void
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map((d) => docToOrder(d.id, d.data())));
   });
+}
+
+export async function markOrderComplete(orderId: string): Promise<void> {
+  await updateDoc(doc(db, COLLECTION, orderId), { type: "Complete" });
 }
