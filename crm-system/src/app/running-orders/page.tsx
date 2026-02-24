@@ -6,19 +6,20 @@ import {
   Plus,
   X,
   Printer,
-  MapPin,
-  Calendar,
-  Package,
+
+
   Loader2,
   Camera,
   FileText,
   Download,
   Send,
+  Pencil,
 } from "lucide-react";
 import { toPng } from "html-to-image";
-import { subscribeOrders, markOrderComplete } from "@/lib/orders";
+import { subscribeOrders, markOrderComplete, getNextSeqNumber, subscribeSeqCounter } from "@/lib/orders";
 import { subscribeRoutes } from "@/lib/routes";
-import type { Order, RouteDoc, OrderItem } from "@/lib/types";
+import BillLayout from "@/components/BillLayout";
+import type { Order, RouteDoc } from "@/lib/types";
 
 type TabStatus = "Running" | "Pending" | "Complete";
 
@@ -45,134 +46,8 @@ function formatDatePrint(d: string): string {
   return `${dd}-${mm}-${yyyy}`;
 }
 
-interface CategoryGroup {
-  category: string;
-  materials: Map<string, OrderItem[]>;
-  totalOrdered: number;
-  totalDelivered: number;
-}
-
-function buildCategoryGroups(items: OrderItem[]): CategoryGroup[] {
-  const catMap = new Map<string, Map<string, OrderItem[]>>();
-  for (const item of items) {
-    if (!catMap.has(item.category)) catMap.set(item.category, new Map());
-    const matMap = catMap.get(item.category)!;
-    if (!matMap.has(item.material)) matMap.set(item.material, []);
-    matMap.get(item.material)!.push(item);
-  }
-  const groups: CategoryGroup[] = [];
-  for (const [category, materials] of catMap) {
-    let totalOrdered = 0;
-    let totalDelivered = 0;
-    for (const matItems of materials.values()) {
-      for (const it of matItems) {
-        totalOrdered += it.orderedQty;
-        totalDelivered += it.deliveredQty;
-      }
-    }
-    groups.push({ category, materials, totalOrdered, totalDelivered });
-  }
-  return groups;
-}
-
-function OrderLayout({ order, sequenceNumber }: { order: Order; sequenceNumber?: number }) {
-  const groups = buildCategoryGroups(order.items ?? []);
-  const grandOrdered = order.grandTotalOrdered ?? groups.reduce((s, g) => s + g.totalOrdered, 0);
-  const grandDelivered = order.grandTotalDelivered ?? groups.reduce((s, g) => s + g.totalDelivered, 0);
-
-  return (
-    <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "#1a1a2e", fontSize: "9px", padding: "6px 10px", maxWidth: "100%", background: "#fff" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1px" }}>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: "13px", fontWeight: 700, color: "#3b3d8e", margin: 0 }}>
-            {order.partyName.toUpperCase()}
-          </h1>
-          <p style={{ fontSize: "8px", color: "#666", margin: "1px 0 0 0", lineHeight: 1.1 }}>{order.partyAddress}</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          {sequenceNumber != null && (
-            <div style={{ fontSize: "22px", fontWeight: 800, color: "#1a1a2e", background: "#f0f0f0", borderRadius: "6px", padding: "2px 14px", lineHeight: 1.2, boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }}>
-              {sequenceNumber}
-            </div>
-          )}
-          <div style={{ fontSize: "18px", fontWeight: 800, color: "#1a1a2e", border: "1.5px solid #1a1a2e", borderRadius: "3px", padding: "0 8px", lineHeight: 1.2 }}>
-            {order.csvId}
-          </div>
-        </div>
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "8px", color: "#555", marginBottom: "3px" }}>
-        <span><b>Date:-</b> {formatDatePrint(order.orderDate)}</span>
-        <span><b>Order ID:-</b> #{order.csvId}</span>
-      </div>
-      <hr style={{ border: "none", borderTop: "1px solid #bbb", margin: "0 0 3px 0" }} />
-
-      {groups.map((group) => {
-        const materialEntries = Array.from(group.materials.entries());
-        return (
-          <div key={group.category} style={{ marginBottom: "4px" }}>
-            <p style={{ textAlign: "center", fontSize: "10px", fontWeight: 700, margin: "0 0 2px 0", borderBottom: "1px solid #ccc", paddingBottom: "1px" }}>
-              {group.category}
-            </p>
-            <div style={{ display: "flex", gap: "4px", alignItems: "flex-start" }}>
-              {materialEntries.map(([material, items]) => {
-                const matOrdered = items.reduce((s, i) => s + i.orderedQty, 0);
-                const matDelivered = items.reduce((s, i) => s + i.deliveredQty, 0);
-                return (
-                  <div key={material} style={{ flex: 1, border: "1px solid #ddd", borderRadius: "2px", padding: "2px 4px" }}>
-                    <p style={{ fontSize: "8px", fontWeight: 700, margin: "0 0 1px 0", borderBottom: "1px dashed #ccc", paddingBottom: "1px" }}>
-                      {material} :-
-                    </p>
-                    <table style={{ width: "100%", fontSize: "8.5px", borderCollapse: "collapse", lineHeight: 1.15 }}>
-                      <tbody>
-                        {items.map((item, idx) => (
-                          <tr key={idx}>
-                            <td style={{ padding: "0", width: "52%" }}>{item.color}</td>
-                            <td style={{ padding: "0", textAlign: "right", width: "16%" }}>{item.orderedQty}</td>
-                            <td style={{ padding: "0", textAlign: "center", width: "16%", color: "#888" }}>-&gt;</td>
-                            <td style={{ padding: "0", textAlign: "right", width: "16%" }}>{item.deliveredQty}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr style={{ borderTop: "1px solid #333", fontWeight: 700 }}>
-                          <td style={{ padding: "1px 0 0" }}>TOTAL</td>
-                          <td style={{ padding: "1px 0 0", textAlign: "right" }}>{matOrdered}</td>
-                          <td style={{ padding: "1px 0 0", textAlign: "center", color: "#888" }}>-&gt;</td>
-                          <td style={{ padding: "1px 0 0", textAlign: "right" }}>{matDelivered}</td>
-                        </tr>
-                        <tr>
-                          <td colSpan={4} style={{ padding: "8px 0 1px", fontSize: "8px" }}>
-                            <div style={{ display: "flex", alignItems: "baseline", gap: "2px" }}>
-                              <span>Weight:</span>
-                              <span style={{ flex: 1, borderBottom: "1px solid #333" }}>&nbsp;</span>
-                            </div>
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ textAlign: "center", margin: "2px 0 0", padding: "1px 8px", border: "1px solid #333", borderRadius: "2px", fontSize: "8.5px", fontWeight: 700 }}>
-              GRAND TOTAL&nbsp;&nbsp;{group.totalOrdered} -&gt; {group.totalDelivered}
-            </div>
-          </div>
-        );
-      })}
-
-      {groups.length > 1 && (
-        <div style={{ textAlign: "center", margin: "3px 0 4px", padding: "2px 8px", border: "1.5px solid #1a1a2e", borderRadius: "2px", fontSize: "9.5px", fontWeight: 800 }}>
-          GRAND TOTAL&nbsp;&nbsp;{grandOrdered} -&gt; {grandDelivered}
-        </div>
-      )}
-
-    </div>
-  );
-}
-
-function PrintView({ order }: { order: Order }) {
-  return <OrderLayout order={order} />;
+function PrintView({ order, sequenceNumber }: { order: Order; sequenceNumber?: number }) {
+  return <BillLayout order={order} sequenceNumber={sequenceNumber} />;
 }
 
 export default function RunningOrdersPage() {
@@ -187,6 +62,8 @@ export default function RunningOrdersPage() {
   const [photoImageUrl, setPhotoImageUrl] = useState<string | null>(null);
   const [photoCapturing, setPhotoCapturing] = useState(false);
   const [cardTips, setCardTips] = useState<Record<string, string>>({});
+  const [seqCounter, setSeqCounter] = useState(0);
+  const [printSeq, setPrintSeq] = useState<number | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
   const photoCaptureRef = useRef<HTMLDivElement>(null);
 
@@ -201,18 +78,28 @@ export default function RunningOrdersPage() {
     }, 2000);
   }, []);
 
-  const handlePrint = useCallback((order: Order) => {
+  const handlePrint = useCallback(async (order: Order) => {
+    let seq = seqCounter + 1;
+    try { seq = await getNextSeqNumber(); } catch { /* use local fallback */ }
+    setPrintSeq(seq);
     setPrintOrder(order);
-    showCardTip(order.id, "Ready to print");
-    setTimeout(() => window.print(), 150);
-  }, [showCardTip]);
+    const originalTitle = document.title;
+    document.title = `${order.partyName}_${formatDatePrint(order.orderDate)}`;
+    showCardTip(order.id, `Seq #${seq} — Ready to print`);
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => { document.title = originalTitle; }, 3000);
+    }, 150);
+  }, [showCardTip, seqCounter]);
 
-  const handlePhotoClick = useCallback((order: Order) => {
+  const handlePhotoClick = useCallback(async (order: Order) => {
+    let seq = seqCounter + 1;
+    try { seq = await getNextSeqNumber(); } catch { /* use local fallback */ }
     setPhotoOrder(order);
-    setPhotoSeqInput("1");
+    setPhotoSeqInput(String(seq));
     setPhotoImageUrl(null);
-    showCardTip(order.id, "Photo opened");
-  }, [showCardTip]);
+    showCardTip(order.id, `Seq #${seq} — Photo opened`);
+  }, [showCardTip, seqCounter]);
 
   const capturePhoto = useCallback(async () => {
     if (!photoCaptureRef.current || !photoOrder) return;
@@ -258,9 +145,13 @@ export default function RunningOrdersPage() {
       setLoading(false);
     });
     const unsubRoutes = subscribeRoutes(setRoutes);
+    const unsubSeq = subscribeSeqCounter((counter) => {
+      setSeqCounter(counter);
+    });
     return () => {
       unsubOrders();
       unsubRoutes();
+      unsubSeq();
     };
   }, []);
 
@@ -272,6 +163,7 @@ export default function RunningOrdersPage() {
         });
       }
       setPrintOrder(null);
+      setPrintSeq(null);
     };
     window.addEventListener("afterprint", onAfterPrint);
     return () => window.removeEventListener("afterprint", onAfterPrint);
@@ -297,6 +189,16 @@ export default function RunningOrdersPage() {
       return true;
     });
   }, [orders, activeTab, oneWeekAgo]);
+
+  const tabCounts = useMemo(() => {
+    const counts: Record<TabStatus, number> = { Running: 0, Pending: 0, Complete: 0 };
+    for (const o of orders) {
+      if (o.type === "Running") counts.Running++;
+      if (hasPendingItems(o) && o.orderDate >= oneWeekAgo) counts.Pending++;
+      if (o.type === "Complete" && o.orderDate >= oneWeekAgo) counts.Complete++;
+    }
+    return counts;
+  }, [orders, oneWeekAgo]);
 
   const routeGroups = useMemo(() => {
     const map = new Map<string, Order[]>();
@@ -326,123 +228,164 @@ export default function RunningOrdersPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-7rem)] flex flex-col">
-      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-hidden flex flex-col flex-1 min-h-0">
+    <div className="h-[calc(100vh-7rem)] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <div className="overflow-hidden flex flex-col flex-1 min-h-0" style={{ background: "#EBEEF4" }}>
         {/* Tabs */}
-        <div className="flex justify-center border-b border-crm-border shrink-0">
+        <div className="flex justify-around shrink-0" style={{ borderBottom: "1px solid #DDDDDD", marginBottom: "15px" }}>
           {ALL_STATUSES.map((s) => {
             const active = activeTab === s;
             return (
               <button
                 key={s}
                 onClick={() => setActiveTab(s)}
-                className={`px-5 sm:px-10 py-2 sm:py-2.5 text-[0.78rem] sm:text-[0.85rem] font-semibold uppercase tracking-wider transition-all ${
-                  active
-                    ? "text-crm-primary border-b-2 border-crm-primary"
-                    : "text-crm-text-muted hover:text-crm-text"
-                }`}
+                className="uppercase transition-all"
+                style={{
+                  padding: "10px",
+                  fontSize: "13px",
+                  fontWeight: 400,
+                  color: active ? "#1460BD" : "#8D9293",
+                  backgroundColor: active ? "#F7F7F7" : "transparent",
+                  borderBottom: active ? "4px solid #1460BD" : "0px none",
+                  borderTop: "0px none",
+                  borderLeft: "0px none",
+                  borderRight: "0px none",
+                  borderRadius: "1px",
+                  cursor: "pointer",
+                }}
               >
                 {s}
+                <span
+                  className="ml-1.5 rounded-full leading-none"
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    padding: "2px 6px",
+                    backgroundColor: active ? "#1460BD" : "#e0e0e0",
+                    color: active ? "#fff" : "#8D9293",
+                  }}
+                >
+                  {tabCounts[s]}
+                </span>
               </button>
             );
           })}
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto min-h-0 px-3 sm:px-4 py-3">
+        <div className="flex-1 overflow-y-auto min-h-0" style={{ padding: "0 15px 15px" }}>
           {Array.from(routeGroups.entries()).map(([route, routeOrders]) => (
-            <div key={route} className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <MapPin className="w-3.5 h-3.5 text-crm-primary" strokeWidth={2} />
-                <p className="text-[0.78rem] font-bold text-crm-text uppercase tracking-wide">
-                  {route}
-                </p>
-                <span className="text-[0.64rem] font-semibold px-1.5 py-0.5 rounded-md bg-crm-primary-muted text-crm-primary">
-                  {routeOrders.length}
-                </span>
-              </div>
+            <div key={route} style={{ marginBottom: "10px" }}>
+              <h4 style={{ color: "#444444", fontSize: "15px", fontWeight: 500, margin: "10px 0", lineHeight: "16.5px" }}>
+                {route.toUpperCase()} :-
+              </h4>
               {routeOrders.length === 0 ? (
-                <p className="text-[0.75rem] text-crm-text-muted ml-5">
+                <p style={{ fontSize: "12.5px", color: "#8D9293", marginLeft: "5px" }}>
                   No orders in this route
                 </p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6" style={{ gap: "12px 38px", padding: "4px 4px 0" }}>
                   {routeOrders.map((order) => {
-                    const totalItems = order.items?.length ?? 0;
-                    const totalQty = order.items?.reduce((s, i) => s + i.orderedQty, 0) ?? 0;
-                    const deliveredQty = order.items?.reduce((s, i) => s + i.deliveredQty, 0) ?? 0;
+                    const delivered = order.grandTotalDelivered ?? order.items?.reduce((s, i) => s + i.deliveredQty, 0) ?? 0;
                     return (
                       <div
                         key={order.id}
                         onClick={() => setViewOrder(order)}
-                        className="bg-white rounded-xl border border-crm-border/60 p-3 cursor-pointer hover:border-crm-primary/40 hover:shadow-md transition-all group"
+                        style={{
+                          position: "relative",
+                          background: "#fff",
+                          borderRadius: "15px",
+                          boxShadow: "0px 1px 4px 0px rgba(0,0,0,0.14)",
+                          margin: "5px 0",
+                          padding: 0,
+                          overflow: "visible",
+                          transition: "0.2s",
+                          cursor: "pointer",
+                          color: "rgba(0,0,0,0.87)",
+                        }}
                       >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[0.8rem] font-bold text-crm-text truncate">
-                              {order.partyName}
-                            </p>
-                            <p className="text-[0.64rem] font-mono text-crm-border mt-0.5">
+                        <div style={{
+                          position: "absolute",
+                          top: "50%",
+                          left: "100%",
+                          transform: "translateY(-50%)",
+                          marginLeft: "1px",
+                          minWidth: "24px",
+                          height: "24px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "#fff",
+                          border: "1.5px solid #1460BD",
+                          borderRadius: "0 6px 6px 0",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          color: "#1460BD",
+                          padding: "0 5px",
+                          boxShadow: "1px 1px 3px rgba(0,0,0,0.12)",
+                          zIndex: 1,
+                          lineHeight: 1,
+                        }}>
+                          {delivered}
+                        </div>
+                        <div style={{ padding: "10px", display: "flex", flexDirection: "column", textAlign: "left" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                            <div style={{ fontSize: "14px", fontWeight: 500, color: "#1460BD", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
+                              {order.partyName.toUpperCase()}
+                            </div>
+                            <span style={{ fontSize: "11px", fontWeight: 600, color: "#444", background: "#f0f0f0", borderRadius: "4px", padding: "1px 6px", marginLeft: "6px", flexShrink: 0 }}>
                               #{order.csvId}
-                            </p>
+                            </span>
                           </div>
-                          <span className={`text-[0.6rem] font-bold px-1.5 py-0.5 rounded-md shrink-0 ml-2 ${
-                            activeTab === "Running"
-                              ? "bg-crm-primary-muted text-crm-primary"
-                              : activeTab === "Complete"
-                                ? "bg-emerald-50 text-emerald-600"
-                                : "bg-orange-50 text-orange-500"
-                          }`}>
-                            {order.type}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 text-[0.68rem] text-crm-text-muted mb-2.5">
-                          <Calendar className="w-3 h-3 shrink-0" strokeWidth={1.8} />
-                          <span>{formatDate(order.orderDate)}</span>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-1.5">
-                          <div className="bg-crm-bg/50 rounded-lg px-2 py-1.5 text-center">
-                            <p className="text-[0.88rem] font-bold text-crm-text tabular-nums leading-none">{totalItems}</p>
-                            <p className="text-[0.56rem] text-crm-text-muted font-medium mt-0.5">Colors</p>
+                          <div style={{ fontSize: "12.5px", color: "#337AB7", marginBottom: "3px" }}>
+                            {formatDate(order.orderDate)}
                           </div>
-                          <div className="bg-crm-bg/50 rounded-lg px-2 py-1.5 text-center">
-                            <p className="text-[0.88rem] font-bold text-crm-text tabular-nums leading-none">{totalQty}</p>
-                            <p className="text-[0.56rem] text-crm-text-muted font-medium mt-0.5">Ordered</p>
-                          </div>
-                          <div className="bg-crm-bg/50 rounded-lg px-2 py-1.5 text-center">
-                            <p className="text-[0.88rem] font-bold text-crm-text tabular-nums leading-none">{deliveredQty}</p>
-                            <p className="text-[0.56rem] text-crm-text-muted font-medium mt-0.5">Delivered</p>
+                          <div style={{ fontSize: "12.5px", color: "#337AB7", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {order.partyAddress}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1 mt-2.5 pt-2 border-t border-crm-border/30">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handlePrint(order); }}
-                            className="flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[0.64rem] font-medium text-crm-text-muted hover:text-crm-primary hover:bg-crm-primary-muted/50 transition-colors"
+                        <div style={{ display: "flex", alignItems: "center", borderTop: "1px solid #f0f0f0" }}>
+                          <Link
+                            href={`/create-order?edit=${order.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "7px 0", fontSize: "11.5px", fontWeight: 500, color: "#8D9293", textDecoration: "none", transition: "0.2s" }}
+                            className="hover:!text-[#1460BD] hover:!bg-[#f7f7f7]"
                           >
-                            <Printer className="w-3 h-3" strokeWidth={1.8} />
-                            Print
-                          </button>
+                            <Pencil className="w-3 h-3" strokeWidth={1.8} />
+                            Edit
+                          </Link>
+                          <div style={{ width: "1px", height: "16px", background: "#f0f0f0" }} />
                           <button
                             onClick={(e) => { e.stopPropagation(); handlePhotoClick(order); }}
-                            className="flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[0.64rem] font-medium text-crm-text-muted hover:text-crm-primary hover:bg-crm-primary-muted/50 transition-colors"
+                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "7px 0", fontSize: "11.5px", fontWeight: 500, color: "#8D9293", background: "none", border: "none", cursor: "pointer", transition: "0.2s" }}
+                            className="hover:!text-[#1460BD] hover:!bg-[#f7f7f7]"
                           >
                             <Camera className="w-3 h-3" strokeWidth={1.8} />
                             Photo
                           </button>
+                          <div style={{ width: "1px", height: "16px", background: "#f0f0f0" }} />
                           <button
+                            onClick={(e) => { e.stopPropagation(); handlePrint(order); }}
+                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "7px 0", fontSize: "11.5px", fontWeight: 500, color: "#8D9293", background: "none", border: "none", cursor: "pointer", transition: "0.2s" }}
+                            className="hover:!text-[#1460BD] hover:!bg-[#f7f7f7]"
+                          >
+                            <Printer className="w-3 h-3" strokeWidth={1.8} />
+                            Print
+                          </button>
+                          <div style={{ width: "1px", height: "16px", background: "#f0f0f0" }} />
+                          <Link
+                            href={`/order-bill/${order.id}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[0.64rem] font-medium text-crm-text-muted hover:text-crm-primary hover:bg-crm-primary-muted/50 transition-colors"
+                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "7px 0", fontSize: "11.5px", fontWeight: 500, color: "#8D9293", textDecoration: "none", transition: "0.2s" }}
+                            className="hover:!text-[#1460BD] hover:!bg-[#f7f7f7]"
                           >
                             <FileText className="w-3 h-3" strokeWidth={1.8} />
-                            Bill
-                          </button>
+                            Invoice
+                          </Link>
                         </div>
 
                         {cardTips[order.id] && (
-                          <p className="text-[0.6rem] font-medium text-emerald-600 text-center mt-1 animate-pulse">
+                          <p style={{ fontSize: "10px", fontWeight: 500, color: "#1B4D3E", textAlign: "center", padding: "4px 0" }} className="animate-pulse">
                             {cardTips[order.id]}
                           </p>
                         )}
@@ -454,12 +397,25 @@ export default function RunningOrdersPage() {
             </div>
           ))}
 
-          <div className="flex justify-center mt-4 pb-1">
+          <div className="flex justify-center" style={{ marginTop: "15px", paddingBottom: "10px" }}>
             <Link
               href="/select-party"
-              className="flex items-center gap-2 h-9 px-7 rounded-xl bg-crm-primary text-white text-[0.82rem] font-semibold hover:bg-[#4845a2] transition-colors shadow-sm"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "10px 30px",
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "#fff",
+                backgroundColor: "#1460BD",
+                border: "1px solid #1460BD",
+                borderRadius: "3px",
+                textDecoration: "none",
+                cursor: "pointer",
+              }}
             >
-              <Plus className="w-3.5 h-3.5" strokeWidth={2.2} />
+              <Plus className="w-4 h-4" strokeWidth={2} />
               New Order
             </Link>
           </div>
@@ -475,20 +431,21 @@ export default function RunningOrdersPage() {
               .print-order-sheet, .print-order-sheet * { visibility: visible !important; }
               .print-order-sheet {
                 position: fixed !important;
-                top: 0; left: 0; right: 0; bottom: 0;
+                top: 0; left: 0; right: 0;
                 z-index: 99999;
                 background: #fff;
                 padding: 0;
                 margin: 0;
               }
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .no-print { display: none !important; }
-              @page { size: A4; margin: 6mm 8mm; }
+              @page { margin: 0; }
             }
             @media screen {
               .print-order-sheet { display: none; }
             }
           `}</style>
-          <PrintView order={printOrder} />
+          <PrintView order={printOrder} sequenceNumber={printSeq ?? undefined} />
         </div>
       )}
 
@@ -523,6 +480,9 @@ export default function RunningOrdersPage() {
                   <div>
                     <label className="block text-[0.72rem] font-semibold text-crm-text-muted uppercase tracking-wider mb-1.5">
                       Sequence Number
+                      <span className="ml-2 normal-case tracking-normal font-normal text-[0.68rem] text-crm-text-muted/70">
+                        (Today&apos;s count: {seqCounter})
+                      </span>
                     </label>
                     <input
                       type="number"
@@ -536,7 +496,7 @@ export default function RunningOrdersPage() {
                   {/* Hidden capture area */}
                   <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
                     <div ref={photoCaptureRef} style={{ width: "540px" }}>
-                      <OrderLayout order={photoOrder} sequenceNumber={parseInt(photoSeqInput) || 1} />
+                      <BillLayout order={photoOrder} sequenceNumber={parseInt(photoSeqInput) || 1} />
                     </div>
                   </div>
 

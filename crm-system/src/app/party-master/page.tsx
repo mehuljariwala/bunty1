@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState, useRef, useEffect, useMemo } from "react";
-import { Plus, Search, Filter, ChevronDown, MapPin, Route, KeyRound, Eye, EyeOff, X, Loader2, Save, Check } from "lucide-react";
+import { Plus, Search, Filter, ChevronDown, MapPin, Route, KeyRound, Eye, EyeOff, X, Loader2, Save, Check, Pencil } from "lucide-react";
 import AddPartyModal from "@/components/AddPartyModal";
 import { subscribeParties, addParty, updateParty } from "@/lib/parties";
 import { subscribeColors } from "@/lib/colors";
@@ -43,6 +43,7 @@ export default function PartyMasterPage(): React.JSX.Element {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [routesList, setRoutesList] = useState<RouteDoc[]>([]);
+  const [editParty, setEditParty] = useState<Party | null>(null);
 
   const totalRates = rateCategories.length * rateMaterials.length;
 
@@ -109,6 +110,11 @@ export default function PartyMasterPage(): React.JSX.Element {
 
   async function handleAdd(party: Omit<Party, "id">): Promise<void> {
     await addParty(party);
+  }
+
+  async function handleEdit(id: string, data: Partial<Omit<Party, "id">>): Promise<void> {
+    await updateParty(id, data);
+    setEditParty(null);
   }
 
   function toggleExpand(id: string) {
@@ -370,6 +376,12 @@ export default function PartyMasterPage(): React.JSX.Element {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditParty(party); setModalOpen(true); }}
+                      className="p-1.5 rounded-lg text-crm-text-muted hover:text-crm-primary hover:bg-crm-primary-muted transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
+                    </button>
                     <span className={`text-[0.68rem] font-medium px-2 py-0.5 rounded-full ${
                       rateCount === totalRates
                         ? "bg-crm-primary-muted text-crm-primary"
@@ -493,11 +505,12 @@ export default function PartyMasterPage(): React.JSX.Element {
         <table className="w-full table-fixed">
           <colgroup>
             <col className="w-10" />
-            <col style={{ width: "22%" }} />
-            <col style={{ width: "12%" }} />
-            <col style={{ width: "26%" }} />
-            <col style={{ width: "12%" }} />
-            <col style={{ width: "18%" }} />
+            <col style={{ width: "20%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "24%" }} />
+            <col style={{ width: "11%" }} />
+            <col style={{ width: "16%" }} />
+            <col style={{ width: "9%" }} />
             <col style={{ width: "10%" }} />
           </colgroup>
           <thead>
@@ -509,6 +522,7 @@ export default function PartyMasterPage(): React.JSX.Element {
               <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Route</th>
               <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Password</th>
               <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Rates</th>
+              <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -595,6 +609,15 @@ export default function PartyMasterPage(): React.JSX.Element {
                         {rateCount}/{totalRates}
                       </span>
                     </td>
+                    <td className="px-5 py-3 text-center">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditParty(party); setModalOpen(true); }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.72rem] font-medium text-crm-text-muted hover:text-crm-primary hover:bg-crm-primary-muted transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
+                        Edit
+                      </button>
+                    </td>
                   </tr>
 
                   {isExpanded && (() => {
@@ -605,7 +628,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                     return (
                       <tr className="border-b border-crm-border/40">
                         <td></td>
-                        <td colSpan={6} className="px-5 py-4">
+                        <td colSpan={7} className="px-5 py-4">
                           <div className="bg-crm-bg/30 rounded-xl border border-crm-border overflow-hidden animate-[fadeIn_150ms_ease-out]">
                             <table className="w-full">
                               <thead>
@@ -690,8 +713,10 @@ export default function PartyMasterPage(): React.JSX.Element {
 
       <AddPartyModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => { setModalOpen(false); setEditParty(null); }}
         onAdd={handleAdd}
+        onEdit={handleEdit}
+        editParty={editParty}
         routes={routesList}
       />
     </div>

@@ -22,6 +22,8 @@ interface AddPartyModalProps {
   open: boolean;
   onClose: () => void;
   onAdd: (party: Omit<Party, "id">) => Promise<void>;
+  onEdit?: (id: string, data: Partial<Omit<Party, "id">>) => Promise<void>;
+  editParty?: Party | null;
   routes?: RouteDoc[];
 }
 
@@ -53,10 +55,31 @@ const ADDRESS_LANGS = [
   { key: "addressHi" as const, lang: "hi", label: "हिन्दी", placeholder: "पूरा पता हिंदी में" },
 ] as const;
 
-export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: AddPartyModalProps) {
+export default function AddPartyModal({ open, onClose, onAdd, onEdit, editParty, routes = [] }: AddPartyModalProps) {
   const activeRoutes = routes.filter((r) => r.active);
   const [form, setForm] = useState<PartyFormData>(EMPTY_FORM);
   const [activeTab, setActiveTab] = useState<string>(RATE_CATEGORIES[0]);
+  const [didPrefill, setDidPrefill] = useState<string | null>(null);
+
+  const isEditMode = !!editParty;
+
+  if (open && editParty && didPrefill !== editParty.id) {
+    setForm({
+      name: editParty.name,
+      address: editParty.address,
+      addressGu: editParty.addressGu ?? "",
+      addressHi: editParty.addressHi ?? "",
+      route: editParty.route,
+      userId: editParty.userId,
+      password: editParty.password,
+      rates: { ...buildEmptyRates(), ...editParty.rates },
+    });
+    setDidPrefill(editParty.id);
+  }
+
+  if (!open && didPrefill) {
+    setDidPrefill(null);
+  }
 
   if (!open) return null;
 
@@ -76,10 +99,14 @@ export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: Add
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
-    await onAdd({
-      ...form,
-      status: "Enable" as const,
-    });
+    if (isEditMode && onEdit && editParty) {
+      await onEdit(editParty.id, { ...form });
+    } else {
+      await onAdd({
+        ...form,
+        status: "Enable" as const,
+      });
+    }
     setForm(EMPTY_FORM);
     setActiveTab(RATE_CATEGORIES[0]);
     onClose();
@@ -97,7 +124,7 @@ export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: Add
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 shrink-0">
           <h2 className="text-[1rem] font-bold text-crm-text tracking-tight">
-            Add New Party
+            {isEditMode ? "Edit Party" : "Add New Party"}
           </h2>
           <button
             type="button"
@@ -273,7 +300,7 @@ export default function AddPartyModal({ open, onClose, onAdd, routes = [] }: Add
                 className="h-11 rounded-xl bg-crm-primary text-white font-semibold text-[0.84rem] hover:bg-crm-primary-light active:opacity-90 transition-colors flex items-center justify-center gap-2 shadow-sm"
               >
                 <Check className="w-4 h-4" strokeWidth={2.5} />
-                Create Party
+                {isEditMode ? "Update Party" : "Create Party"}
               </button>
             </div>
           </div>

@@ -38,10 +38,10 @@ import { subscribeColors } from "@/lib/colors";
 import { subscribeRoutes } from "@/lib/routes";
 import type { Order, Color, Party, RouteDoc } from "@/lib/types";
 
-const CHART_COLORS = ["#5b5fc7", "#f5956b", "#36b49f", "#e8b838", "#9b59b6", "#3498db"];
+const CHART_COLORS = ["#f5956b", "#5b5fc7", "#36b49f", "#e8b838", "#9b59b6", "#3498db"];
 const FIXED_CATEGORY_COLORS: Record<string, string> = {
-  "3 Tar": "#5b5fc7",
-  "5 Tar": "#f5956b",
+  "3 Tar": "#f5956b",
+  "5 Tar": "#5b5fc7",
   "Yarn": "#36b49f",
 };
 const TOOLTIP_STYLE = {

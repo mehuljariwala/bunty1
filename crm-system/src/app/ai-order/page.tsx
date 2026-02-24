@@ -192,8 +192,8 @@ export default function AiOrderPage() {
   }, [parsed]);
 
   const CATEGORY_COLORS: Record<string, string> = {
-    "3 Tar": "#5b5fc7",
-    "5 Tar": "#f5956b",
+    "3 Tar": "#f5956b",
+    "5 Tar": "#5b5fc7",
     "Yarn": "#36b49f",
   };
 

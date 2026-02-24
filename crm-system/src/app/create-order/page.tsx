@@ -7,6 +7,7 @@ import { collection, addDoc, doc, writeBatch, query, orderBy, limit, getDocs } f
 import { db } from "@/lib/firebase";
 import { subscribeParties } from "@/lib/parties";
 import { subscribeColors } from "@/lib/colors";
+import { getOrder, updateOrder } from "@/lib/orders";
 import type { Party, Color } from "@/lib/types";
 
 interface SelectedColor {
@@ -78,6 +79,7 @@ function CreateOrderPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const partyIdFromUrl = searchParams.get("partyId");
+  const editOrderId = searchParams.get("edit");
 
   const [parties, setParties] = useState<Party[]>([]);
   const [colors, setColors] = useState<Color[]>([]);
@@ -95,6 +97,7 @@ function CreateOrderPage() {
   const [selectedColors, setSelectedColors] = useState<SelectedColor[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editOrderCsvId, setEditOrderCsvId] = useState<number | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeParties((loaded) => {
@@ -114,6 +117,37 @@ function CreateOrderPage() {
     const match = parties.find((p) => p.id === partyIdFromUrl);
     if (match) setSelectedParty(match);
   }, [partyIdFromUrl, parties]);
+
+  useEffect(() => {
+    if (!editOrderId || parties.length === 0 || colors.length === 0) return;
+    getOrder(editOrderId).then((order) => {
+      if (!order) return;
+      setEditOrderCsvId(order.csvId);
+      const party = parties.find((p) => p.name === order.partyName);
+      if (party) setSelectedParty(party);
+      const d = new Date(order.orderDate + "T00:00:00");
+      setFormDate(
+        d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }).replace(/\//g, "-"),
+      );
+      if (order.items && order.items.length > 0) {
+        const prefilled: SelectedColor[] = order.items.map((item) => {
+          const colorDoc = colors.find(
+            (c) => c.name === item.color && c.category === item.category && c.subCategory === item.material,
+          );
+          return {
+            colour: item.color,
+            hex: colorDoc?.hex ?? "#ccc",
+            category: item.category,
+            subCategory: item.material,
+            quantity: item.orderedQty,
+            deliveredQty: item.deliveredQty,
+            currentStock: colorDoc?.currentStock ?? 0,
+          };
+        });
+        setSelectedColors(prefilled);
+      }
+    });
+  }, [editOrderId, parties, colors]);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("ai-order-prefill");
@@ -241,6 +275,11 @@ function CreateOrderPage() {
       const grandTotalOrdered = items.reduce((s, i) => s + i.orderedQty, 0);
       const grandTotalDelivered = items.reduce((s, i) => s + i.deliveredQty, 0);
 
+      if (editOrderId) {
+        await updateOrder(editOrderId, { items, grandTotalOrdered, grandTotalDelivered, type });
+        return editOrderId;
+      }
+
       const lastOrderSnap = await getDocs(
         query(collection(db, "orders"), orderBy("csvId", "desc"), limit(1)),
       );
@@ -270,7 +309,7 @@ function CreateOrderPage() {
         );
         if (colorDoc) {
           batch.update(doc(db, "colors", colorDoc.id), {
-            currentStock: colorDoc.currentStock - sc.quantity,
+            currentStock: colorDoc.currentStock - sc.deliveredQty,
           });
         }
       }
@@ -337,7 +376,7 @@ function CreateOrderPage() {
             Order ID
           </span>
           <span className="text-[0.82rem] font-bold text-crm-primary border border-crm-primary/30 rounded px-2.5 py-0.5 bg-crm-primary-muted/50">
-            #
+            #{editOrderCsvId ?? ""}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -389,7 +428,9 @@ function CreateOrderPage() {
                 >
                   {subColors.map((color) => {
                     const qty = getQtyForColor(color);
-                    const adjustedStock = color.currentStock - qty;
+                    const key = `${color.category}::${color.subCategory}::${color.name}`;
+                    const delivered = selectedColors.find((c) => colorKey(c) === key)?.deliveredQty ?? 0;
+                    const adjustedStock = color.currentStock - delivered;
                     const isLightHex = LIGHT_HEXES.has(color.hex);
                     return (
                       <div
@@ -455,7 +496,7 @@ function CreateOrderPage() {
                   (s, c) => s + c.deliveredQty,
                   0,
                 );
-                const CATEGORY_COLORS: Record<string, string> = { "3 Tar": "#5b5fc7", "5 Tar": "#f5956b", "Yarn": "#36b49f" };
+                const CATEGORY_COLORS: Record<string, string> = { "3 Tar": "#f5956b", "5 Tar": "#5b5fc7", "Yarn": "#36b49f" };
                 const headerBg = CATEGORY_COLORS[cat] ?? "#5b5fc7";
                 return (
                   <div key={cat}>
@@ -591,7 +632,7 @@ function CreateOrderPage() {
                   }
                   className="h-9 px-6 rounded-lg bg-crm-primary text-white text-[0.82rem] font-semibold hover:bg-crm-sidebar-active transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {saving ? "..." : "Hold"}
+                  {saving ? "..." : editOrderId ? "Update" : "Hold"}
                 </button>
                 <button
                   onClick={handleClear}
