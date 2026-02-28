@@ -54,6 +54,18 @@ export interface SubAdmin {
   createdAt: string;
 }
 
+export interface PhotoRecord {
+  id: string;
+  orderId: string;
+  orderCsvId: number;
+  partyName: string;
+  route: string;
+  orderDate: string;
+  sequenceNumber: number;
+  imageUrl: string;
+  capturedAt: string;
+}
+
 export interface Color {
   id: string;
   name: string;

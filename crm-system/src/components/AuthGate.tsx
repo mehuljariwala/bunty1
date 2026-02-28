@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import Sidebar from "@/components/Sidebar";
-import TopBar from "@/components/TopBar";
 import MainContent from "@/components/MainContent";
 import CommandPalette from "@/components/CommandPalette";
 import { ActivityTrackerProvider } from "@/lib/activity-tracker-context";
@@ -23,7 +22,7 @@ export default function AuthGate({ children }: { children: ReactNode }): React.R
       router.replace("/login");
     }
     if (user && isLoginPage) {
-      router.replace("/dashboard");
+      router.replace("/running-orders");
     }
   }, [user, loading, isLoginPage, router]);
 
@@ -62,8 +61,7 @@ export default function AuthGate({ children }: { children: ReactNode }): React.R
       <div className="flex min-h-screen">
         <Sidebar />
         <MainContent>
-          <TopBar />
-          <main className="flex-1 p-2 sm:p-3 lg:p-4">{children}</main>
+          <main className="flex-1 flex flex-col px-2 sm:px-3 lg:px-4 py-2 sm:py-3">{children}</main>
         </MainContent>
       </div>
       <CommandPalette />

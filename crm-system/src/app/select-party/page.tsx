@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { Loader2, Search, MapPin } from "lucide-react";
 import { subscribeParties } from "@/lib/parties";
 import { subscribeRoutes } from "@/lib/routes";
-import type { Party, RouteDoc } from "@/lib/types";
+import { subscribeOrders } from "@/lib/orders";
+import type { Party, RouteDoc, Order } from "@/lib/types";
 
 export default function SelectPartyPage() {
   const router = useRouter();
   const [parties, setParties] = useState<Party[]>([]);
   const [routes, setRoutes] = useState<RouteDoc[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -30,11 +32,22 @@ export default function SelectPartyPage() {
       if (partiesLoaded) setLoading(false);
     });
 
+    const unsubOrders = subscribeOrders(setOrders);
+
     return () => {
       unsubParties();
       unsubRoutes();
+      unsubOrders();
     };
   }, []);
+
+  const runningPartyNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const o of orders) {
+      if (o.type === "Running") names.add(o.partyName);
+    }
+    return names;
+  }, [orders]);
 
   const filteredParties = useMemo(() => {
     if (!search.trim()) return parties;
@@ -87,8 +100,8 @@ export default function SelectPartyPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-7rem)] flex flex-col">
-      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-hidden flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1">
         <div className="flex items-center justify-between border-b border-crm-border shrink-0 px-4 sm:px-6 py-3">
           <h1 className="text-[0.9rem] sm:text-[1rem] font-bold text-crm-primary uppercase tracking-wider">
             Party Name
@@ -107,9 +120,9 @@ export default function SelectPartyPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0 px-3 sm:px-5 py-3 sm:py-4">
+        <div className="px-3 sm:px-5 py-3 sm:py-4">
           {Array.from(routeGroups.entries()).map(([routeName, routeParties]) => (
-            <div key={routeName} className="mb-4">
+            <div key={routeName} className="mb-5">
               <div className="flex items-center gap-1.5 mb-2">
                 <MapPin
                   className="w-3.5 h-3.5 text-crm-primary"
@@ -120,20 +133,32 @@ export default function SelectPartyPage() {
                 </p>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-2.5">
-                {routeParties.map((party) => (
-                  <button
-                    key={party.id}
-                    onClick={() => handleSelect(party)}
-                    className="group text-left bg-crm-bg/40 hover:bg-crm-primary-muted border border-crm-border/60 hover:border-crm-primary/40 rounded-xl px-3 py-2.5 transition-all hover:shadow-sm active:scale-[0.97]"
-                  >
-                    <p className="text-[0.8rem] font-semibold text-crm-primary truncate leading-tight">
-                      {party.name}
-                    </p>
-                    <p className="text-[0.68rem] text-crm-text-muted truncate mt-0.5 leading-snug">
-                      {party.address}
-                    </p>
-                  </button>
-                ))}
+                {routeParties.map((party) => {
+                  const hasRunning = runningPartyNames.has(party.name);
+                  return (
+                    <button
+                      key={party.id}
+                      onClick={() => handleSelect(party)}
+                      className="group text-left bg-white hover:bg-crm-primary-muted border border-crm-border/60 hover:border-crm-primary/40 rounded-xl overflow-hidden transition-all hover:shadow-sm active:scale-[0.97]"
+                    >
+                      <div className="px-3 py-2.5">
+                        <p className="text-[0.8rem] font-semibold text-crm-primary truncate leading-tight">
+                          {party.name}
+                        </p>
+                        <p className="text-[0.68rem] text-crm-text-muted truncate mt-0.5 leading-snug">
+                          {party.address}
+                        </p>
+                      </div>
+                      {hasRunning && (
+                        <div className="bg-amber-50 border-t border-amber-200 px-2 py-0.5">
+                          <p className="text-[0.58rem] font-medium text-amber-600 truncate">
+                            Running order exists
+                          </p>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}

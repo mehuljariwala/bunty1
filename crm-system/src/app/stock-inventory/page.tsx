@@ -423,8 +423,8 @@ export default function StockInventoryPage(): React.JSX.Element {
   }
 
   return (
-    <div ref={contentRef} className="h-[calc(100vh-7rem)] flex flex-col">
-      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-hidden flex flex-col flex-1 min-h-0">
+    <div ref={contentRef} className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1">
 
         {/* Top bar: Save button when changes exist */}
         {changeCount > 0 && (

@@ -7,7 +7,7 @@ import {
   BookUser,
   Palette,
   ArrowRight,
-  Loader2,
+
   TrendingUp,
   Calendar,
   Filter,
@@ -317,12 +317,70 @@ function getDefaultDateFrom(): string {
   return getDateFromMonthsAgo(12);
 }
 
+function Shimmer({ className }: { className?: string }) {
+  return (
+    <div className={`bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-[shimmer_1.5s_ease-in-out_infinite] rounded-lg ${className ?? ""}`} />
+  );
+}
+
+function CardShimmer() {
+  return (
+    <div className="bg-white rounded-xl card-shadow px-3 py-2.5 flex items-center gap-3">
+      <Shimmer className="w-8 h-8 rounded-lg shrink-0" />
+      <div className="flex-1 space-y-1.5">
+        <Shimmer className="h-5 w-16" />
+        <Shimmer className="h-3 w-24" />
+      </div>
+    </div>
+  );
+}
+
+function ChartShimmer({ height = "h-52" }: { height?: string }) {
+  return (
+    <div className="bg-white rounded-2xl card-shadow p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="space-y-1.5">
+          <Shimmer className="h-4 w-40" />
+          <Shimmer className="h-3 w-28" />
+        </div>
+        <Shimmer className="h-7 w-24 rounded-xl" />
+      </div>
+      <Shimmer className={`w-full ${height}`} />
+    </div>
+  );
+}
+
+function ListShimmer({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="bg-white rounded-2xl card-shadow overflow-hidden">
+      <div className="flex items-center justify-between px-5 pt-4 pb-3">
+        <Shimmer className="h-4 w-32" />
+        <Shimmer className="h-3 w-16" />
+      </div>
+      <div className="px-5 pb-4 space-y-3">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Shimmer className="w-2 h-2 rounded-full shrink-0" />
+            <div className="flex-1 space-y-1">
+              <Shimmer className="h-3.5 w-3/4" />
+              <Shimmer className="h-2.5 w-1/2" />
+            </div>
+            <Shimmer className="h-5 w-16 rounded-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [parties, setParties] = useState<Party[]>([]);
   const [colors, setColors] = useState<Color[]>([]);
   const [_routes, setRoutes] = useState<RouteDoc[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [ordersLoaded, setOrdersLoaded] = useState(false);
+  const [partiesLoaded, setPartiesLoaded] = useState(false);
+  const [colorsLoaded, setColorsLoaded] = useState(false);
   const [dateFrom, setDateFrom] = useState(getDefaultDateFrom);
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split("T")[0]);
   const [activePreset, setActivePreset] = useState<DatePreset | null>("1y");
@@ -334,15 +392,10 @@ export default function DashboardPage() {
   const partyDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let loaded = 0;
-    const done = (): void => {
-      loaded++;
-      if (loaded >= 4) setLoading(false);
-    };
-    const u1 = subscribeOrders((d) => { setAllOrders(d); done(); });
-    const u2 = subscribeParties((d) => { setParties(d); done(); });
-    const u3 = subscribeColors((d) => { setColors(d); done(); });
-    const u4 = subscribeRoutes((d) => { setRoutes(d); done(); });
+    const u1 = subscribeOrders((d) => { setAllOrders(d); setOrdersLoaded(true); });
+    const u2 = subscribeParties((d) => { setParties(d); setPartiesLoaded(true); });
+    const u3 = subscribeColors((d) => { setColors(d); setColorsLoaded(true); });
+    const u4 = subscribeRoutes((d) => { setRoutes(d); });
     return () => { u1(); u2(); u3(); u4(); };
   }, []);
 
@@ -497,14 +550,6 @@ export default function DashboardPage() {
     return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [orders]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 text-crm-primary animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5">
 
@@ -617,63 +662,71 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          {
-            label: "Total Delivered",
-            sub: `${completedOrders.length} completed orders`,
-            value: totalDeliveredQtyAll.toLocaleString(),
-            icon: CheckCircle2,
-            accent: "bg-emerald-50 text-emerald-600",
-            href: "/orders",
-          },
-          {
-            label: "Running Orders",
-            sub: `${pendingQty.toLocaleString()} qty pending`,
-            value: runningCount,
-            icon: ListOrdered,
-            accent: "bg-crm-primary-muted text-crm-primary",
-            href: "/running-orders",
-          },
-          {
-            label: "Active Parties",
-            sub: `${new Set(completedOrders.map((o) => o.partyName)).size} ordered`,
-            value: parties.length,
-            icon: Users,
-            accent: "bg-[#ede8f8] text-[#7c5fc7]",
-            href: "/party-master",
-          },
-          {
-            label: "Stock Alerts",
-            sub: `of ${colors.filter((c) => c.maxStock > 0).length} tracked colors`,
-            value: stockAlertCount,
-            icon: AlertTriangle,
-            accent: stockAlertCount > 0 ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-500",
-            href: "/color-master",
-          },
-        ].map((card) => (
-          <Link
-            key={card.label}
-            href={card.href}
-            className="bg-white rounded-xl card-shadow px-3 py-2.5 hover:shadow-md transition-shadow group flex items-center gap-3"
-          >
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${card.accent}`}>
-              <card.icon className="w-4 h-4" strokeWidth={1.8} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-2">
-                <p className="text-[1.25rem] font-bold tracking-tight text-crm-text leading-none tabular-nums">
-                  {card.value.toLocaleString()}
-                </p>
-                <p className="text-[0.72rem] text-crm-text-muted font-medium truncate">{card.label}</p>
+      {!(ordersLoaded && partiesLoaded && colorsLoaded) ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => <CardShimmer key={i} />)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            {
+              label: "Total Delivered",
+              sub: `${completedOrders.length} completed orders`,
+              value: totalDeliveredQtyAll.toLocaleString(),
+              icon: CheckCircle2,
+              accent: "bg-emerald-50 text-emerald-600",
+              href: "/orders",
+            },
+            {
+              label: "Running Orders",
+              sub: `${pendingQty.toLocaleString()} qty pending`,
+              value: runningCount,
+              icon: ListOrdered,
+              accent: "bg-crm-primary-muted text-crm-primary",
+              href: "/running-orders",
+            },
+            {
+              label: "Active Parties",
+              sub: `${new Set(completedOrders.map((o) => o.partyName)).size} ordered`,
+              value: parties.length,
+              icon: Users,
+              accent: "bg-[#ede8f8] text-[#7c5fc7]",
+              href: "/party-master",
+            },
+            {
+              label: "Stock Alerts",
+              sub: `of ${colors.filter((c) => c.maxStock > 0).length} tracked colors`,
+              value: stockAlertCount,
+              icon: AlertTriangle,
+              accent: stockAlertCount > 0 ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-500",
+              href: "/color-master",
+            },
+          ].map((card) => (
+            <Link
+              key={card.label}
+              href={card.href}
+              className="bg-white rounded-xl card-shadow px-3 py-2.5 hover:shadow-md transition-shadow group flex items-center gap-3"
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${card.accent}`}>
+                <card.icon className="w-4 h-4" strokeWidth={1.8} />
               </div>
-              <p className="text-[0.62rem] text-crm-border mt-0.5">{card.sub}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <p className="text-[1.25rem] font-bold tracking-tight text-crm-text leading-none tabular-nums">
+                    {card.value.toLocaleString()}
+                  </p>
+                  <p className="text-[0.72rem] text-crm-text-muted font-medium truncate">{card.label}</p>
+                </div>
+                <p className="text-[0.62rem] text-crm-border mt-0.5">{card.sub}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
-      {(() => {
+      {!ordersLoaded ? (
+        <ChartShimmer />
+      ) : (() => {
         const fromLabel = new Date(dateFrom + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
         const toLabel = new Date(dateTo + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
         return (
@@ -744,6 +797,12 @@ export default function DashboardPage() {
         );
       })()}
 
+      {!ordersLoaded ? (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          <div className="lg:col-span-2"><ChartShimmer height="h-64" /></div>
+          <div className="lg:col-span-3"><ChartShimmer height="h-80" /></div>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-2 bg-white rounded-2xl card-shadow p-5">
           <h3 className="text-[0.88rem] font-bold text-crm-text mb-3">Category Distribution</h3>
@@ -942,8 +1001,11 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      )}
 
-      {(() => {
+      {!(ordersLoaded && colorsLoaded) ? (
+        <ChartShimmer height="h-72" />
+      ) : (() => {
         const active = categoryInsights.find((r) => r.category === activeCatTab) ?? categoryInsights[0];
         if (!active) return null;
         const catColor = categoryColorMap[active.category] ?? "#5b5fc7";
@@ -1075,7 +1137,9 @@ export default function DashboardPage() {
         );
       })()}
 
-      {(() => {
+      {!(ordersLoaded && colorsLoaded) ? (
+        <ChartShimmer height="h-80" />
+      ) : (() => {
         const active = categoryInsights.find((r) => r.category === activeCatTab) ?? categoryInsights[0];
         if (!active) return null;
         const catColor = categoryColorMap[active.category] ?? "#5b5fc7";
@@ -1138,6 +1202,9 @@ export default function DashboardPage() {
         );
       })()}
 
+      {!colorsLoaded ? (
+        <ChartShimmer height="h-48" />
+      ) : (
       <div className="bg-white rounded-2xl card-shadow px-4 py-3">
         <div className="flex items-center justify-between mb-2.5">
           <h3 className="text-[0.84rem] font-bold text-crm-text">Stock Health</h3>
@@ -1235,7 +1302,11 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      )}
 
+      {!colorsLoaded ? (
+        <ChartShimmer height="h-64" />
+      ) : (
       <div className="bg-white rounded-2xl card-shadow p-5">
         <h3 className="text-[0.88rem] font-bold text-crm-text mb-4">Stock Levels by Category</h3>
         <div className="h-64">
@@ -1270,7 +1341,14 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
       </div>
+      )}
 
+      {!ordersLoaded ? (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          <div className="lg:col-span-3"><ListShimmer rows={6} /></div>
+          <div className="lg:col-span-2"><ListShimmer rows={5} /></div>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
         <div className="lg:col-span-3 bg-white rounded-2xl card-shadow overflow-hidden">
@@ -1334,6 +1412,7 @@ export default function DashboardPage() {
         </div>
 
       </div>
+      )}
     </div>
   );
 }

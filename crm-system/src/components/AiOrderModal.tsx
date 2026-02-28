@@ -1,0 +1,355 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import {
+  Sparkles,
+  Loader2,
+  AlertCircle,
+  Check,
+  Zap,
+  X,
+  Package,
+} from "lucide-react";
+import type { Color } from "@/lib/types";
+
+interface ParsedItem {
+  category: string;
+  colorName: string;
+  quantity: number;
+  matched: boolean;
+  matchedColor?: Color;
+}
+
+interface SelectedColor {
+  colour: string;
+  hex: string;
+  category: string;
+  subCategory: string;
+  quantity: number;
+  deliveredQty: number;
+  currentStock: number;
+}
+
+interface AiOrderModalProps {
+  open: boolean;
+  onClose: () => void;
+  colors: Color[];
+  onApply: (items: SelectedColor[]) => void;
+}
+
+const PLACEHOLDER_TEXT = `5 TAR
+
+RED       :  1
+RAMA      :  1
+N-BLUE    :  2
+CHIKU     :  1
+BLACK     :  2
+MAHENDI   :  2
+SKY       :  1
+
+3 TAR
+
+RED       :  2
+WHITE     :  1
+BLACK     :  2
+MAHROON   :  1
+B-CREAM   :  1
+COFEE     :  2
+PISTA     :  1
+MAHENDI   :  1
+
+Yarn
+
+RED       :  1
+BLACK     :  1`;
+
+const CATEGORY_COLORS: Record<string, string> = {
+  "3 Tar": "#f5956b",
+  "5 Tar": "#5b5fc7",
+  "Yarn": "#36b49f",
+};
+
+export default function AiOrderModal({ open, onClose, colors, onApply }: AiOrderModalProps) {
+  const [orderText, setOrderText] = useState("");
+  const [parsing, setParsing] = useState(false);
+  const [parsed, setParsed] = useState<ParsedItem[] | null>(null);
+  const [error, setError] = useState("");
+
+  const colorNames = useMemo(() => colors.map((c) => c.name), [colors]);
+
+  function matchColorToDb(name: string, category: string): Color | undefined {
+    const lower = name.toLowerCase().trim();
+    const exact = colors.find(
+      (c) => c.name.toLowerCase() === lower && c.category.toLowerCase() === category.toLowerCase(),
+    );
+    if (exact) return exact;
+
+    const catMatch = colors.find(
+      (c) =>
+        c.category.toLowerCase() === category.toLowerCase() &&
+        (c.name.toLowerCase().includes(lower) || lower.includes(c.name.toLowerCase())),
+    );
+    if (catMatch) return catMatch;
+
+    return colors.find((c) => c.name.toLowerCase() === lower);
+  }
+
+  async function handleParse() {
+    if (!orderText.trim()) return;
+    setParsing(true);
+    setError("");
+    setParsed(null);
+
+    try {
+      const res = await fetch("/api/parse-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderText: orderText.trim(),
+          colorNames: [...new Set(colorNames)],
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to parse");
+      }
+
+      const data = await res.json() as { items: { category: string; colorName: string; quantity: number }[] };
+
+      const items: ParsedItem[] = data.items.map((item) => {
+        const dbColor = matchColorToDb(item.colorName, item.category);
+        return {
+          category: item.category,
+          colorName: dbColor ? dbColor.name : item.colorName,
+          quantity: item.quantity,
+          matched: !!dbColor,
+          matchedColor: dbColor,
+        };
+      });
+
+      setParsed(items);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setParsing(false);
+    }
+  }
+
+  function handleApply() {
+    if (!parsed) return;
+
+    const items: SelectedColor[] = parsed
+      .filter((item) => item.matchedColor)
+      .map((item) => ({
+        colour: item.matchedColor!.name,
+        hex: item.matchedColor!.hex,
+        category: item.matchedColor!.category,
+        subCategory: item.matchedColor!.subCategory,
+        quantity: item.quantity,
+        deliveredQty: item.quantity,
+        currentStock: item.matchedColor!.currentStock,
+      }));
+
+    onApply(items);
+    handleClose();
+  }
+
+  function handleClose() {
+    setOrderText("");
+    setParsed(null);
+    setError("");
+    onClose();
+  }
+
+  const matchedCount = parsed?.filter((i) => i.matched).length ?? 0;
+  const unmatchedCount = parsed ? parsed.length - matchedCount : 0;
+  const totalQty = parsed?.reduce((s, i) => s + i.quantity, 0) ?? 0;
+
+  const groupedByCategory = useMemo(() => {
+    if (!parsed) return new Map<string, ParsedItem[]>();
+    const map = new Map<string, ParsedItem[]>();
+    for (const item of parsed) {
+      const list = map.get(item.category) ?? [];
+      list.push(item);
+      map.set(item.category, list);
+    }
+    return map;
+  }, [parsed]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
+
+      <div className="relative w-full max-w-4xl max-h-[90vh] mx-4 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-[fadeIn_150ms_ease-out]">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-crm-border shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-crm-primary to-crm-sidebar flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-white" strokeWidth={2} />
+            </div>
+            <div>
+              <h2 className="text-[0.95rem] font-bold text-crm-text">AI Order</h2>
+              <p className="text-[0.68rem] text-crm-text-muted">Paste order text and let AI fill the order</p>
+            </div>
+          </div>
+          <button
+            onClick={handleClose}
+            className="p-1.5 rounded-lg hover:bg-crm-bg text-crm-text-muted hover:text-crm-text transition-colors"
+          >
+            <X className="w-5 h-5" strokeWidth={1.8} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-[0.76rem] font-bold text-crm-text">
+                    Order Text
+                  </label>
+                  <span className="text-[0.64rem] text-crm-text-muted">
+                    Paste your order below
+                  </span>
+                </div>
+                <textarea
+                  value={orderText}
+                  onChange={(e) => { setOrderText(e.target.value); setParsed(null); setError(""); }}
+                  placeholder={PLACEHOLDER_TEXT}
+                  rows={14}
+                  className="w-full px-3.5 py-3 rounded-xl bg-crm-bg/30 border border-crm-border text-[0.82rem] text-crm-text font-mono leading-relaxed placeholder:text-crm-border focus:outline-none focus:ring-2 focus:ring-crm-primary/20 focus:border-crm-primary/50 focus:bg-white transition-all resize-none"
+                />
+
+                <button
+                  onClick={handleParse}
+                  disabled={!orderText.trim() || parsing}
+                  className="mt-3 w-full h-11 rounded-xl bg-gradient-to-r from-crm-primary to-crm-sidebar text-white font-semibold text-[0.84rem] hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {parsing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Parsing with AI...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4" strokeWidth={2} />
+                      Parse Order
+                    </>
+                  )}
+                </button>
+
+                {error && (
+                  <div className="mt-3 flex items-start gap-2 px-3 py-2.5 rounded-lg bg-red-50 border border-red-200">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" strokeWidth={2} />
+                    <p className="text-[0.76rem] text-red-600">{error}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {!parsed ? (
+                <div className="bg-crm-bg/30 rounded-xl p-8 flex flex-col items-center justify-center min-h-[300px] text-center border border-crm-border/50">
+                  <div className="w-14 h-14 rounded-2xl bg-crm-bg flex items-center justify-center mb-3">
+                    <Sparkles className="w-6 h-6 text-crm-border" strokeWidth={1.5} />
+                  </div>
+                  <p className="text-[0.84rem] font-semibold text-crm-text-muted">Results will appear here</p>
+                  <p className="text-[0.7rem] text-crm-border mt-1 max-w-[240px]">
+                    Paste your order text and click &quot;Parse Order&quot;
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-[0.84rem] font-bold text-crm-text">Parsed Results</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[0.66rem] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">
+                          {matchedCount} matched
+                        </span>
+                        {unmatchedCount > 0 && (
+                          <span className="text-[0.66rem] font-bold px-2 py-0.5 rounded-md bg-orange-50 text-orange-500">
+                            {unmatchedCount} unmatched
+                          </span>
+                        )}
+                        <span className="text-[0.66rem] font-bold px-2 py-0.5 rounded-md bg-crm-primary-muted text-crm-primary">
+                          {totalQty} qty
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 max-h-[340px] overflow-y-auto">
+                      {Array.from(groupedByCategory.entries()).map(([cat, items]) => {
+                        const headerBg = CATEGORY_COLORS[cat] ?? "#5b5fc7";
+                        const catQty = items.reduce((s, i) => s + i.quantity, 0);
+                        return (
+                          <div key={cat} className="rounded-lg overflow-hidden border border-crm-border/50">
+                            <div
+                              className="flex items-center justify-between px-3 py-2 text-white"
+                              style={{ backgroundColor: headerBg }}
+                            >
+                              <span className="text-[0.76rem] font-bold">{cat}</span>
+                              <span className="text-[0.66rem] font-semibold opacity-80">
+                                {items.length} colors &middot; {catQty} qty
+                              </span>
+                            </div>
+                            <div className="divide-y divide-crm-border/30">
+                              {items.map((item, i) => (
+                                <div
+                                  key={`${item.colorName}-${i}`}
+                                  className={`flex items-center gap-2.5 px-3 py-2 ${
+                                    item.matched ? "bg-white" : "bg-orange-50/40"
+                                  }`}
+                                >
+                                  {item.matchedColor && (
+                                    <div
+                                      className="w-4 h-4 rounded-sm shrink-0 border border-black/10"
+                                      style={{ backgroundColor: item.matchedColor.hex }}
+                                    />
+                                  )}
+                                  {!item.matchedColor && (
+                                    <AlertCircle className="w-4 h-4 text-orange-400 shrink-0" strokeWidth={2} />
+                                  )}
+                                  <span className={`flex-1 text-[0.78rem] font-medium ${item.matched ? "text-crm-text" : "text-orange-600"}`}>
+                                    {item.colorName}
+                                  </span>
+                                  {item.matched && (
+                                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" strokeWidth={2.5} />
+                                  )}
+                                  <span className="text-[0.78rem] font-bold tabular-nums text-crm-text w-6 text-right">
+                                    {item.quantity}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleApply}
+                    disabled={matchedCount === 0}
+                    className="w-full h-11 rounded-xl bg-crm-sidebar text-white font-bold text-[0.84rem] hover:bg-crm-sidebar-active transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <Package className="w-4 h-4" strokeWidth={2} />
+                    Apply to Order ({matchedCount} colors, {totalQty} qty)
+                  </button>
+
+                  {unmatchedCount > 0 && (
+                    <p className="text-[0.68rem] text-crm-text-muted text-center">
+                      {unmatchedCount} unmatched color{unmatchedCount > 1 ? "s" : ""} will be skipped
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

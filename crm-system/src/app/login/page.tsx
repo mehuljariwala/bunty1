@@ -21,7 +21,7 @@ export default function LoginPage(): React.ReactElement {
 
     try {
       await signIn(email, password);
-      router.push("/dashboard");
+      router.push("/running-orders");
     } catch {
       setError("Invalid email or password. Please try again.");
     } finally {

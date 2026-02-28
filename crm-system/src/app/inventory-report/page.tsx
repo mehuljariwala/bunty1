@@ -209,8 +209,8 @@ export default function InventoryReportPage(): React.JSX.Element {
   }
 
   return (
-    <div className="h-[calc(100vh-7rem)] flex flex-col">
-      <div className="bg-crm-card rounded-2xl card-shadow border border-crm-border overflow-hidden flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1">
 
         {/* Tabs: category + filters */}
         <div className="flex flex-col gap-0 px-3 sm:px-5 pt-1 sm:pt-3 pb-0 border-b border-crm-border/40 shrink-0">

@@ -6,6 +6,7 @@ interface SidebarContextType {
   isOpen: boolean;
   expanded: boolean;
   toggle: () => void;
+  open: () => void;
   close: () => void;
   setExpanded: (val: boolean) => void;
 }
@@ -17,10 +18,11 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   const [expanded, setExpanded] = useState(false);
 
   const toggle = () => setIsOpen((prev) => !prev);
+  const open = () => setIsOpen(true);
   const close = () => setIsOpen(false);
 
   return (
-    <SidebarContext.Provider value={{ isOpen, toggle, close, expanded, setExpanded }}>
+    <SidebarContext.Provider value={{ isOpen, toggle, open, close, expanded, setExpanded }}>
       {children}
     </SidebarContext.Provider>
   );

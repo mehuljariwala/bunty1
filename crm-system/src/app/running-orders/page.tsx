@@ -6,18 +6,14 @@ import {
   Plus,
   X,
   Printer,
-
-
   Loader2,
-  Camera,
   FileText,
-  Download,
-  Send,
   Pencil,
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { subscribeOrders, markOrderComplete, getNextSeqNumber, subscribeSeqCounter } from "@/lib/orders";
 import { subscribeRoutes } from "@/lib/routes";
+import { uploadOrderPhoto, savePhotoRecord } from "@/lib/photos";
 import BillLayout from "@/components/BillLayout";
 import type { Order, RouteDoc } from "@/lib/types";
 
@@ -57,10 +53,6 @@ export default function RunningOrdersPage() {
   const [activeTab, setActiveTab] = useState<TabStatus>("Running");
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const [printOrder, setPrintOrder] = useState<Order | null>(null);
-  const [photoOrder, setPhotoOrder] = useState<Order | null>(null);
-  const [photoSeqInput, setPhotoSeqInput] = useState("1");
-  const [photoImageUrl, setPhotoImageUrl] = useState<string | null>(null);
-  const [photoCapturing, setPhotoCapturing] = useState(false);
   const [cardTips, setCardTips] = useState<Record<string, string>>({});
   const [seqCounter, setSeqCounter] = useState(0);
   const [printSeq, setPrintSeq] = useState<number | null>(null);
@@ -78,66 +70,50 @@ export default function RunningOrdersPage() {
     }, 2000);
   }, []);
 
+  const pendingPrint = useRef<{ order: Order; seq: number } | null>(null);
+
   const handlePrint = useCallback(async (order: Order) => {
     let seq = seqCounter + 1;
     try { seq = await getNextSeqNumber(); } catch { /* use local fallback */ }
     setPrintSeq(seq);
     setPrintOrder(order);
+    pendingPrint.current = { order, seq };
+    showCardTip(order.id, `Seq #${seq} — Capturing photo...`);
+  }, [showCardTip, seqCounter]);
+
+  useEffect(() => {
+    if (!pendingPrint.current || !printOrder || !photoCaptureRef.current) return;
+    const { order, seq } = pendingPrint.current;
+    pendingPrint.current = null;
+
+    const captureNode = photoCaptureRef.current;
+
     const originalTitle = document.title;
     document.title = `${order.partyName}_${formatDatePrint(order.orderDate)}`;
-    showCardTip(order.id, `Seq #${seq} — Ready to print`);
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => { document.title = originalTitle; }, 3000);
-    }, 150);
-  }, [showCardTip, seqCounter]);
+    window.print();
+    setTimeout(() => { document.title = originalTitle; }, 1000);
+    showCardTip(order.id, `Seq #${seq} — Printed`);
 
-  const handlePhotoClick = useCallback(async (order: Order) => {
-    let seq = seqCounter + 1;
-    try { seq = await getNextSeqNumber(); } catch { /* use local fallback */ }
-    setPhotoOrder(order);
-    setPhotoSeqInput(String(seq));
-    setPhotoImageUrl(null);
-    showCardTip(order.id, `Seq #${seq} — Photo opened`);
-  }, [showCardTip, seqCounter]);
-
-  const capturePhoto = useCallback(async () => {
-    if (!photoCaptureRef.current || !photoOrder) return;
-    setPhotoCapturing(true);
-    try {
-      const dataUrl = await toPng(photoCaptureRef.current, {
-        pixelRatio: 3,
-        backgroundColor: "#ffffff",
+    toPng(captureNode, { pixelRatio: 3, backgroundColor: "#ffffff" })
+      .then(async (dataUrl) => {
+        const blob = await (await fetch(dataUrl)).blob();
+        const imageUrl = await uploadOrderPhoto(blob, order.id, seq);
+        await savePhotoRecord({
+          orderId: order.id,
+          orderCsvId: order.csvId,
+          partyName: order.partyName,
+          route: order.route,
+          orderDate: order.orderDate,
+          sequenceNumber: seq,
+          imageUrl,
+          capturedAt: new Date().toISOString(),
+        });
+        showCardTip(order.id, `Seq #${seq} — Photo saved`);
+      })
+      .catch(() => {
+        showCardTip(order.id, `Seq #${seq} — Photo upload failed`);
       });
-      setPhotoImageUrl(dataUrl);
-      showCardTip(photoOrder.id, "Ready to print");
-    } catch {
-      alert("Failed to capture image");
-    }
-    setPhotoCapturing(false);
-  }, [photoOrder, showCardTip]);
-
-  const downloadPhoto = useCallback(() => {
-    if (!photoImageUrl || !photoOrder) return;
-    const link = document.createElement("a");
-    link.download = `order-${photoOrder.csvId}-seq${photoSeqInput}.png`;
-    link.href = photoImageUrl;
-    link.click();
-  }, [photoImageUrl, photoOrder, photoSeqInput]);
-
-  const shareToWhatsApp = useCallback(async () => {
-    if (!photoImageUrl || !photoOrder) return;
-    try {
-      const blob = await (await fetch(photoImageUrl)).blob();
-      await navigator.clipboard.write([
-        new ClipboardItem({ "image/png": blob }),
-      ]);
-    } catch {
-      downloadPhoto();
-    }
-    const text = encodeURIComponent(`Order #${photoOrder.csvId} - ${photoOrder.partyName} (Seq: ${photoSeqInput})`);
-    window.open(`https://wa.me/919998478787?text=${text}`, "_blank");
-  }, [photoImageUrl, photoOrder, photoSeqInput, downloadPhoto]);
+  }, [printOrder, showCardTip]);
 
   useEffect(() => {
     const unsubOrders = subscribeOrders((loaded) => {
@@ -228,8 +204,8 @@ export default function RunningOrdersPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-7rem)] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      <div className="overflow-hidden flex flex-col flex-1 min-h-0" style={{ background: "#EBEEF4" }}>
+    <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1">
         {/* Tabs */}
         <div className="flex justify-around shrink-0" style={{ borderBottom: "1px solid #DDDDDD", marginBottom: "15px" }}>
           {ALL_STATUSES.map((s) => {
@@ -238,7 +214,7 @@ export default function RunningOrdersPage() {
               <button
                 key={s}
                 onClick={() => setActiveTab(s)}
-                className="uppercase transition-all"
+                className="uppercase transition-all flex-1 sm:flex-none"
                 style={{
                   padding: "10px",
                   fontSize: "13px",
@@ -272,7 +248,7 @@ export default function RunningOrdersPage() {
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto min-h-0" style={{ padding: "0 15px 15px" }}>
+        <div style={{ padding: "0 15px 15px" }}>
           {Array.from(routeGroups.entries()).map(([route, routeOrders]) => (
             <div key={route} style={{ marginBottom: "10px" }}>
               <h4 style={{ color: "#444444", fontSize: "15px", fontWeight: 500, margin: "10px 0", lineHeight: "16.5px" }}>
@@ -283,7 +259,7 @@ export default function RunningOrdersPage() {
                   No orders in this route
                 </p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6" style={{ gap: "12px 38px", padding: "4px 4px 0" }}>
+                <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 xs:gap-x-[38px] xs:gap-y-3" style={{ padding: "4px 4px 0" }}>
                   {routeOrders.map((order) => {
                     const delivered = order.grandTotalDelivered ?? order.items?.reduce((s, i) => s + i.deliveredQty, 0) ?? 0;
                     return (
@@ -303,7 +279,8 @@ export default function RunningOrdersPage() {
                           color: "rgba(0,0,0,0.87)",
                         }}
                       >
-                        <div style={{
+                        {/* Delivered badge — outside card on desktop, inline on mobile */}
+                        <div className="hidden xs:flex" style={{
                           position: "absolute",
                           top: "50%",
                           left: "100%",
@@ -311,7 +288,6 @@ export default function RunningOrdersPage() {
                           marginLeft: "1px",
                           minWidth: "24px",
                           height: "24px",
-                          display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           background: "#fff",
@@ -332,9 +308,15 @@ export default function RunningOrdersPage() {
                             <div style={{ fontSize: "14px", fontWeight: 500, color: "#1460BD", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
                               {order.partyName.toUpperCase()}
                             </div>
-                            <span style={{ fontSize: "11px", fontWeight: 600, color: "#444", background: "#f0f0f0", borderRadius: "4px", padding: "1px 6px", marginLeft: "6px", flexShrink: 0 }}>
-                              #{order.csvId}
-                            </span>
+                            <div className="flex items-center gap-1 shrink-0 ml-1.5">
+                              <span style={{ fontSize: "11px", fontWeight: 600, color: "#444", background: "#f0f0f0", borderRadius: "4px", padding: "1px 6px" }}>
+                                #{order.csvId}
+                              </span>
+                              {/* Inline delivered badge — mobile only */}
+                              <span className="xs:hidden" style={{ fontSize: "10px", fontWeight: 700, color: "#fff", background: "#1460BD", borderRadius: "4px", padding: "1px 6px" }}>
+                                {delivered}
+                              </span>
+                            </div>
                           </div>
                           <div style={{ fontSize: "12.5px", color: "#337AB7", marginBottom: "3px" }}>
                             {formatDate(order.orderDate)}
@@ -354,15 +336,6 @@ export default function RunningOrdersPage() {
                             <Pencil className="w-3 h-3" strokeWidth={1.8} />
                             Edit
                           </Link>
-                          <div style={{ width: "1px", height: "16px", background: "#f0f0f0" }} />
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handlePhotoClick(order); }}
-                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "7px 0", fontSize: "11.5px", fontWeight: 500, color: "#8D9293", background: "none", border: "none", cursor: "pointer", transition: "0.2s" }}
-                            className="hover:!text-[#1460BD] hover:!bg-[#f7f7f7]"
-                          >
-                            <Camera className="w-3 h-3" strokeWidth={1.8} />
-                            Photo
-                          </button>
                           <div style={{ width: "1px", height: "16px", background: "#f0f0f0" }} />
                           <button
                             onClick={(e) => { e.stopPropagation(); handlePrint(order); }}
@@ -449,109 +422,11 @@ export default function RunningOrdersPage() {
         </div>
       )}
 
-      {/* Photo modal */}
-      {photoOrder && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-crm-sidebar/30 backdrop-blur-sm"
-          onClick={() => { setPhotoOrder(null); setPhotoImageUrl(null); }}
-        >
-          <div
-            className="bg-crm-card rounded-2xl shadow-xl w-full max-w-md mx-4 max-h-[90vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-crm-border/50 shrink-0">
-              <div>
-                <h3 className="text-[0.92rem] font-bold text-crm-text">
-                  Photo — #{photoOrder.csvId}
-                </h3>
-                <p className="text-[0.7rem] text-crm-text-muted mt-0.5">{photoOrder.partyName}</p>
-              </div>
-              <button
-                onClick={() => { setPhotoOrder(null); setPhotoImageUrl(null); }}
-                className="p-2 rounded-lg hover:bg-crm-primary-muted text-crm-text-muted hover:text-crm-text transition-colors"
-              >
-                <X className="w-4 h-4" strokeWidth={2} />
-              </button>
-            </div>
-
-            <div className="px-5 py-4 overflow-y-auto flex-1 min-h-0">
-              {!photoImageUrl ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[0.72rem] font-semibold text-crm-text-muted uppercase tracking-wider mb-1.5">
-                      Sequence Number
-                      <span className="ml-2 normal-case tracking-normal font-normal text-[0.68rem] text-crm-text-muted/70">
-                        (Today&apos;s count: {seqCounter})
-                      </span>
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={photoSeqInput}
-                      onChange={(e) => setPhotoSeqInput(e.target.value)}
-                      className="w-full h-10 px-3 rounded-xl border border-crm-border text-[0.9rem] font-bold text-crm-text text-center focus:outline-none focus:ring-2 focus:ring-crm-primary/30 focus:border-crm-primary"
-                    />
-                  </div>
-
-                  {/* Hidden capture area */}
-                  <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
-                    <div ref={photoCaptureRef} style={{ width: "540px" }}>
-                      <BillLayout order={photoOrder} sequenceNumber={parseInt(photoSeqInput) || 1} />
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={capturePhoto}
-                    disabled={photoCapturing}
-                    className="w-full h-10 rounded-xl bg-crm-primary text-white text-[0.82rem] font-semibold hover:bg-[#4845a2] transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
-                  >
-                    {photoCapturing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} />
-                    ) : (
-                      <Camera className="w-4 h-4" strokeWidth={2} />
-                    )}
-                    {photoCapturing ? "Capturing..." : "Generate Photo"}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="rounded-xl border border-crm-border overflow-hidden">
-                    <img
-                      src={photoImageUrl}
-                      alt={`Order #${photoOrder.csvId}`}
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={downloadPhoto}
-                      className="h-9 rounded-xl border border-crm-border text-[0.78rem] font-semibold text-crm-text hover:bg-crm-primary-muted transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <Download className="w-3.5 h-3.5" strokeWidth={2} />
-                      Download
-                    </button>
-                    <button
-                      onClick={shareToWhatsApp}
-                      className="h-9 rounded-xl bg-[#25D366] text-white text-[0.78rem] font-semibold hover:bg-[#1fb855] transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <Send className="w-3.5 h-3.5" strokeWidth={2} />
-                      WhatsApp
-                    </button>
-                  </div>
-                  <p className="text-[0.64rem] text-crm-text-muted text-center">
-                    Image copied to clipboard — paste (Ctrl+V) in WhatsApp chat
-                  </p>
-
-                  <button
-                    onClick={() => setPhotoImageUrl(null)}
-                    className="w-full h-8 rounded-lg text-[0.72rem] font-medium text-crm-text-muted hover:text-crm-text hover:bg-crm-bg transition-colors"
-                  >
-                    Change sequence number
-                  </button>
-                </div>
-              )}
-            </div>
+      {/* Offscreen capture area for auto-photo */}
+      {printOrder && (
+        <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
+          <div ref={photoCaptureRef} style={{ width: "540px" }}>
+            <BillLayout order={printOrder} sequenceNumber={printSeq ?? undefined} />
           </div>
         </div>
       )}

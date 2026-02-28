@@ -117,6 +117,11 @@ export default function PartyMasterPage(): React.JSX.Element {
     setEditParty(null);
   }
 
+  async function toggleStatus(party: Party) {
+    const newStatus = party.status === "Enable" ? "Disable" : "Enable";
+    await updateParty(party.id, { status: newStatus });
+  }
+
   function toggleExpand(id: string) {
     setExpandedId((prev) => (prev === id ? null : id));
   }
@@ -358,7 +363,7 @@ export default function PartyMasterPage(): React.JSX.Element {
           const rateCount = getRateCount(party.rates, rateCategories, rateMaterials);
 
           return (
-            <div key={party.id} className="bg-crm-card rounded-xl card-shadow border border-crm-border overflow-hidden">
+            <div key={party.id} className={`bg-crm-card rounded-xl card-shadow border border-crm-border overflow-hidden ${party.status === "Disable" ? "opacity-60" : ""}`}>
               <button
                 onClick={() => toggleExpand(party.id)}
                 className="w-full text-left px-4 py-3"
@@ -376,6 +381,16 @@ export default function PartyMasterPage(): React.JSX.Element {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleStatus(party); }}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                        party.status === "Enable" ? "bg-crm-primary" : "bg-crm-border"
+                      }`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-sm ${
+                        party.status === "Enable" ? "translate-x-4" : "translate-x-0"
+                      }`} />
+                    </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setEditParty(party); setModalOpen(true); }}
                       className="p-1.5 rounded-lg text-crm-text-muted hover:text-crm-primary hover:bg-crm-primary-muted transition-colors"
@@ -505,13 +520,14 @@ export default function PartyMasterPage(): React.JSX.Element {
         <table className="w-full table-fixed">
           <colgroup>
             <col className="w-10" />
-            <col style={{ width: "20%" }} />
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "24%" }} />
-            <col style={{ width: "11%" }} />
-            <col style={{ width: "16%" }} />
+            <col style={{ width: "15%" }} />
+            <col style={{ width: "13%" }} />
+            <col style={{ width: "18%" }} />
             <col style={{ width: "9%" }} />
-            <col style={{ width: "10%" }} />
+            <col style={{ width: "13%" }} />
+            <col style={{ width: "7%" }} />
+            <col style={{ width: "7%" }} />
+            <col style={{ width: "8%" }} />
           </colgroup>
           <thead>
             <tr className="border-b-2 border-crm-border">
@@ -522,6 +538,7 @@ export default function PartyMasterPage(): React.JSX.Element {
               <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Route</th>
               <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Password</th>
               <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Rates</th>
+              <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Status</th>
               <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text">Action</th>
             </tr>
           </thead>
@@ -536,7 +553,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                     onClick={() => toggleExpand(party.id)}
                     className={`border-b border-crm-border/40 cursor-pointer transition-colors hover:bg-crm-primary-muted/20 ${
                       isExpanded ? "bg-crm-primary-muted/20" : i % 2 === 1 ? "bg-crm-bg/30" : "bg-crm-card"
-                    }`}
+                    } ${party.status === "Disable" ? "opacity-60" : ""}`}
                   >
                     <td className="text-center py-3">
                       <ChevronDown
@@ -557,7 +574,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                       </div>
                     </td>
                     <td className="px-5 py-3">
-                      <span className="text-[0.78rem] font-mono text-crm-primary bg-crm-primary-muted px-2 py-0.5 rounded-md">
+                      <span className="text-[0.78rem] font-mono text-crm-primary bg-crm-primary-muted px-2 py-0.5 rounded-md block truncate max-w-full">
                         {party.userId}
                       </span>
                     </td>
@@ -611,6 +628,18 @@ export default function PartyMasterPage(): React.JSX.Element {
                     </td>
                     <td className="px-5 py-3 text-center">
                       <button
+                        onClick={(e) => { e.stopPropagation(); toggleStatus(party); }}
+                        className={`relative inline-flex w-9 h-5 rounded-full transition-colors ${
+                          party.status === "Enable" ? "bg-crm-primary" : "bg-crm-border"
+                        }`}
+                      >
+                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-sm ${
+                          party.status === "Enable" ? "translate-x-4" : "translate-x-0"
+                        }`} />
+                      </button>
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <button
                         onClick={(e) => { e.stopPropagation(); setEditParty(party); setModalOpen(true); }}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[0.72rem] font-medium text-crm-text-muted hover:text-crm-primary hover:bg-crm-primary-muted transition-colors"
                       >
@@ -628,7 +657,7 @@ export default function PartyMasterPage(): React.JSX.Element {
                     return (
                       <tr className="border-b border-crm-border/40">
                         <td></td>
-                        <td colSpan={7} className="px-5 py-4">
+                        <td colSpan={8} className="px-5 py-4">
                           <div className="bg-crm-bg/30 rounded-xl border border-crm-border overflow-hidden animate-[fadeIn_150ms_ease-out]">
                             <table className="w-full">
                               <thead>
