@@ -1,0 +1,20 @@
+[ 2111998ms] [ERROR] ./src/app/running-orders/page.tsx:419:11
+Parsing ecmascript source code failed
+  417 |             </Link>
+  418 |           </div>
+> 419 |         </div>
+      |           ^^^
+  420 |       </div>
+  421 |
+  422 |       {/* Print layout — hidden on screen, visible on print */}
+
+Expected '</', got 'ident'
+
+Import traces:
+  Client Component Browser:
+    ./src/app/running-orders/page.tsx [Client Component Browser]
+    ./src/app/running-orders/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/running-orders/page.tsx [Client Component SSR]
+    ./src/app/running-orders/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127

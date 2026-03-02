@@ -213,13 +213,13 @@ export default function InventoryReportPage(): React.JSX.Element {
       <div className="flex flex-col flex-1">
 
         {/* Tabs: category + filters */}
-        <div className="flex flex-col gap-0 px-3 sm:px-5 pt-1 sm:pt-3 pb-0 border-b border-crm-border/40 shrink-0">
+        <div className="flex flex-col gap-0 px-2 sm:px-5 pt-0.5 sm:pt-3 pb-0 border-b border-crm-border/40 shrink-0">
           <div className="flex gap-0 overflow-x-auto pb-0">
             {["all", ...CATEGORIES].map((cat) => (
               <button
                 key={cat}
                 onClick={() => { setCatFilter(cat); setFilter("all"); }}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2.5 rounded-t-xl text-[0.76rem] sm:text-[0.82rem] font-semibold transition-all whitespace-nowrap ${
+                className={`px-2.5 sm:px-4 py-1 sm:py-2.5 rounded-t-xl text-[0.72rem] sm:text-[0.82rem] font-semibold transition-all whitespace-nowrap ${
                   catFilter === cat
                     ? "bg-crm-bg/40 text-crm-text shadow-[inset_0_2px_0_0_var(--color-crm-primary)]"
                     : "text-crm-text-muted hover:text-crm-text hover:bg-crm-bg/20"
@@ -230,20 +230,20 @@ export default function InventoryReportPage(): React.JSX.Element {
             ))}
           </div>
 
-          <div className="flex gap-0.5 sm:gap-1 flex-wrap pb-1.5 sm:pb-2.5">
+          <div className="flex gap-0.5 sm:gap-1 flex-wrap pb-1 sm:pb-2.5">
             {FILTERS.map((f) => (
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[0.68rem] sm:text-[0.76rem] font-medium transition-all whitespace-nowrap ${
+                className={`inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[0.62rem] sm:text-[0.76rem] font-medium transition-all whitespace-nowrap ${
                   filter === f.key
                     ? "bg-crm-primary-muted text-crm-primary shadow-[inset_0_0_0_1px_var(--color-crm-primary)]"
                     : "text-crm-text-muted hover:text-crm-text hover:bg-crm-bg/40"
                 }`}
               >
-                {f.dot && <span className={`w-1.5 h-1.5 rounded-full ${f.dot}`} />}
+                {f.dot && <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${f.dot}`} />}
                 {f.label}
-                <span className={`text-[0.6rem] sm:text-[0.65rem] tabular-nums ${
+                <span className={`text-[0.55rem] sm:text-[0.65rem] tabular-nums ${
                   filter === f.key ? "text-crm-primary" : "text-crm-border"
                 }`}>{f.count}</span>
               </button>
@@ -351,9 +351,9 @@ export default function InventoryReportPage(): React.JSX.Element {
           <table className="w-full">
             <thead>
               <tr className="border-b-2 border-crm-border">
-                <th className="text-left pl-3 pr-1 py-2 text-[0.72rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10 w-8">#</th>
-                <th className="text-left px-2 py-2 text-[0.72rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">Colour</th>
-                <th className="text-center px-2 pr-3 py-2 text-[0.72rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">
+                <th className="text-left pl-2 pr-0.5 py-1.5 text-[0.65rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10 w-6">#</th>
+                <th className="text-left px-1 py-1.5 text-[0.65rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">Colour</th>
+                <th className="text-center px-1 pr-2 py-1.5 text-[0.65rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">
                   {catFilter !== "all" ? "Stock" : "Stock by Category"}
                 </th>
               </tr>
@@ -367,16 +367,16 @@ export default function InventoryReportPage(): React.JSX.Element {
                     key={row.name}
                     className={`border-b border-crm-border/40 transition-colors ${rowBase}`}
                   >
-                    <td className="pl-3 pr-1 py-2 align-top">
+                    <td className="pl-2 pr-0.5 py-1 align-middle">
                       <div
-                        className={`w-7 h-7 rounded-lg shrink-0 mt-0.5 ${LIGHT_HEXES.has(row.hex) ? "border border-crm-border" : ""}`}
+                        className={`w-5 h-5 rounded-md shrink-0 ${LIGHT_HEXES.has(row.hex) ? "border border-crm-border" : ""}`}
                         style={{ backgroundColor: row.hex }}
                       />
                     </td>
-                    <td className="px-2 py-2 align-top">
-                      <span className="text-[0.78rem] font-semibold text-crm-text">{row.name}</span>
+                    <td className="px-1 py-1 align-middle">
+                      <span className="text-[0.7rem] font-semibold text-crm-text leading-tight">{row.name}</span>
                       {catFilter !== "all" && row.stocks[catFilter] && (
-                        <div className="relative h-1 rounded-full bg-crm-bg overflow-hidden mt-1 max-w-[100px]">
+                        <div className="relative h-0.5 rounded-full bg-crm-bg overflow-hidden mt-0.5 max-w-[80px]">
                           <div
                             className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${barFill(row.stocks[catFilter])}`}
                             style={{ width: row.stocks[catFilter].currentStock < 0 ? "100%" : `${stockPct(row.stocks[catFilter].currentStock, row.stocks[catFilter].maxStock)}%` }}
@@ -389,38 +389,38 @@ export default function InventoryReportPage(): React.JSX.Element {
                       )}
                     </td>
 
-                    <td className="px-2 pr-3 py-2 align-top">
+                    <td className="px-1 pr-2 py-1 align-middle">
                       {catFilter !== "all" ? (
                         <div className="text-center">
                           {row.stocks[catFilter] ? (
-                            <span className={`text-[0.84rem] font-bold tabular-nums ${stockNumColor(row.stocks[catFilter])}`}>
+                            <span className={`text-[0.75rem] font-bold tabular-nums ${stockNumColor(row.stocks[catFilter])}`}>
                               {row.stocks[catFilter].currentStock}
                             </span>
                           ) : (
-                            <span className="text-[0.78rem] text-crm-border">&mdash;</span>
+                            <span className="text-[0.7rem] text-crm-border">&mdash;</span>
                           )}
                         </div>
                       ) : (
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                           {CATEGORIES.map((cat) => {
                             const item = row.stocks[cat];
                             return (
-                              <div key={cat} className="flex items-center gap-1.5">
-                                <span className="text-[0.62rem] text-crm-text-muted w-10 truncate">{cat}</span>
+                              <div key={cat} className="flex items-center gap-1">
+                                <span className="text-[0.55rem] text-crm-text-muted w-8 truncate leading-none">{cat}</span>
                                 {item ? (
                                   <>
-                                    <div className="relative h-1 rounded-full bg-crm-bg overflow-hidden flex-1 min-w-[40px]">
+                                    <div className="relative h-0.5 rounded-full bg-crm-bg overflow-hidden flex-1 min-w-[30px]">
                                       <div
                                         className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${barFill(item)}`}
                                         style={{ width: item.currentStock < 0 ? "100%" : `${stockPct(item.currentStock, item.maxStock)}%` }}
                                       />
                                     </div>
-                                    <span className={`text-[0.68rem] font-bold tabular-nums w-6 text-right ${stockNumColor(item)}`}>
+                                    <span className={`text-[0.6rem] font-bold tabular-nums w-5 text-right leading-none ${stockNumColor(item)}`}>
                                       {item.currentStock}
                                     </span>
                                   </>
                                 ) : (
-                                  <span className="text-[0.68rem] text-crm-border">&mdash;</span>
+                                  <span className="text-[0.6rem] text-crm-border">&mdash;</span>
                                 )}
                               </div>
                             );
@@ -444,23 +444,23 @@ export default function InventoryReportPage(): React.JSX.Element {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-t border-crm-border bg-crm-card shrink-0 gap-2">
-          <p className="text-[0.72rem] sm:text-[0.78rem] text-crm-text-muted shrink-0">
+        <div className="flex items-center justify-between px-2 sm:px-5 py-1.5 sm:py-3 border-t border-crm-border bg-crm-card shrink-0 gap-1.5 sm:gap-2">
+          <p className="text-[0.6rem] sm:text-[0.78rem] text-crm-text-muted shrink-0">
             {filtered.length} of {baseRows.length}
             {catFilter !== "all" && <span className="ml-1 font-semibold text-crm-text">in {catFilter}</span>}
           </p>
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
-            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] text-crm-text-muted">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-400" /> Deficit
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-end">
+            <span className="flex items-center gap-0.5 sm:gap-1 text-[0.52rem] sm:text-[0.65rem] text-crm-text-muted">
+              <span className="w-1 h-1 sm:w-2 sm:h-2 rounded-full bg-red-400" /> Deficit
             </span>
-            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] text-crm-text-muted">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-400" /> Low
+            <span className="flex items-center gap-0.5 sm:gap-1 text-[0.52rem] sm:text-[0.65rem] text-crm-text-muted">
+              <span className="w-1 h-1 sm:w-2 sm:h-2 rounded-full bg-amber-400" /> Low
             </span>
-            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] text-crm-text-muted">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-400" /> Good
+            <span className="flex items-center gap-0.5 sm:gap-1 text-[0.52rem] sm:text-[0.65rem] text-crm-text-muted">
+              <span className="w-1 h-1 sm:w-2 sm:h-2 rounded-full bg-blue-400" /> Good
             </span>
-            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] text-crm-text-muted">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400" /> Max
+            <span className="flex items-center gap-0.5 sm:gap-1 text-[0.52rem] sm:text-[0.65rem] text-crm-text-muted">
+              <span className="w-1 h-1 sm:w-2 sm:h-2 rounded-full bg-emerald-400" /> Max
             </span>
           </div>
         </div>

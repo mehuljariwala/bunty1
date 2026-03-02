@@ -37,6 +37,7 @@ export interface Order {
   csvId: number;
   partyName: string;
   partyAddress: string;
+  partyAddressGu?: string;
   route: string;
   orderDate: string;
   type: "Running" | "Complete";
@@ -52,6 +53,7 @@ export interface SubAdmin {
   password: string;
   email: string;
   createdAt: string;
+  allowedPages?: string[];
 }
 
 export interface PhotoRecord {
@@ -62,8 +64,9 @@ export interface PhotoRecord {
   route: string;
   orderDate: string;
   sequenceNumber: number;
-  imageUrl: string;
+  orderSnapshot: Order;
   capturedAt: string;
+  status?: "pending" | "complete";
 }
 
 export interface Color {

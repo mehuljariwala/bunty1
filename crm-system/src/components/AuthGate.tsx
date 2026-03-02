@@ -3,7 +3,7 @@
 import { type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, getDefaultPage } from "@/lib/auth-context";
 import Sidebar from "@/components/Sidebar";
 import MainContent from "@/components/MainContent";
 import CommandPalette from "@/components/CommandPalette";
@@ -22,7 +22,7 @@ export default function AuthGate({ children }: { children: ReactNode }): React.R
       router.replace("/login");
     }
     if (user && isLoginPage) {
-      router.replace("/running-orders");
+      router.replace(getDefaultPage(user));
     }
   }, [user, loading, isLoginPage, router]);
 

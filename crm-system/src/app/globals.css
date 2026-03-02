@@ -23,11 +23,6 @@
 }
 
 @layer base {
-  * {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
   body {
     font-family: var(--font-body);
     background-color: var(--color-crm-bg);

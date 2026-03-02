@@ -22,7 +22,8 @@ const pageTitles: Record<string, string> = {
   "/settings": "Settings",
 };
 
-function getUserInitials(user: { displayName?: string | null; email?: string | null }): string {
+function getUserInitials(user: { displayName?: string | null; email?: string | null } | null): string {
+  if (!user) return "U";
   if (user.displayName) {
     return user.displayName
       .split(" ")

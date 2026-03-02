@@ -303,6 +303,7 @@ function CreateOrderPage() {
         csvId: nextCsvId,
         partyName: selectedParty.name,
         partyAddress: selectedParty.address,
+        ...(selectedParty.addressGu ? { partyAddressGu: selectedParty.addressGu } : {}),
         route: selectedParty.route,
         orderDate: new Date().toISOString().split("T")[0],
         type,
@@ -599,8 +600,8 @@ function CreateOrderPage() {
                                     </span>
                                   </div>
                                 </td>
-                                <td className={`py-1 sm:py-1.5 px-1 sm:px-2 text-center text-[0.68rem] sm:text-[0.74rem] font-bold tabular-nums ${stockColor(c.currentStock)}`}>
-                                  {c.currentStock}
+                                <td className={`py-1 sm:py-1.5 px-1 sm:px-2 text-center text-[0.68rem] sm:text-[0.74rem] font-bold tabular-nums ${stockColor(c.currentStock - c.deliveredQty)}`}>
+                                  {c.currentStock - c.deliveredQty}
                                 </td>
                                 <td className="py-1 sm:py-1.5 px-1 sm:px-2 text-center text-[0.68rem] sm:text-[0.74rem] font-bold tabular-nums text-crm-text">
                                   {c.quantity}

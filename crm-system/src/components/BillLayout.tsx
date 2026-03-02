@@ -7,6 +7,12 @@ interface CategoryGroup {
   totalDelivered: number;
 }
 
+const CATEGORY_COLORS: Record<string, string> = {
+  "3 Tar": "#f5956b",
+  "5 Tar": "#5b5fc7",
+  "Yarn": "#36b49f",
+};
+
 function groupItems(items: OrderItem[]): CategoryGroup[] {
   const catMap = new Map<string, Map<string, OrderItem[]>>();
   for (const item of items) {
@@ -50,7 +56,7 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
   const grandDelivered = order.grandTotalDelivered ?? groups.reduce((s, g) => s + g.totalDelivered, 0);
 
   return (
-    <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "#000", fontSize: "13.5px", background: "#fff", width: "100%" }}>
+    <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "#000", fontSize: "14px", fontWeight: 500, background: "#fff", width: "100%", WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}>
 
       {/* Header card */}
       <div style={{ textAlign: "center", padding: "10px 10px 0" }}>
@@ -59,9 +65,14 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
             <div style={{ fontSize: "20px", fontWeight: 500, color: "#1460BD" }}>
               {order.partyName.toUpperCase()}
             </div>
-            <div style={{ fontSize: "12.5px", color: "#333", marginBottom: 0 }}>
+            <div style={{ fontSize: "13px", color: "#000", fontWeight: 500, marginBottom: 0 }}>
               {order.partyAddress}
             </div>
+            {order.partyAddressGu && (
+              <div style={{ fontSize: "13px", color: "#000", fontWeight: 500, marginBottom: 0 }}>
+                {order.partyAddressGu}
+              </div>
+            )}
           </div>
           {sequenceNumber != null && (
             <div style={{ fontSize: "28px", fontWeight: 800, color: "#1a1a2e", background: "#f0f0f0", borderRadius: "6px", padding: "2px 16px", lineHeight: 1.2, boxShadow: "0 1px 3px rgba(0,0,0,0.12)", flexShrink: 0 }}>
@@ -72,11 +83,11 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "5px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <span style={{ fontSize: "14px", fontWeight: 500, color: "#1460BD", minWidth: "60px" }}>Date :-</span>
-            <span style={{ fontSize: "13px" }}>{formatDateBill(order.orderDate)}</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#000" }}>{formatDateBill(order.orderDate)}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <span style={{ fontSize: "14px", fontWeight: 500, color: "#1460BD", minWidth: "60px" }}>Order ID :-</span>
-            <span style={{ fontSize: "13px" }}> # {order.csvId}</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#000" }}> # {order.csvId}</span>
           </div>
         </div>
       </div>
@@ -85,7 +96,18 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
       {groups.map((group) => (
         <div key={group.category}>
           {/* Category header with dashed borders */}
-          <h3 style={{ textAlign: "center", margin: "0", padding: "4px 0", borderTop: "1px dashed #000", borderBottom: "1px dashed #000", fontSize: "16px", fontWeight: 700 }}>
+          <h3 style={{
+            textAlign: "center",
+            margin: "0",
+            padding: "4px 0",
+            fontSize: "16px",
+            fontWeight: 700,
+            color: CATEGORY_COLORS[group.category] ? "#fff" : "#000",
+            background: CATEGORY_COLORS[group.category] ?? "transparent",
+            borderTop: CATEGORY_COLORS[group.category] ? "none" : "1px dashed #000",
+            borderBottom: CATEGORY_COLORS[group.category] ? "none" : "1px dashed #000",
+            borderRadius: CATEGORY_COLORS[group.category] ? "4px" : "0",
+          }}>
             {group.category}
           </h3>
 
@@ -93,20 +115,20 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0" }}>
             {group.materials.map((mat) => (
               <div key={mat.material} style={{ padding: "0 4px" }}>
-                <h4 style={{ margin: "0 0 0 10px", fontSize: "14px", fontWeight: 700 }}>{mat.material} :-</h4>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13.5px" }}>
+                <h4 style={{ margin: "0 0 0 10px", fontSize: "14px", fontWeight: 800, color: "#000" }}>{mat.material} :-</h4>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px", color: "#000" }}>
                   <tbody>
                     {mat.items.map((item, idx) => (
                       <tr key={idx}>
-                        <td style={{ padding: "0 4px" }}>{item.color}</td>
-                        <td style={{ padding: "0 4px", width: "48px" }}>{item.orderedQty}&nbsp; -&gt;</td>
-                        <td style={{ padding: "0 4px" }}>{item.deliveredQty}</td>
+                        <td style={{ padding: "1px 4px", fontWeight: 500 }}>{item.color}</td>
+                        <td style={{ padding: "1px 4px", width: "48px", fontWeight: 600 }}>{item.orderedQty}&nbsp; -&gt;</td>
+                        <td style={{ padding: "1px 4px", fontWeight: 600 }}>{item.deliveredQty}</td>
                       </tr>
                     ))}
-                    <tr style={{ fontWeight: 600, border: "1px solid #000" }}>
-                      <td style={{ padding: "0 4px", borderTop: "1px solid #000" }}>TOTAL</td>
-                      <td style={{ padding: "0 4px", width: "48px", borderTop: "1px solid #000" }}>{mat.totalOrdered}&nbsp; -&gt;</td>
-                      <td style={{ padding: "0 4px", borderTop: "1px solid #000" }}>{mat.totalDelivered}</td>
+                    <tr style={{ fontWeight: 700, border: "1px solid #000" }}>
+                      <td style={{ padding: "1px 4px", borderTop: "1px solid #000" }}>TOTAL</td>
+                      <td style={{ padding: "1px 4px", width: "48px", borderTop: "1px solid #000" }}>{mat.totalOrdered}&nbsp; -&gt;</td>
+                      <td style={{ padding: "1px 4px", borderTop: "1px solid #000" }}>{mat.totalDelivered}</td>
                     </tr>
                     <tr>
                       <td colSpan={3} style={{ padding: "6px 4px 2px" }}>
@@ -124,10 +146,10 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
 
           {/* Category grand total */}
           <div style={{ padding: "0 15px", marginBottom: "5px" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px", color: "#000" }}>
               <tbody>
-                <tr style={{ fontWeight: 700 }}>
-                  <td style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: "8px", borderTop: "0", fontSize: "13px" }}>
+                <tr style={{ fontWeight: 800 }}>
+                  <td style={{ textAlign: "center", display: "flex", justifyContent: "center", gap: "8px", borderTop: "0", fontSize: "14px" }}>
                     GRAND TOTAL
                     <span>{group.totalOrdered} <span style={{ margin: "0 2px" }}>-&gt;</span> {group.totalDelivered}</span>
                   </td>

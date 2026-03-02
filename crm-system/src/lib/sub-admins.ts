@@ -22,6 +22,7 @@ function docToSubAdmin(id: string, data: Record<string, unknown>): SubAdmin {
     password: (data.password as string) ?? "",
     email: (data.email as string) ?? "",
     createdAt: (data.createdAt as string) ?? "",
+    allowedPages: Array.isArray(data.allowedPages) ? (data.allowedPages as string[]) : undefined,
   };
 }
 

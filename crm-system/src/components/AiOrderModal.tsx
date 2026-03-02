@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Sparkles,
   Loader2,
   AlertCircle,
-  Check,
   Zap,
   X,
   Package,
+  Plus,
+  Pencil,
 } from "lucide-react";
 import type { Color } from "@/lib/types";
 
@@ -69,29 +70,265 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Yarn": "#36b49f",
 };
 
+function EditableRow({
+  item,
+  allColors,
+  onChangeColor,
+  onChangeQty,
+  onRemove,
+}: {
+  item: ParsedItem;
+  allColors: Color[];
+  onChangeColor: (c: Color) => void;
+  onChangeQty: (v: number) => void;
+  onRemove: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [qtyDraft, setQtyDraft] = useState(String(item.quantity));
+  const [colorSearch, setColorSearch] = useState("");
+  const qtyRef = useRef<HTMLInputElement>(null);
+  const colorRef = useRef<HTMLInputElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  const catColors = useMemo(
+    () => allColors.filter((c) => c.category.toLowerCase() === item.category.toLowerCase()),
+    [allColors, item.category],
+  );
+  const filtered = useMemo(
+    () => colorSearch ? catColors.filter((c) => c.name.toLowerCase().includes(colorSearch.toLowerCase())) : catColors,
+    [catColors, colorSearch],
+  );
+
+  useEffect(() => {
+    if (editing) {
+      setQtyDraft(String(item.quantity));
+      setColorSearch("");
+      setTimeout(() => colorRef.current?.focus(), 50);
+    }
+  }, [editing, item.quantity]);
+
+  useEffect(() => {
+    if (!editing) return;
+    function handleClick(e: MouseEvent) {
+      if (rowRef.current && !rowRef.current.contains(e.target as Node)) commitAndClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  });
+
+  function commitAndClose() {
+    const n = parseInt(qtyDraft);
+    if (!isNaN(n) && n > 0 && n !== item.quantity) onChangeQty(n);
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <div ref={rowRef} className="bg-crm-primary-muted/30 border border-crm-primary/20 rounded-lg mx-1 my-1 p-2 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[0.7rem] font-semibold text-crm-primary uppercase tracking-wider">Edit Color</span>
+          <button onClick={commitAndClose} className="p-0.5 rounded hover:bg-white text-crm-text-muted hover:text-crm-text transition-colors">
+            <X className="w-3.5 h-3.5" strokeWidth={2} />
+          </button>
+        </div>
+        <input
+          ref={colorRef}
+          type="text"
+          value={colorSearch}
+          onChange={(e) => setColorSearch(e.target.value)}
+          placeholder="Search color..."
+          className="w-full h-7 px-2.5 rounded-lg border border-crm-border text-[0.74rem] text-crm-text focus:outline-none focus:ring-1 focus:ring-crm-primary/30 focus:border-crm-primary/50"
+        />
+        <div className="max-h-[100px] overflow-y-auto space-y-0.5">
+          {filtered.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => { onChangeColor(c); setColorSearch(""); setEditing(false); }}
+              className={`flex items-center gap-2 w-full px-2 py-1 rounded-md hover:bg-white text-left transition-colors ${c.name === item.colorName ? "bg-white ring-1 ring-crm-primary/30" : ""}`}
+            >
+              <div className="w-3.5 h-3.5 rounded-sm shrink-0 border border-black/10" style={{ backgroundColor: c.hex }} />
+              <span className="text-[0.74rem] font-medium text-crm-text flex-1 truncate">{c.name}</span>
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[0.7rem] font-semibold text-crm-text-muted">Qty:</span>
+          <input
+            ref={qtyRef}
+            type="number"
+            min={1}
+            value={qtyDraft}
+            onChange={(e) => setQtyDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") commitAndClose(); }}
+            className="w-14 h-7 text-center text-[0.78rem] font-bold rounded-lg border border-crm-border focus:outline-none focus:ring-1 focus:ring-crm-primary/30"
+          />
+          <div className="flex-1" />
+          <button onClick={onRemove} className="text-[0.7rem] font-medium text-red-400 hover:text-red-500 transition-colors">
+            Remove
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex items-center gap-2 px-3 py-1.5 ${item.matched ? "bg-white" : "bg-orange-50/40"}`}>
+      {item.matchedColor ? (
+        <div className="w-3.5 h-3.5 rounded-sm shrink-0 border border-black/10" style={{ backgroundColor: item.matchedColor.hex }} />
+      ) : (
+        <AlertCircle className="w-3.5 h-3.5 text-orange-400 shrink-0" strokeWidth={2} />
+      )}
+      <span className={`flex-1 text-[0.78rem] font-medium truncate min-w-0 ${item.matched ? "text-crm-text" : "text-orange-600"}`}>
+        {item.colorName}
+      </span>
+      <span className="text-[0.78rem] font-bold tabular-nums text-crm-text w-6 text-right">
+        {item.quantity}
+      </span>
+      <button
+        onClick={() => setEditing(true)}
+        className="p-0.5 rounded text-crm-text-muted hover:text-crm-primary transition-colors shrink-0"
+        title="Edit"
+      >
+        <Pencil className="w-3.5 h-3.5" strokeWidth={2} />
+      </button>
+    </div>
+  );
+}
+
+function AddColorDropdown({ category, colors, onAdd }: { category: string; colors: Color[]; onAdd: (c: Color, qty: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const catColors = useMemo(
+    () => colors.filter((c) => c.category.toLowerCase() === category.toLowerCase()),
+    [colors, category],
+  );
+
+  const filtered = useMemo(
+    () => search ? catColors.filter((c) => c.name.toLowerCase().includes(search.toLowerCase())) : catColors,
+    [catColors, search],
+  );
+
+  useEffect(() => {
+    if (open) { setSearch(""); setTimeout(() => inputRef.current?.focus(), 50); }
+  }, [open]);
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1 px-2 py-1.5 text-[0.68rem] font-medium text-crm-primary hover:bg-crm-primary-muted rounded-md transition-colors w-full justify-center"
+      >
+        <Plus className="w-3 h-3" strokeWidth={2.5} />
+        Add color
+      </button>
+    );
+  }
+
+  return (
+    <div className="border-t border-crm-border/30 bg-crm-bg/30 p-2 space-y-1.5">
+      <input
+        ref={inputRef}
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search color..."
+        className="w-full h-7 px-2.5 rounded-lg border border-crm-border text-[0.74rem] text-crm-text focus:outline-none focus:ring-1 focus:ring-crm-primary/30 focus:border-crm-primary/50"
+      />
+      <div className="max-h-[120px] overflow-y-auto space-y-0.5">
+        {filtered.length === 0 && (
+          <p className="text-[0.68rem] text-crm-text-muted text-center py-2">No colors found</p>
+        )}
+        {filtered.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => { onAdd(c, 1); setOpen(false); }}
+            className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-white text-left transition-colors"
+          >
+            <div className="w-3.5 h-3.5 rounded-sm shrink-0 border border-black/10" style={{ backgroundColor: c.hex }} />
+            <span className="text-[0.74rem] font-medium text-crm-text flex-1">{c.name}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={() => setOpen(false)}
+        className="w-full text-[0.66rem] text-crm-text-muted hover:text-crm-text py-1 transition-colors"
+      >
+        Cancel
+      </button>
+    </div>
+  );
+}
+
 export default function AiOrderModal({ open, onClose, colors, onApply }: AiOrderModalProps) {
   const [orderText, setOrderText] = useState("");
   const [parsing, setParsing] = useState(false);
   const [parsed, setParsed] = useState<ParsedItem[] | null>(null);
   const [error, setError] = useState("");
 
-  const colorNames = useMemo(() => colors.map((c) => c.name), [colors]);
+  const colorsByCategory = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (const c of colors) {
+      if (!map[c.category]) map[c.category] = [];
+      if (!map[c.category].includes(c.name)) map[c.category].push(c.name);
+    }
+    return map;
+  }, [colors]);
+
+  function normalize(s: string): string {
+    return s.toLowerCase().replace(/[-_\s]+/g, "").trim();
+  }
 
   function matchColorToDb(name: string, category: string): Color | undefined {
-    const lower = name.toLowerCase().trim();
-    const exact = colors.find(
-      (c) => c.name.toLowerCase() === lower && c.category.toLowerCase() === category.toLowerCase(),
-    );
-    if (exact) return exact;
+    const normName = normalize(name);
+    const catLower = category.toLowerCase();
 
-    const catMatch = colors.find(
-      (c) =>
-        c.category.toLowerCase() === category.toLowerCase() &&
-        (c.name.toLowerCase().includes(lower) || lower.includes(c.name.toLowerCase())),
+    const exactCat = colors.find(
+      (c) => c.category.toLowerCase() === catLower && normalize(c.name) === normName,
     );
-    if (catMatch) return catMatch;
+    if (exactCat) return exactCat;
 
-    return colors.find((c) => c.name.toLowerCase() === lower);
+    const exactAny = colors.find((c) => normalize(c.name) === normName);
+    if (exactAny) return exactAny;
+
+    return undefined;
+  }
+
+  function updateItemQty(category: string, colorName: string, qty: number) {
+    if (!parsed) return;
+    setParsed(parsed.map((item) =>
+      item.category === category && item.colorName === colorName
+        ? { ...item, quantity: qty }
+        : item,
+    ));
+  }
+
+  function updateItemColor(category: string, oldColorName: string, newColor: Color) {
+    if (!parsed) return;
+    setParsed(parsed.map((item) =>
+      item.category === category && item.colorName === oldColorName
+        ? { ...item, colorName: newColor.name, matched: true, matchedColor: newColor }
+        : item,
+    ));
+  }
+
+  function removeItem(category: string, colorName: string) {
+    if (!parsed) return;
+    setParsed(parsed.filter((item) => !(item.category === category && item.colorName === colorName)));
+  }
+
+  function addItem(category: string, color: Color, qty: number) {
+    if (!parsed) return;
+    const existing = parsed.find((item) => item.category === category && item.colorName === color.name);
+    if (existing) {
+      updateItemQty(category, color.name, existing.quantity + qty);
+      return;
+    }
+    setParsed([
+      ...parsed,
+      { category, colorName: color.name, quantity: qty, matched: true, matchedColor: color },
+    ]);
   }
 
   async function handleParse() {
@@ -106,7 +343,7 @@ export default function AiOrderModal({ open, onClose, colors, onApply }: AiOrder
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderText: orderText.trim(),
-          colorNames: [...new Set(colorNames)],
+          colorsByCategory,
         }),
       });
 
@@ -117,7 +354,7 @@ export default function AiOrderModal({ open, onClose, colors, onApply }: AiOrder
 
       const data = await res.json() as { items: { category: string; colorName: string; quantity: number }[] };
 
-      const items: ParsedItem[] = data.items.map((item) => {
+      const raw: ParsedItem[] = data.items.map((item) => {
         const dbColor = matchColorToDb(item.colorName, item.category);
         return {
           category: item.category,
@@ -128,7 +365,18 @@ export default function AiOrderModal({ open, onClose, colors, onApply }: AiOrder
         };
       });
 
-      setParsed(items);
+      const seen = new Map<string, ParsedItem>();
+      for (const item of raw) {
+        const key = `${item.category}::${item.colorName}`;
+        const existing = seen.get(key);
+        if (existing) {
+          existing.quantity += item.quantity;
+        } else {
+          seen.set(key, { ...item });
+        }
+      }
+
+      setParsed(Array.from(seen.values()));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -297,33 +545,21 @@ export default function AiOrderModal({ open, onClose, colors, onApply }: AiOrder
                             </div>
                             <div className="divide-y divide-crm-border/30">
                               {items.map((item, i) => (
-                                <div
+                                <EditableRow
                                   key={`${item.colorName}-${i}`}
-                                  className={`flex items-center gap-2.5 px-3 py-2 ${
-                                    item.matched ? "bg-white" : "bg-orange-50/40"
-                                  }`}
-                                >
-                                  {item.matchedColor && (
-                                    <div
-                                      className="w-4 h-4 rounded-sm shrink-0 border border-black/10"
-                                      style={{ backgroundColor: item.matchedColor.hex }}
-                                    />
-                                  )}
-                                  {!item.matchedColor && (
-                                    <AlertCircle className="w-4 h-4 text-orange-400 shrink-0" strokeWidth={2} />
-                                  )}
-                                  <span className={`flex-1 text-[0.78rem] font-medium ${item.matched ? "text-crm-text" : "text-orange-600"}`}>
-                                    {item.colorName}
-                                  </span>
-                                  {item.matched && (
-                                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" strokeWidth={2.5} />
-                                  )}
-                                  <span className="text-[0.78rem] font-bold tabular-nums text-crm-text w-6 text-right">
-                                    {item.quantity}
-                                  </span>
-                                </div>
+                                  item={item}
+                                  allColors={colors}
+                                  onChangeColor={(c) => updateItemColor(item.category, item.colorName, c)}
+                                  onChangeQty={(v) => updateItemQty(item.category, item.colorName, v)}
+                                  onRemove={() => removeItem(item.category, item.colorName)}
+                                />
                               ))}
                             </div>
+                            <AddColorDropdown
+                              category={cat}
+                              colors={colors}
+                              onAdd={(c, qty) => addItem(cat, c, qty)}
+                            />
                           </div>
                         );
                       })}

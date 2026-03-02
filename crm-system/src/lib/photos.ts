@@ -4,28 +4,21 @@ import {
   query,
   orderBy,
   onSnapshot,
+  doc,
+  updateDoc,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "./firebase";
+import { db } from "./firebase";
 import type { PhotoRecord } from "./types";
-
-export async function uploadOrderPhoto(
-  file: Blob,
-  orderId: string,
-  seq: number,
-): Promise<string> {
-  const today = new Date().toISOString().split("T")[0];
-  const path = `photos/${today}/${orderId}-seq${seq}.png`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file, { contentType: "image/png" });
-  return getDownloadURL(storageRef);
-}
 
 export async function savePhotoRecord(
   data: Omit<PhotoRecord, "id">,
 ): Promise<string> {
   const docRef = await addDoc(collection(db, "photos"), data);
   return docRef.id;
+}
+
+export async function markPhotoComplete(photoId: string): Promise<void> {
+  await updateDoc(doc(db, "photos", photoId), { status: "complete" });
 }
 
 export function subscribePhotos(

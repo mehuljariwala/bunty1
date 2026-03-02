@@ -23,7 +23,7 @@ import {
   Menu,
 } from "lucide-react";
 import { useSidebar } from "./SidebarContext";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, type AppUser } from "@/lib/auth-context";
 import type { LucideIcon } from "lucide-react";
 
 const pageTitles: Record<string, string> = {
@@ -140,7 +140,8 @@ function NavSection({
   );
 }
 
-function getUserInitials(user: { displayName?: string | null; email?: string | null }): string {
+function getUserInitials(user: { displayName?: string | null; email?: string | null } | null): string {
+  if (!user) return "U";
   if (user.displayName) {
     return user.displayName
       .split(" ")
@@ -153,11 +154,30 @@ function getUserInitials(user: { displayName?: string | null; email?: string | n
   return "U";
 }
 
+function filterNav(items: NavItem[], user: AppUser | null): NavItem[] {
+  if (!user || user.role === "admin") return items;
+  const allowed = user.allowedPages ?? [];
+  return items.filter((item) => allowed.includes(item.href));
+}
+
+const topNav: NavItem[] = [
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Running Orders", href: "/running-orders", icon: ListOrdered },
+  { label: "Orders", href: "/orders", icon: Package },
+  { label: "Photo Master", href: "/photo-master", icon: Image },
+];
+
 export default function Sidebar() {
   const pathname = usePathname();
   const { isOpen, open, close } = useSidebar();
   const { user, logout } = useAuth();
   const initials = user ? getUserInitials(user) : "U";
+
+  const filteredTop = filterNav(topNav, user);
+  const filteredMaster = filterNav(masterNav, user);
+  const filteredInventory = filterNav(inventoryNav, user);
+  const filteredAnalytics = filterNav(analyticsNav, user);
+  const filteredAdmin = filterNav(adminNav, user);
 
   return (
     <>
@@ -222,33 +242,23 @@ export default function Sidebar() {
         </div>
 
         <nav className={`flex-1 mt-1 space-y-4 overflow-y-auto ${isOpen ? "px-3" : "px-2"}`}>
-          <ul className="space-y-0.5">
-            <NavLink
-              item={{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboard }}
-              pathname={pathname === "/" ? "/dashboard" : pathname}
-              mobile={isOpen}
-            />
-            <NavLink
-              item={{ label: "Running Orders", href: "/running-orders", icon: ListOrdered }}
-              pathname={pathname}
-              mobile={isOpen}
-            />
-            <NavLink
-              item={{ label: "Orders", href: "/orders", icon: Package }}
-              pathname={pathname}
-              mobile={isOpen}
-            />
-            <NavLink
-              item={{ label: "Photo Master", href: "/photo-master", icon: Image }}
-              pathname={pathname}
-              mobile={isOpen}
-            />
-          </ul>
+          {filteredTop.length > 0 && (
+            <ul className="space-y-0.5">
+              {filteredTop.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  pathname={item.href === "/dashboard" && pathname === "/" ? "/dashboard" : pathname}
+                  mobile={isOpen}
+                />
+              ))}
+            </ul>
+          )}
 
-          <NavSection title="Masters" items={masterNav} pathname={pathname} mobile={isOpen} />
-          <NavSection title="Inventory" items={inventoryNav} pathname={pathname} mobile={isOpen} />
-          <NavSection title="Analytics" items={analyticsNav} pathname={pathname} mobile={isOpen} />
-          <NavSection title="Admin" items={adminNav} pathname={pathname} mobile={isOpen} />
+          {filteredMaster.length > 0 && <NavSection title="Masters" items={filteredMaster} pathname={pathname} mobile={isOpen} />}
+          {filteredInventory.length > 0 && <NavSection title="Inventory" items={filteredInventory} pathname={pathname} mobile={isOpen} />}
+          {filteredAnalytics.length > 0 && <NavSection title="Analytics" items={filteredAnalytics} pathname={pathname} mobile={isOpen} />}
+          {filteredAdmin.length > 0 && <NavSection title="Admin" items={filteredAdmin} pathname={pathname} mobile={isOpen} />}
         </nav>
 
         <div className={`border-t border-indigo-400/20 ${isOpen ? "px-3 py-3" : "px-2 py-3"}`}>

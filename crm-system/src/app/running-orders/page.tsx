@@ -6,16 +6,31 @@ import {
   Plus,
   X,
   Printer,
-  Loader2,
   FileText,
   Pencil,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { toPng } from "html-to-image";
 import { subscribeOrders, markOrderComplete, getNextSeqNumber, subscribeSeqCounter } from "@/lib/orders";
 import { subscribeRoutes } from "@/lib/routes";
-import { uploadOrderPhoto, savePhotoRecord } from "@/lib/photos";
+import { savePhotoRecord } from "@/lib/photos";
 import BillLayout from "@/components/BillLayout";
 import type { Order, RouteDoc } from "@/lib/types";
+
+const RO_CACHE_KEY = "running_orders_cache";
+
+function getCachedOrders(): { orders: Order[]; routes: RouteDoc[] } | null {
+  try {
+    const raw = sessionStorage.getItem(RO_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
+function setCachedOrders(orders: Order[], routes: RouteDoc[]): void {
+  try { sessionStorage.setItem(RO_CACHE_KEY, JSON.stringify({ orders, routes })); }
+  catch { /* ignore */ }
+}
 
 type TabStatus = "Running" | "Pending" | "Complete";
 
@@ -47,17 +62,18 @@ function PrintView({ order, sequenceNumber }: { order: Order; sequenceNumber?: n
 }
 
 export default function RunningOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [routes, setRoutes] = useState<RouteDoc[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedRO = useRef(getCachedOrders());
+  const [orders, setOrders] = useState<Order[]>(cachedRO.current?.orders ?? []);
+  const [routes, setRoutes] = useState<RouteDoc[]>(cachedRO.current?.routes ?? []);
+  const [loading, setLoading] = useState(!cachedRO.current);
   const [activeTab, setActiveTab] = useState<TabStatus>("Running");
+  const [completeDate, setCompleteDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const [printOrder, setPrintOrder] = useState<Order | null>(null);
   const [cardTips, setCardTips] = useState<Record<string, string>>({});
   const [seqCounter, setSeqCounter] = useState(0);
   const [printSeq, setPrintSeq] = useState<number | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
-  const photoCaptureRef = useRef<HTMLDivElement>(null);
 
   const showCardTip = useCallback((orderId: string, message: string) => {
     setCardTips((prev) => ({ ...prev, [orderId]: message }));
@@ -70,57 +86,46 @@ export default function RunningOrdersPage() {
     }, 2000);
   }, []);
 
-  const pendingPrint = useRef<{ order: Order; seq: number } | null>(null);
-
   const handlePrint = useCallback(async (order: Order) => {
     let seq = seqCounter + 1;
     try { seq = await getNextSeqNumber(); } catch { /* use local fallback */ }
     setPrintSeq(seq);
     setPrintOrder(order);
-    pendingPrint.current = { order, seq };
-    showCardTip(order.id, `Seq #${seq} — Capturing photo...`);
-  }, [showCardTip, seqCounter]);
-
-  useEffect(() => {
-    if (!pendingPrint.current || !printOrder || !photoCaptureRef.current) return;
-    const { order, seq } = pendingPrint.current;
-    pendingPrint.current = null;
-
-    const captureNode = photoCaptureRef.current;
 
     const originalTitle = document.title;
     document.title = `${order.partyName}_${formatDatePrint(order.orderDate)}`;
-    window.print();
+    setTimeout(() => { window.print(); }, 100);
     setTimeout(() => { document.title = originalTitle; }, 1000);
-    showCardTip(order.id, `Seq #${seq} — Printed`);
 
-    toPng(captureNode, { pixelRatio: 3, backgroundColor: "#ffffff" })
-      .then(async (dataUrl) => {
-        const blob = await (await fetch(dataUrl)).blob();
-        const imageUrl = await uploadOrderPhoto(blob, order.id, seq);
-        await savePhotoRecord({
-          orderId: order.id,
-          orderCsvId: order.csvId,
-          partyName: order.partyName,
-          route: order.route,
-          orderDate: order.orderDate,
-          sequenceNumber: seq,
-          imageUrl,
-          capturedAt: new Date().toISOString(),
-        });
-        showCardTip(order.id, `Seq #${seq} — Photo saved`);
-      })
-      .catch(() => {
-        showCardTip(order.id, `Seq #${seq} — Photo upload failed`);
+    showCardTip(order.id, `Seq #${seq} — Saving...`);
+    try {
+      await savePhotoRecord({
+        orderId: order.id,
+        orderCsvId: order.csvId,
+        partyName: order.partyName,
+        route: order.route,
+        orderDate: order.orderDate,
+        sequenceNumber: seq,
+        orderSnapshot: order,
+        capturedAt: new Date().toISOString(),
       });
-  }, [printOrder, showCardTip]);
+      showCardTip(order.id, `Seq #${seq} — Saved`);
+    } catch {
+      showCardTip(order.id, `Seq #${seq} — Save failed`);
+    }
+  }, [showCardTip, seqCounter]);
 
+  const latestRoutes = useRef<RouteDoc[]>(cachedRO.current?.routes ?? []);
   useEffect(() => {
     const unsubOrders = subscribeOrders((loaded) => {
       setOrders(loaded);
       setLoading(false);
+      setCachedOrders(loaded, latestRoutes.current);
     });
-    const unsubRoutes = subscribeRoutes(setRoutes);
+    const unsubRoutes = subscribeRoutes((loaded) => {
+      latestRoutes.current = loaded;
+      setRoutes(loaded);
+    });
     const unsubSeq = subscribeSeqCounter((counter) => {
       setSeqCounter(counter);
     });
@@ -154,27 +159,31 @@ export default function RunningOrdersPage() {
   }, []);
 
   const filteredOrders = useMemo(() => {
-    return orders.filter((o) => {
-      if (activeTab === "Pending") {
-        if (!hasPendingItems(o)) return false;
-        if (o.orderDate < oneWeekAgo) return false;
-      } else {
-        if (o.type !== activeTab) return false;
-        if (activeTab === "Complete" && o.orderDate < oneWeekAgo) return false;
-      }
-      return true;
-    });
-  }, [orders, activeTab, oneWeekAgo]);
+    return orders
+      .filter((o) => {
+        if (activeTab === "Pending") {
+          if (!hasPendingItems(o)) return false;
+          if (o.orderDate < oneWeekAgo) return false;
+        } else if (activeTab === "Complete") {
+          if (o.type !== "Complete") return false;
+          if (o.orderDate !== completeDate) return false;
+        } else {
+          if (o.type !== activeTab) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => a.csvId - b.csvId);
+  }, [orders, activeTab, oneWeekAgo, completeDate]);
 
   const tabCounts = useMemo(() => {
     const counts: Record<TabStatus, number> = { Running: 0, Pending: 0, Complete: 0 };
     for (const o of orders) {
       if (o.type === "Running") counts.Running++;
       if (hasPendingItems(o) && o.orderDate >= oneWeekAgo) counts.Pending++;
-      if (o.type === "Complete" && o.orderDate >= oneWeekAgo) counts.Complete++;
+      if (o.type === "Complete" && o.orderDate === completeDate) counts.Complete++;
     }
     return counts;
-  }, [orders, oneWeekAgo]);
+  }, [orders, oneWeekAgo, completeDate]);
 
   const routeGroups = useMemo(() => {
     const map = new Map<string, Order[]>();
@@ -186,22 +195,6 @@ export default function RunningOrdersPage() {
     }
     return map;
   }, [filteredOrders, routeNames]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2
-            className="w-8 h-8 text-crm-primary animate-spin"
-            strokeWidth={1.8}
-          />
-          <p className="text-[0.85rem] text-crm-text-muted">
-            Loading orders...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col flex-1">
@@ -247,8 +240,96 @@ export default function RunningOrdersPage() {
           })}
         </div>
 
+        {activeTab === "Complete" && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "0 15px 10px" }}>
+            <button
+              onClick={() => {
+                const d = new Date(completeDate + "T00:00:00");
+                d.setDate(d.getDate() - 1);
+                setCompleteDate(d.toISOString().split("T")[0]);
+              }}
+              style={{ background: "none", border: "1px solid #e0e0e0", borderRadius: "8px", padding: "5px 8px", cursor: "pointer", display: "flex", alignItems: "center" }}
+            >
+              <ChevronLeft className="w-4 h-4" style={{ color: "#8D9293" }} strokeWidth={2} />
+            </button>
+            <input
+              type="date"
+              value={completeDate}
+              onChange={(e) => setCompleteDate(e.target.value)}
+              style={{
+                fontSize: "13px",
+                fontWeight: 500,
+                color: "#444",
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+                padding: "5px 12px",
+                outline: "none",
+                textAlign: "center",
+              }}
+            />
+            <button
+              onClick={() => {
+                const d = new Date(completeDate + "T00:00:00");
+                d.setDate(d.getDate() + 1);
+                setCompleteDate(d.toISOString().split("T")[0]);
+              }}
+              style={{ background: "none", border: "1px solid #e0e0e0", borderRadius: "8px", padding: "5px 8px", cursor: "pointer", display: "flex", alignItems: "center" }}
+            >
+              <ChevronRight className="w-4 h-4" style={{ color: "#8D9293" }} strokeWidth={2} />
+            </button>
+            {completeDate !== new Date().toISOString().split("T")[0] && (
+              <button
+                onClick={() => setCompleteDate(new Date().toISOString().split("T")[0])}
+                style={{ fontSize: "11.5px", fontWeight: 500, color: "#1460BD", background: "#EBF2FF", border: "none", borderRadius: "8px", padding: "6px 12px", cursor: "pointer" }}
+              >
+                Today
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Scrollable content */}
         <div style={{ padding: "0 15px 15px" }}>
+          {loading ? (
+            <div>
+              {[1, 2].map((g) => (
+                <div key={g} style={{ marginBottom: "10px" }}>
+                  <div className="animate-[shimmer_1.5s_ease-in-out_infinite] bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded h-4 w-28" style={{ margin: "10px 0" }} />
+                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 xs:gap-x-[38px] xs:gap-y-3" style={{ padding: "4px 4px 0" }}>
+                    {Array.from({ length: g === 1 ? 4 : 3 }).map((_, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          background: "#fff",
+                          borderRadius: "15px",
+                          boxShadow: "0px 1px 4px 0px rgba(0,0,0,0.14)",
+                          margin: "5px 0",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div style={{ padding: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <div className="flex items-center justify-between">
+                            <div className="animate-[shimmer_1.5s_ease-in-out_infinite] bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded h-4 flex-1 mr-2" />
+                            <div className="animate-[shimmer_1.5s_ease-in-out_infinite] bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded h-4 w-10" />
+                          </div>
+                          <div className="animate-[shimmer_1.5s_ease-in-out_infinite] bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded h-3 w-24" />
+                          <div className="animate-[shimmer_1.5s_ease-in-out_infinite] bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded h-3 w-32" />
+                        </div>
+                        <div style={{ borderTop: "1px solid #f0f0f0", display: "flex" }}>
+                          {[1, 2, 3].map((b) => (
+                            <div key={b} className="flex-1 flex justify-center" style={{ padding: "7px 0" }}>
+                              <div className="animate-[shimmer_1.5s_ease-in-out_infinite] bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded h-3 w-10" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+          <>
           {Array.from(routeGroups.entries()).map(([route, routeOrders]) => (
             <div key={route} style={{ marginBottom: "10px" }}>
               <h4 style={{ color: "#444444", fontSize: "15px", fontWeight: 500, margin: "10px 0", lineHeight: "16.5px" }}>
@@ -392,6 +473,8 @@ export default function RunningOrdersPage() {
               New Order
             </Link>
           </div>
+          </>
+          )}
         </div>
       </div>
 
@@ -419,15 +502,6 @@ export default function RunningOrdersPage() {
             }
           `}</style>
           <PrintView order={printOrder} sequenceNumber={printSeq ?? undefined} />
-        </div>
-      )}
-
-      {/* Offscreen capture area for auto-photo */}
-      {printOrder && (
-        <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
-          <div ref={photoCaptureRef} style={{ width: "540px" }}>
-            <BillLayout order={printOrder} sequenceNumber={printSeq ?? undefined} />
-          </div>
         </div>
       )}
 

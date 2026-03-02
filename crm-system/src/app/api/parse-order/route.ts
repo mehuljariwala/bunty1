@@ -12,9 +12,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const body = await req.json();
-  const { orderText, colorNames } = body as {
+  const { orderText, colorsByCategory } = body as {
     orderText: string;
-    colorNames: string[];
+    colorsByCategory?: Record<string, string[]>;
+    colorNames?: string[];
   };
 
   if (!orderText) {
@@ -26,33 +27,33 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const groq = new Groq({ apiKey: GROQ_API_KEY });
 
-  const prompt = `You are an order parser for a textile/lace business. Parse the following order text and extract structured data.
+  const colorsSection = colorsByCategory
+    ? Object.entries(colorsByCategory)
+        .map(([cat, names]) => `${cat}: ${names.join(", ")}`)
+        .join("\n")
+    : "";
 
-The order text contains categories (like "5 TAR", "3 TAR", "5 Tar", "3 Tar", "Yarn") followed by color names and quantities.
+  const prompt = `You are an order parser for a textile/lace business. Parse the following order text into structured JSON.
 
-Available color names in the system: ${JSON.stringify(colorNames)}
+The order text has CATEGORIES (like "5 TAR", "3 TAR", "Yarn") as headers, followed by lines with a color name and quantity.
 
-IMPORTANT: Match the color names from the order text to the closest available color name from the system. Use fuzzy matching - for example "N-BLUE" could match "N Blue" or "Navy Blue", "MAHENDI" could match "Mahendi" or "Mehndi", "MAHROON" could match "Maroon" or "Mahroon". Be flexible with casing, hyphens, spaces.
+AVAILABLE COLORS PER CATEGORY:
+${colorsSection}
 
-For category names, normalize them:
-- "5 TAR" or "5TAR" or "5 tar" → "5 Tar"
-- "3 TAR" or "3TAR" or "3 tar" → "3 Tar"
-- "YARN" or "yarn" → "Yarn"
+RULES:
+1. Normalize categories: "5 TAR"/"5TAR"/"5 tar" → "5 Tar", "3 TAR" → "3 Tar", "YARN" → "Yarn"
+2. Match each color to the EXACT name from the available list for THAT category. Use fuzzy matching for typos/casing/hyphens (e.g., "N-BLUE" → "N Blue", "MAHENDI" → "Mahendi", "MAHROON" → "Maroon").
+3. ONLY use color names from the available list above. If a color cannot be matched to any name in the list, use the original text as-is.
+4. NEVER output duplicate entries — each color should appear at most ONCE per category. If the same color appears multiple times in the input, sum up the quantities.
+5. Return ONLY valid JSON, no markdown, no code fences.
 
-Parse this order text:
+ORDER TEXT:
 ---
 ${orderText}
 ---
 
-Return ONLY a valid JSON object with this exact structure (no markdown, no code fences):
-{"items":[{"category":"5 Tar","colorName":"Red","quantity":1}]}
-
-Each item should have:
-- "category": The normalized category name
-- "colorName": The matched color name from the available colors list (use EXACT name from the list if matched)
-- "quantity": The number quantity
-
-If a color name from the order text doesn't match any available color, still include it with the original name.`;
+Return this exact JSON structure:
+{"items":[{"category":"5 Tar","colorName":"Red","quantity":1}]}`;
 
   try {
     const completion = await groq.chat.completions.create({
@@ -68,7 +69,18 @@ If a color name from the order text doesn't match any available color, still inc
       items: { category: string; colorName: string; quantity: number }[];
     };
 
-    return NextResponse.json(parsed);
+    const deduped = new Map<string, { category: string; colorName: string; quantity: number }>();
+    for (const item of parsed.items) {
+      const key = `${item.category}::${item.colorName}`;
+      const existing = deduped.get(key);
+      if (existing) {
+        existing.quantity += item.quantity;
+      } else {
+        deduped.set(key, { ...item });
+      }
+    }
+
+    return NextResponse.json({ items: Array.from(deduped.values()) });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to parse order";
     return NextResponse.json({ error: message }, { status: 500 });

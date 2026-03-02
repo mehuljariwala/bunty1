@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Sprout, Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, getDefaultPage } from "@/lib/auth-context";
 
 export default function LoginPage(): React.ReactElement {
   const [email, setEmail] = useState("");
@@ -20,8 +20,8 @@ export default function LoginPage(): React.ReactElement {
     setSubmitting(true);
 
     try {
-      await signIn(email, password);
-      router.push("/running-orders");
+      const user = await signIn(email, password);
+      router.push(user ? getDefaultPage(user) : "/running-orders");
     } catch {
       setError("Invalid email or password. Please try again.");
     } finally {

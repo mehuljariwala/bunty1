@@ -20,6 +20,7 @@ function docToOrder(id: string, data: Record<string, unknown>): Order {
     csvId: (data.csvId as number) ?? 0,
     partyName: (data.partyName as string) ?? "",
     partyAddress: (data.partyAddress as string) ?? "",
+    partyAddressGu: (data.partyAddressGu as string) || undefined,
     route: (data.route as string) ?? "",
     orderDate: (data.orderDate as string) ?? "",
     type: (data.type as "Running" | "Complete") ?? "Complete",

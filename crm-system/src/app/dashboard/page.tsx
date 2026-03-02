@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   ListOrdered,
   BookUser,
   Palette,
   ArrowRight,
-
+  RefreshCw,
   TrendingUp,
   Calendar,
   Filter,
@@ -36,6 +36,7 @@ import { subscribeOrders } from "@/lib/orders";
 import { subscribeParties } from "@/lib/parties";
 import { subscribeColors } from "@/lib/colors";
 import { subscribeRoutes } from "@/lib/routes";
+import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-cache";
 import type { Order, Color, Party, RouteDoc } from "@/lib/types";
 
 const CHART_COLORS = ["#f5956b", "#5b5fc7", "#36b49f", "#e8b838", "#9b59b6", "#3498db"];
@@ -374,13 +375,16 @@ function ListShimmer({ rows = 5 }: { rows?: number }) {
 }
 
 export default function DashboardPage() {
-  const [allOrders, setAllOrders] = useState<Order[]>([]);
-  const [parties, setParties] = useState<Party[]>([]);
-  const [colors, setColors] = useState<Color[]>([]);
-  const [_routes, setRoutes] = useState<RouteDoc[]>([]);
-  const [ordersLoaded, setOrdersLoaded] = useState(false);
-  const [partiesLoaded, setPartiesLoaded] = useState(false);
-  const [colorsLoaded, setColorsLoaded] = useState(false);
+  const cached = useRef(getDashboardCache());
+  const [allOrders, setAllOrders] = useState<Order[]>(cached.current?.orders ?? []);
+  const [parties, setParties] = useState<Party[]>(cached.current?.parties ?? []);
+  const [colors, setColors] = useState<Color[]>(cached.current?.colors ?? []);
+  const routesRef = useRef<RouteDoc[]>(cached.current?.routes ?? []);
+  const [ordersLoaded, setOrdersLoaded] = useState(!!cached.current);
+  const [partiesLoaded, setPartiesLoaded] = useState(!!cached.current);
+  const [colorsLoaded, setColorsLoaded] = useState(!!cached.current);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<number>(cached.current?.timestamp ?? 0);
   const [dateFrom, setDateFrom] = useState(getDefaultDateFrom);
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split("T")[0]);
   const [activePreset, setActivePreset] = useState<DatePreset | null>("1y");
@@ -390,14 +394,39 @@ export default function DashboardPage() {
   const [partyDropdownOpen, setPartyDropdownOpen] = useState(false);
   const [partySearch, setPartySearch] = useState("");
   const partyDropdownRef = useRef<HTMLDivElement>(null);
+  const unsubs = useRef<(() => void)[]>([]);
+
+  const fetchFresh = useCallback(() => {
+    unsubs.current.forEach((u) => u());
+    unsubs.current = [];
+    setRefreshing(true);
+
+    let o: Order[] = [], p: Party[] = [], c: Color[] = [], r: RouteDoc[] = [];
+    let loaded = 0;
+    const done = (): void => {
+      loaded++;
+      if (loaded >= 4) {
+        setDashboardCache({ orders: o, parties: p, colors: c, routes: r });
+        setLastRefreshed(Date.now());
+        setRefreshing(false);
+        unsubs.current.forEach((u) => u());
+        unsubs.current = [];
+      }
+    };
+
+    const u1 = subscribeOrders((d) => { o = d; setAllOrders(d); setOrdersLoaded(true); done(); });
+    const u2 = subscribeParties((d) => { p = d; setParties(d); setPartiesLoaded(true); done(); });
+    const u3 = subscribeColors((d) => { c = d; setColors(d); setColorsLoaded(true); done(); });
+    const u4 = subscribeRoutes((d) => { r = d; routesRef.current = d; done(); });
+    unsubs.current = [u1, u2, u3, u4];
+  }, []);
 
   useEffect(() => {
-    const u1 = subscribeOrders((d) => { setAllOrders(d); setOrdersLoaded(true); });
-    const u2 = subscribeParties((d) => { setParties(d); setPartiesLoaded(true); });
-    const u3 = subscribeColors((d) => { setColors(d); setColorsLoaded(true); });
-    const u4 = subscribeRoutes((d) => { setRoutes(d); });
-    return () => { u1(); u2(); u3(); u4(); };
-  }, []);
+    if (!cached.current) {
+      fetchFresh();
+    }
+    return () => { unsubs.current.forEach((u) => u()); };
+  }, [fetchFresh]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -556,6 +585,24 @@ export default function DashboardPage() {
       <div className="bg-white rounded-2xl card-shadow px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
         <div className="flex items-center gap-3 shrink-0">
           <h2 className="text-[1.1rem] font-bold tracking-tight text-crm-text">Dashboard</h2>
+          <button
+            onClick={fetchFresh}
+            disabled={refreshing}
+            className={`flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[0.7rem] font-medium border transition-all ${
+              refreshing
+                ? "bg-crm-primary-muted border-crm-primary/30 text-crm-primary cursor-wait"
+                : "bg-crm-bg border-crm-border text-crm-text-muted hover:text-crm-primary hover:border-crm-primary/30"
+            }`}
+            title={lastRefreshed ? `Last refreshed: ${new Date(lastRefreshed).toLocaleTimeString()}` : "Refresh data"}
+          >
+            <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} strokeWidth={2} />
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </button>
+          {lastRefreshed > 0 && !refreshing && (
+            <span className="text-[0.6rem] text-crm-border hidden sm:inline">
+              {new Date(lastRefreshed).toLocaleTimeString()}
+            </span>
+          )}
           <div className="w-px h-5 bg-crm-border" />
           <Filter className="w-3.5 h-3.5 text-crm-text-muted" strokeWidth={1.8} />
         </div>
