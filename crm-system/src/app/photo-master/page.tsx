@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { X, Loader2, ImageIcon, CheckCircle2 } from "lucide-react";
+import { X, Loader2, ImageIcon, CheckCircle2, Clock } from "lucide-react";
 import { subscribePhotos, markPhotoComplete } from "@/lib/photos";
 import BillLayout from "@/components/BillLayout";
 import type { PhotoRecord } from "@/lib/types";
@@ -27,9 +27,18 @@ function getCategoryBadges(photo: PhotoRecord): { name: string; color: string }[
 
 function formatGroupDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-IN", {
+    weekday: "short",
     day: "2-digit",
     month: "short",
     year: "numeric",
+  });
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   });
 }
 
@@ -53,9 +62,13 @@ export default function PhotoMasterPage() {
   const completePhotos = useMemo(() => photos.filter((p) => p.status === "complete"), [photos]);
   const activePhotos = tab === "all" ? photos : tab === "pending" ? pendingPhotos : completePhotos;
 
+  // Group by date, sorted newest first. Within each date, sort by time descending.
   const grouped = useMemo(() => {
+    const sorted = [...activePhotos].sort(
+      (a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime()
+    );
     const map = new Map<string, PhotoRecord[]>();
-    for (const p of activePhotos) {
+    for (const p of sorted) {
       const key = formatGroupDate(p.capturedAt);
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(p);
@@ -173,72 +186,98 @@ export default function PhotoMasterPage() {
               </span>
             </h3>
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
-              {datePhotos.map((photo) => (
-                <div
-                  key={photo.id}
-                  onClick={() => setSelected(photo)}
-                  style={{
-                    background: "#fff",
-                    borderRadius: "12px",
-                    boxShadow: "0px 1px 4px 0px rgba(0,0,0,0.12)",
-                    overflow: "hidden",
-                    cursor: "pointer",
-                    transition: "0.2s",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                  className="hover:shadow-md"
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px 6px" }}>
-                    <span style={{
-                      fontSize: "28px",
-                      fontWeight: 800,
-                      color: "#1a1a2e",
-                      background: "#f0f0f0",
-                      borderRadius: "8px",
-                      padding: "2px 12px",
-                      lineHeight: 1.2,
-                      flexShrink: 0,
-                    }}>
-                      {photo.sequenceNumber}
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        color: "#1460BD",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
+              {datePhotos.map((photo) => {
+                const isPending = (photo.status ?? "pending") === "pending";
+                return (
+                  <div
+                    key={photo.id}
+                    onClick={() => setSelected(photo)}
+                    style={{
+                      background: "#fff",
+                      borderRadius: "12px",
+                      boxShadow: "0px 1px 4px 0px rgba(0,0,0,0.12)",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      transition: "0.2s",
+                      display: "flex",
+                      flexDirection: "column",
+                      borderLeft: isPending ? "3px solid #f59e0b" : "3px solid #10b981",
+                    }}
+                    className="hover:shadow-md"
+                  >
+                    {/* Seq + Party */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px 4px" }}>
+                      <span style={{
+                        fontSize: "24px",
+                        fontWeight: 800,
+                        color: "#1a1a2e",
+                        background: "#f0f0f0",
+                        borderRadius: "8px",
+                        padding: "2px 10px",
+                        lineHeight: 1.2,
+                        flexShrink: 0,
                       }}>
-                        {photo.partyName.toUpperCase()}
+                        {photo.sequenceNumber}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          color: "#1460BD",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {photo.partyName.toUpperCase()}
+                        </div>
+                        <span style={{ fontSize: "11px", color: "#8D9293", fontWeight: 500 }}>
+                          #{photo.orderCsvId}
+                        </span>
                       </div>
-                      <span style={{ fontSize: "11px", color: "#8D9293", fontWeight: 500 }}>
-                        #{photo.orderCsvId}
+                    </div>
+
+                    {/* Time */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "2px 10px 4px" }}>
+                      <Clock style={{ width: "11px", height: "11px", color: "#9CA3AF" }} strokeWidth={2} />
+                      <span style={{ fontSize: "11px", fontWeight: 600, color: "#6B7280" }}>
+                        {formatTime(photo.capturedAt)}
+                      </span>
+                      <span style={{
+                        marginLeft: "auto",
+                        fontSize: "9px",
+                        fontWeight: 700,
+                        color: isPending ? "#f59e0b" : "#10b981",
+                        background: isPending ? "#fef3c7" : "#d1fae5",
+                        borderRadius: "4px",
+                        padding: "1px 5px",
+                      }}>
+                        {isPending ? "PENDING" : "DONE"}
                       </span>
                     </div>
+
+                    {/* Category badges */}
+                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", padding: "0 10px 8px" }}>
+                      {getCategoryBadges(photo).map((b) => (
+                        <span
+                          key={b.name}
+                          style={{
+                            fontSize: "9px",
+                            fontWeight: 600,
+                            color: "#fff",
+                            background: b.color,
+                            borderRadius: "3px",
+                            padding: "1px 5px",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          {b.name}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", padding: "0 10px 8px" }}>
-                    {getCategoryBadges(photo).map((b) => (
-                      <span
-                        key={b.name}
-                        style={{
-                          fontSize: "9px",
-                          fontWeight: 600,
-                          color: "#fff",
-                          background: b.color,
-                          borderRadius: "3px",
-                          padding: "1px 5px",
-                          lineHeight: "1.5",
-                        }}
-                      >
-                        {b.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))
@@ -259,7 +298,7 @@ export default function PhotoMasterPage() {
                   {selected.partyName}
                 </h3>
                 <p className="text-[0.7rem] text-crm-text-muted mt-0.5">
-                  #{selected.orderCsvId} &middot; Seq {selected.sequenceNumber} &middot; {formatGroupDate(selected.capturedAt)}
+                  #{selected.orderCsvId} &middot; Seq {selected.sequenceNumber} &middot; {formatGroupDate(selected.capturedAt)} at {formatTime(selected.capturedAt)}
                 </p>
               </div>
               <button

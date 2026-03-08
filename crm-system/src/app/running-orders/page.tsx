@@ -86,53 +86,43 @@ export default function RunningOrdersPage() {
     }, 2000);
   }, []);
 
-  const handlePrint = useCallback((order: Order) => {
-    const seq = seqCounter + 1;
-    setPrintSeq(seq);
+  const handlePrint = useCallback(async (order: Order) => {
+    showCardTip(order.id, `Saving...`);
+
+    // First save to photo-master collection, then print
+    let realSeq = seqCounter + 1;
+    try {
+      realSeq = await getNextSeqNumber();
+    } catch {
+      // use local fallback
+    }
+
+    try {
+      await savePhotoRecord({
+        orderId: order.id,
+        orderCsvId: order.csvId,
+        partyName: order.partyName,
+        route: order.route,
+        orderDate: order.orderDate,
+        sequenceNumber: realSeq,
+        orderSnapshot: order,
+        capturedAt: new Date().toISOString(),
+        status: "pending",
+      });
+      showCardTip(order.id, `Seq #${realSeq} — Saved`);
+    } catch {
+      showCardTip(order.id, `Seq #${realSeq} — Save failed`);
+      return;
+    }
+
+    // Now print after successful save
+    setPrintSeq(realSeq);
     setPrintOrder(order);
 
-    // Print immediately to preserve user gesture chain (required on mobile)
     const originalTitle = document.title;
     document.title = `${order.partyName}_${formatDatePrint(order.orderDate)}`;
     setTimeout(() => { window.print(); }, 150);
     setTimeout(() => { document.title = originalTitle; }, 3000);
-
-    // Save photo + get real seq number in the background
-    showCardTip(order.id, `Seq #${seq} — Saving...`);
-    getNextSeqNumber()
-      .then((realSeq) => {
-        setPrintSeq(realSeq);
-        return savePhotoRecord({
-          orderId: order.id,
-          orderCsvId: order.csvId,
-          partyName: order.partyName,
-          route: order.route,
-          orderDate: order.orderDate,
-          sequenceNumber: realSeq,
-          orderSnapshot: order,
-          capturedAt: new Date().toISOString(),
-          status: "pending",
-        }).then(() => realSeq);
-      })
-      .then((realSeq) => {
-        showCardTip(order.id, `Seq #${realSeq} — Saved`);
-      })
-      .catch(() => {
-        // Fallback: save with local seq if getNextSeqNumber failed
-        savePhotoRecord({
-          orderId: order.id,
-          orderCsvId: order.csvId,
-          partyName: order.partyName,
-          route: order.route,
-          orderDate: order.orderDate,
-          sequenceNumber: seq,
-          orderSnapshot: order,
-          capturedAt: new Date().toISOString(),
-          status: "pending",
-        })
-          .then(() => showCardTip(order.id, `Seq #${seq} — Saved`))
-          .catch(() => showCardTip(order.id, `Seq #${seq} — Save failed`));
-      });
   }, [showCardTip, seqCounter]);
 
   useEffect(() => {
