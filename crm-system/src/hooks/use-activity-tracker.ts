@@ -10,9 +10,11 @@ import {
 } from "@/lib/activity-logger";
 
 const PAGE_NAMES: Record<string, string> = {
+  "/": "Home",
   "/dashboard": "Dashboard",
   "/running-orders": "Running Orders",
   "/orders": "Orders",
+  "/select-party": "Select Party",
   "/party-master": "Party Master",
   "/color-master": "Color Master",
   "/route-master": "Route Master",
@@ -20,13 +22,18 @@ const PAGE_NAMES: Record<string, string> = {
   "/stock-inventory": "Stock Inventory",
   "/inventory-report": "Inventory Report",
   "/reports": "Reports",
+  "/photo-master": "Photo Master",
   "/manage-sub-admin": "Manage Sub Admin",
   "/admin-profile": "Admin Profile",
   "/user-activity": "User Activity",
+  "/settings": "Settings",
 };
 
 function getPageName(path: string): string {
-  return PAGE_NAMES[path] || path.replace(/^\//, "").replace(/-/g, " ") || "Home";
+  if (PAGE_NAMES[path]) return PAGE_NAMES[path];
+  if (path.startsWith("/create-order")) return "Create Order";
+  if (path.startsWith("/order-bill/")) return "Order Bill";
+  return path.replace(/^\//, "").replace(/-/g, " ") || "Home";
 }
 
 export function useActivityTracker() {

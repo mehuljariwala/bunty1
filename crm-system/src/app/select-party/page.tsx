@@ -1,45 +1,18 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Search, MapPin } from "lucide-react";
-import { subscribeParties } from "@/lib/parties";
-import { subscribeRoutes } from "@/lib/routes";
-import { subscribeOrders } from "@/lib/orders";
-import type { Party, RouteDoc, Order } from "@/lib/types";
+import { usePartiesQuery, useRoutesQuery, useOrdersQuery } from "@/hooks/use-queries";
+import type { Party } from "@/lib/types";
 
 export default function SelectPartyPage() {
   const router = useRouter();
-  const [parties, setParties] = useState<Party[]>([]);
-  const [routes, setRoutes] = useState<RouteDoc[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: parties = [], isLoading: partiesLoading } = usePartiesQuery();
+  const { data: routes = [], isLoading: routesLoading } = useRoutesQuery();
+  const { data: orders = [], isLoading: ordersLoading } = useOrdersQuery();
+  const loading = partiesLoading || routesLoading || ordersLoading;
   const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    let partiesLoaded = false;
-    let routesLoaded = false;
-
-    const unsubParties = subscribeParties((loaded) => {
-      setParties(loaded);
-      partiesLoaded = true;
-      if (routesLoaded) setLoading(false);
-    });
-
-    const unsubRoutes = subscribeRoutes((loaded) => {
-      setRoutes(loaded);
-      routesLoaded = true;
-      if (partiesLoaded) setLoading(false);
-    });
-
-    const unsubOrders = subscribeOrders(setOrders);
-
-    return () => {
-      unsubParties();
-      unsubRoutes();
-      unsubOrders();
-    };
-  }, []);
 
   const runningPartyNames = useMemo(() => {
     const names = new Set<string>();

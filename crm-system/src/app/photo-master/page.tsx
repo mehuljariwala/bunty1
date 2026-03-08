@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { X, Loader2, ImageIcon, CheckCircle2 } from "lucide-react";
 import { subscribePhotos, markPhotoComplete } from "@/lib/photos";
-import { markOrderComplete } from "@/lib/orders";
 import BillLayout from "@/components/BillLayout";
 import type { PhotoRecord } from "@/lib/types";
 
@@ -34,13 +33,13 @@ function formatGroupDate(iso: string): string {
   });
 }
 
-type Tab = "pending" | "complete";
+type Tab = "all" | "pending" | "complete";
 
 export default function PhotoMasterPage() {
   const [photos, setPhotos] = useState<PhotoRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<PhotoRecord | null>(null);
-  const [tab, setTab] = useState<Tab>("pending");
+  const [tab, setTab] = useState<Tab>("all");
   const [marking, setMarking] = useState(false);
 
   useEffect(() => {
@@ -52,7 +51,7 @@ export default function PhotoMasterPage() {
 
   const pendingPhotos = useMemo(() => photos.filter((p) => (p.status ?? "pending") === "pending"), [photos]);
   const completePhotos = useMemo(() => photos.filter((p) => p.status === "complete"), [photos]);
-  const activePhotos = tab === "pending" ? pendingPhotos : completePhotos;
+  const activePhotos = tab === "all" ? photos : tab === "pending" ? pendingPhotos : completePhotos;
 
   const grouped = useMemo(() => {
     const map = new Map<string, PhotoRecord[]>();
@@ -69,7 +68,6 @@ export default function PhotoMasterPage() {
     setMarking(true);
     try {
       await markPhotoComplete(selected.id);
-      await markOrderComplete(selected.orderId);
       setSelected(null);
     } finally {
       setMarking(false);
@@ -77,6 +75,7 @@ export default function PhotoMasterPage() {
   }
 
   const TABS: { key: Tab; label: string; count: number }[] = [
+    { key: "all", label: "All", count: photos.length },
     { key: "pending", label: "Pending", count: pendingPhotos.length },
     { key: "complete", label: "Complete", count: completePhotos.length },
   ];
@@ -146,7 +145,7 @@ export default function PhotoMasterPage() {
         <div className="flex flex-col items-center justify-center py-16 gap-2">
           <ImageIcon className="w-10 h-10 text-crm-text-muted/30" strokeWidth={1.2} />
           <p className="text-[0.85rem] text-crm-text-muted">
-            No {tab === "pending" ? "pending" : "completed"} photos
+            No {tab === "all" ? "" : tab === "pending" ? "pending " : "completed "}photos
           </p>
         </div>
       ) : (

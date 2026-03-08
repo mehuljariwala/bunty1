@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useEffect, useMemo, useCallback } from "react";
+import { Fragment, useState, useMemo, useCallback } from "react";
 import {
   Search,
   ChevronDown,
@@ -13,8 +13,8 @@ import {
   X,
   Save,
 } from "lucide-react";
-import { subscribeParties, updateParty } from "@/lib/parties";
-import { subscribeColors } from "@/lib/colors";
+import { updateParty } from "@/lib/parties";
+import { usePartiesQuery, useColorsQuery, useInvalidate } from "@/hooks/use-queries";
 import type { Party, RateValues } from "@/lib/types";
 
 function getRateCount(rates: Party["rates"], categories: string[], materials: string[]): number {
@@ -283,11 +283,13 @@ function ApplyRateModal({
 }
 
 export default function RateMasterPage(): React.JSX.Element {
-  const [parties, setParties] = useState<Party[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [colorsLoading, setColorsLoading] = useState(true);
-  const [rateCategories, setRateCategories] = useState<string[]>([]);
-  const [rateMaterials, setRateMaterials] = useState<string[]>([]);
+  const { data: parties = [], isLoading: loading } = usePartiesQuery();
+  const { data: colors = [], isLoading: colorsLoading } = useColorsQuery();
+  const invalidate = useInvalidate();
+
+  const rateCategories = useMemo(() => [...new Set(colors.map((c) => c.category))].sort(), [colors]);
+  const rateMaterials = useMemo(() => [...new Set(colors.map((c) => c.subCategory).filter(Boolean))].sort(), [colors]);
+
   const [search, setSearch] = useState("");
   const [activeRoute, setActiveRoute] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -299,25 +301,6 @@ export default function RateMasterPage(): React.JSX.Element {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = subscribeParties((updated) => {
-      setParties(updated);
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = subscribeColors((colors) => {
-      const cats = [...new Set(colors.map((c) => c.category))].sort();
-      const mats = [...new Set(colors.map((c) => c.subCategory).filter(Boolean))].sort();
-      setRateCategories(cats);
-      setRateMaterials(mats);
-      setColorsLoading(false);
-    });
-    return unsubscribe;
-  }, []);
 
   useEffect(() => {
     if (rateCategories.length > 0 && rateMaterials.length > 0 && Object.keys(rateCard).length === 0) {

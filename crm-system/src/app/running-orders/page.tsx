@@ -11,8 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { subscribeOrders, markOrderComplete, getNextSeqNumber, subscribeSeqCounter } from "@/lib/orders";
-import { subscribeRoutes } from "@/lib/routes";
+import { subscribeOrders, getNextSeqNumber, subscribeSeqCounter } from "@/lib/orders";
+import { useRoutesQuery } from "@/hooks/use-queries";
 import { savePhotoRecord } from "@/lib/photos";
 import BillLayout from "@/components/BillLayout";
 import type { Order, RouteDoc } from "@/lib/types";
@@ -64,7 +64,7 @@ function PrintView({ order, sequenceNumber }: { order: Order; sequenceNumber?: n
 export default function RunningOrdersPage() {
   const cachedRO = useRef(getCachedOrders());
   const [orders, setOrders] = useState<Order[]>(cachedRO.current?.orders ?? []);
-  const [routes, setRoutes] = useState<RouteDoc[]>(cachedRO.current?.routes ?? []);
+  const { data: routes = cachedRO.current?.routes ?? [] } = useRoutesQuery();
   const [loading, setLoading] = useState(!cachedRO.current);
   const [activeTab, setActiveTab] = useState<TabStatus>("Running");
   const [completeDate, setCompleteDate] = useState(() => new Date().toISOString().split("T")[0]);
@@ -86,69 +86,78 @@ export default function RunningOrdersPage() {
     }, 2000);
   }, []);
 
-  const handlePrint = useCallback(async (order: Order) => {
-    let seq = seqCounter + 1;
-    try { seq = await getNextSeqNumber(); } catch { /* use local fallback */ }
+  const handlePrint = useCallback((order: Order) => {
+    const seq = seqCounter + 1;
     setPrintSeq(seq);
     setPrintOrder(order);
 
+    // Print immediately to preserve user gesture chain (required on mobile)
     const originalTitle = document.title;
     document.title = `${order.partyName}_${formatDatePrint(order.orderDate)}`;
-    setTimeout(() => { window.print(); }, 100);
-    setTimeout(() => { document.title = originalTitle; }, 1000);
+    setTimeout(() => { window.print(); }, 150);
+    setTimeout(() => { document.title = originalTitle; }, 3000);
 
+    // Save photo + get real seq number in the background
     showCardTip(order.id, `Seq #${seq} — Saving...`);
-    try {
-      await savePhotoRecord({
-        orderId: order.id,
-        orderCsvId: order.csvId,
-        partyName: order.partyName,
-        route: order.route,
-        orderDate: order.orderDate,
-        sequenceNumber: seq,
-        orderSnapshot: order,
-        capturedAt: new Date().toISOString(),
+    getNextSeqNumber()
+      .then((realSeq) => {
+        setPrintSeq(realSeq);
+        return savePhotoRecord({
+          orderId: order.id,
+          orderCsvId: order.csvId,
+          partyName: order.partyName,
+          route: order.route,
+          orderDate: order.orderDate,
+          sequenceNumber: realSeq,
+          orderSnapshot: order,
+          capturedAt: new Date().toISOString(),
+          status: "pending",
+        }).then(() => realSeq);
+      })
+      .then((realSeq) => {
+        showCardTip(order.id, `Seq #${realSeq} — Saved`);
+      })
+      .catch(() => {
+        // Fallback: save with local seq if getNextSeqNumber failed
+        savePhotoRecord({
+          orderId: order.id,
+          orderCsvId: order.csvId,
+          partyName: order.partyName,
+          route: order.route,
+          orderDate: order.orderDate,
+          sequenceNumber: seq,
+          orderSnapshot: order,
+          capturedAt: new Date().toISOString(),
+          status: "pending",
+        })
+          .then(() => showCardTip(order.id, `Seq #${seq} — Saved`))
+          .catch(() => showCardTip(order.id, `Seq #${seq} — Save failed`));
       });
-      showCardTip(order.id, `Seq #${seq} — Saved`);
-    } catch {
-      showCardTip(order.id, `Seq #${seq} — Save failed`);
-    }
   }, [showCardTip, seqCounter]);
 
-  const latestRoutes = useRef<RouteDoc[]>(cachedRO.current?.routes ?? []);
   useEffect(() => {
     const unsubOrders = subscribeOrders((loaded) => {
       setOrders(loaded);
       setLoading(false);
-      setCachedOrders(loaded, latestRoutes.current);
-    });
-    const unsubRoutes = subscribeRoutes((loaded) => {
-      latestRoutes.current = loaded;
-      setRoutes(loaded);
+      setCachedOrders(loaded, routes);
     });
     const unsubSeq = subscribeSeqCounter((counter) => {
       setSeqCounter(counter);
     });
     return () => {
       unsubOrders();
-      unsubRoutes();
       unsubSeq();
     };
   }, []);
 
   useEffect(() => {
     const onAfterPrint = () => {
-      if (printOrder) {
-        markOrderComplete(printOrder.id).then(() => {
-          showCardTip(printOrder.id, "Marked as Complete");
-        });
-      }
       setPrintOrder(null);
       setPrintSeq(null);
     };
     window.addEventListener("afterprint", onAfterPrint);
     return () => window.removeEventListener("afterprint", onAfterPrint);
-  }, [printOrder, showCardTip]);
+  }, []);
 
   const routeNames = useMemo(() => routes.map((r) => r.name).sort(), [routes]);
 

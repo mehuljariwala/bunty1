@@ -10,10 +10,23 @@ import {
 import { db } from "./firebase";
 import type { PhotoRecord } from "./types";
 
+function stripUndefined(obj: Record<string, unknown>): Record<string, unknown> {
+  const clean: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(obj)) {
+    if (val === undefined) continue;
+    if (val !== null && typeof val === "object" && !Array.isArray(val)) {
+      clean[key] = stripUndefined(val as Record<string, unknown>);
+    } else {
+      clean[key] = val;
+    }
+  }
+  return clean;
+}
+
 export async function savePhotoRecord(
   data: Omit<PhotoRecord, "id">,
 ): Promise<string> {
-  const docRef = await addDoc(collection(db, "photos"), data);
+  const docRef = await addDoc(collection(db, "photos"), stripUndefined(data as unknown as Record<string, unknown>));
   return docRef.id;
 }
 

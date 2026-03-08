@@ -3,6 +3,7 @@ import "./globals.css";
 import { SidebarProvider } from "@/components/SidebarContext";
 import { AuthProvider } from "@/lib/auth-context";
 import AuthGate from "@/components/AuthGate";
+import QueryProvider from "@/lib/query-provider";
 
 export const metadata: Metadata = {
   title: "Bloom CRM",
@@ -29,11 +30,13 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-crm-bg text-crm-text">
-        <SidebarProvider>
-          <AuthProvider>
-            <AuthGate>{children}</AuthGate>
-          </AuthProvider>
-        </SidebarProvider>
+        <QueryProvider>
+          <SidebarProvider>
+            <AuthProvider>
+              <AuthGate>{children}</AuthGate>
+            </AuthProvider>
+          </SidebarProvider>
+        </QueryProvider>
       </body>
     </html>
   );

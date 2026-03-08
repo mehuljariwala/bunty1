@@ -23,10 +23,10 @@ import {
   CornerDownLeft,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { subscribeParties } from "@/lib/parties";
-import { subscribeOrders } from "@/lib/orders";
-import { subscribeColors } from "@/lib/colors";
-import { subscribeRoutes } from "@/lib/routes";
+import { fetchPartiesCached } from "@/lib/parties";
+import { fetchOrdersCached } from "@/lib/orders";
+import { fetchColors } from "@/lib/colors";
+import { fetchRoutesCached } from "@/lib/routes";
 import type { Party, Order, Color, RouteDoc } from "@/lib/types";
 
 interface NavItem {
@@ -84,19 +84,15 @@ export default function CommandPalette(): React.ReactNode {
     if (dataLoadedRef.current) return;
     dataLoadedRef.current = true;
 
-    const unsubs: (() => void)[] = [];
-    unsubs.push(subscribeParties(setParties));
-    unsubs.push(subscribeOrders(setOrders));
-    unsubs.push(subscribeColors(setColors));
-    unsubs.push(subscribeRoutes(setRoutes));
-
-    return () => unsubs.forEach((u) => u());
+    fetchPartiesCached().then(setParties);
+    fetchOrdersCached().then(setOrders);
+    fetchColors().then(setColors);
+    fetchRoutesCached().then(setRoutes);
   }, []);
 
   useEffect(() => {
     if (open) {
-      const cleanup = loadFirestoreData();
-      return cleanup;
+      loadFirestoreData();
     }
   }, [open, loadFirestoreData]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -11,7 +11,7 @@ import {
   Package,
 } from "lucide-react";
 
-import { subscribeColors } from "@/lib/colors";
+import { useColorsQuery } from "@/hooks/use-queries";
 import type { Color } from "@/lib/types";
 
 interface StockItem {
@@ -71,16 +71,7 @@ function statusTag(item: StockItem): { label: string; cls: string } | null {
 }
 
 export default function InventoryReportPage(): React.JSX.Element {
-  const [colors, setColors] = useState<Color[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsub = subscribeColors((loaded) => {
-      setColors(loaded);
-      setLoading(false);
-    });
-    return () => unsub();
-  }, []);
+  const { data: colors = [], isLoading: loading } = useColorsQuery();
 
   const ALL = useMemo<StockItem[]>(() =>
     colors.map((c) => ({

@@ -12,7 +12,8 @@ import {
   Check,
   ArrowRight,
 } from "lucide-react";
-import { subscribeColors, updateColor } from "@/lib/colors";
+import { updateColor } from "@/lib/colors";
+import { useColorsQuery, useInvalidate } from "@/hooks/use-queries";
 import { useTracker } from "@/lib/activity-tracker-context";
 import type { Color } from "@/lib/types";
 
@@ -221,9 +222,10 @@ function SummaryModal({
 
 export default function StockInventoryPage(): React.JSX.Element {
   const { trackStockUpdate } = useTracker();
-  const [dbStock, setDbStock] = useState<StockItem[]>([]);
+  const { data: rawColors = [], isLoading: loading } = useColorsQuery();
+  const invalidate = useInvalidate();
+  const dbStock = useMemo(() => rawColors.map(colorToStockItem), [rawColors]);
   const [localStock, setLocalStock] = useState<StockItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("");
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -236,26 +238,22 @@ export default function StockInventoryPage(): React.JSX.Element {
   const [lastTouchedId, setLastTouchedId] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Sync localStock with dbStock, preserving pending edits
   useEffect(() => {
-    const unsubscribe = subscribeColors((colors) => {
-      const items = colors.map(colorToStockItem);
-      setDbStock(items);
-      setLocalStock((prev) => {
-        if (prev.length === 0) return items;
-        const pendingIds = new Set<string>();
-        setPendingChanges((pc) => { pc.forEach((_, id) => pendingIds.add(id)); return pc; });
-        return items.map((item) => {
-          if (pendingIds.has(item.id)) {
-            const existing = prev.find((p) => p.id === item.id);
-            if (existing) return { ...item, currentStock: existing.currentStock };
-          }
-          return item;
-        });
+    if (dbStock.length === 0) return;
+    setLocalStock((prev) => {
+      if (prev.length === 0) return dbStock;
+      const pendingIds = new Set<string>();
+      setPendingChanges((pc) => { pc.forEach((_, id) => pendingIds.add(id)); return pc; });
+      return dbStock.map((item) => {
+        if (pendingIds.has(item.id)) {
+          const existing = prev.find((p) => p.id === item.id);
+          if (existing) return { ...item, currentStock: existing.currentStock };
+        }
+        return item;
       });
-      setLoading(false);
     });
-    return unsubscribe;
-  }, []);
+  }, [dbStock]);
 
   const categories = useMemo(
     () => [...new Set(localStock.map((s) => s.category))].sort(),
@@ -342,6 +340,7 @@ export default function StockInventoryPage(): React.JSX.Element {
     );
 
     const successCount = results.filter(Boolean).length;
+    if (successCount > 0) invalidate.colors();
 
     if (successCount > 0) {
       const changes = entries.map(([, change]) => ({

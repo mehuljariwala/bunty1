@@ -1,12 +1,11 @@
 "use client";
 
-import { Fragment, useState, useRef, useEffect, useMemo } from "react";
+import { Fragment, useState, useRef, useMemo } from "react";
 import { Plus, Search, Filter, ChevronDown, MapPin, Route, KeyRound, Eye, EyeOff, X, Loader2, Save, Check, Pencil } from "lucide-react";
 import AddPartyModal from "@/components/AddPartyModal";
-import { subscribeParties, addParty, updateParty } from "@/lib/parties";
-import { subscribeColors } from "@/lib/colors";
-import { subscribeRoutes } from "@/lib/routes";
-import type { Party, RateValues, RouteDoc } from "@/lib/types";
+import { addParty, updateParty } from "@/lib/parties";
+import { usePartiesQuery, useColorsQuery, useRoutesQuery, useInvalidate } from "@/hooks/use-queries";
+import type { Party, RateValues } from "@/lib/types";
 
 function getRateCount(rates: Party["rates"], categories: string[], materials: string[]): number {
   let count = 0;
@@ -28,10 +27,14 @@ interface Filters {
 const EMPTY_FILTERS: Filters = { routes: [], rateStatus: "all" };
 
 export default function PartyMasterPage(): React.JSX.Element {
-  const [parties, setParties] = useState<Party[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [rateCategories, setRateCategories] = useState<string[]>([]);
-  const [rateMaterials, setRateMaterials] = useState<string[]>([]);
+  const { data: parties = [], isLoading: loading } = usePartiesQuery();
+  const { data: colors = [] } = useColorsQuery();
+  const { data: routesList = [] } = useRoutesQuery();
+  const invalidate = useInvalidate();
+
+  const rateCategories = useMemo(() => [...new Set(colors.map((c) => c.category))].sort(), [colors]);
+  const rateMaterials = useMemo(() => [...new Set(colors.map((c) => c.subCategory).filter(Boolean))].sort(), [colors]);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -42,30 +45,9 @@ export default function PartyMasterPage(): React.JSX.Element {
   const [editingRates, setEditingRates] = useState<Record<string, RateValues>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
-  const [routesList, setRoutesList] = useState<RouteDoc[]>([]);
   const [editParty, setEditParty] = useState<Party | null>(null);
 
   const totalRates = rateCategories.length * rateMaterials.length;
-
-  useEffect(() => {
-    const unsubscribe = subscribeParties((updatedParties) => {
-      setParties(updatedParties);
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = subscribeColors((colors) => {
-      setRateCategories([...new Set(colors.map((c) => c.category))].sort());
-      setRateMaterials([...new Set(colors.map((c) => c.subCategory).filter(Boolean))].sort());
-    });
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    return subscribeRoutes(setRoutesList);
-  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -110,16 +92,19 @@ export default function PartyMasterPage(): React.JSX.Element {
 
   async function handleAdd(party: Omit<Party, "id">): Promise<void> {
     await addParty(party);
+    invalidate.parties();
   }
 
   async function handleEdit(id: string, data: Partial<Omit<Party, "id">>): Promise<void> {
     await updateParty(id, data);
+    invalidate.parties();
     setEditParty(null);
   }
 
   async function toggleStatus(party: Party) {
     const newStatus = party.status === "Enable" ? "Disable" : "Enable";
     await updateParty(party.id, { status: newStatus });
+    invalidate.parties();
   }
 
   function toggleExpand(id: string) {
@@ -181,6 +166,7 @@ export default function PartyMasterPage(): React.JSX.Element {
     setSavingId(party.id);
     try {
       await updateParty(party.id, { rates });
+      invalidate.parties();
       setEditingRates((prev) => {
         const next = { ...prev };
         delete next[party.id];

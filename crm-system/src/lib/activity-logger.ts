@@ -88,20 +88,28 @@ export async function fetchActivityLogs(
   date: string,
   userId?: string
 ): Promise<ActivityLog[]> {
-  const constraints = [
+  const constraints: ReturnType<typeof where>[] = [
     where("date", "==", date),
-    orderBy("timestamp", "desc"),
   ];
 
   if (userId) {
-    constraints.unshift(where("userId", "==", userId));
+    constraints.push(where("userId", "==", userId));
   }
 
   const q = query(collection(db, COLLECTION), ...constraints);
   const snap = await getDocs(q);
 
-  return snap.docs.map((d) => ({
+  const logs = snap.docs.map((d) => ({
     id: d.id,
     ...d.data(),
   })) as ActivityLog[];
+
+  // Sort client-side to avoid requiring a composite Firestore index
+  logs.sort((a, b) => {
+    const ta = a.timestamp?.toDate?.()?.getTime() ?? 0;
+    const tb = b.timestamp?.toDate?.()?.getTime() ?? 0;
+    return tb - ta;
+  });
+
+  return logs;
 }

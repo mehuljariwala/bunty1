@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Plus, Search, Filter, X, Pencil, Trash2, Loader2 } from "lucide-react";
 import AddColorModal, { type ColorFormData } from "@/components/AddColorModal";
-import { subscribeColors, addColor, updateColor, deleteColor } from "@/lib/colors";
+import { addColor, updateColor, deleteColor } from "@/lib/colors";
+import { useColorsQuery, useInvalidate } from "@/hooks/use-queries";
 import { useTracker } from "@/lib/activity-tracker-context";
 import type { Color } from "@/lib/types";
 
@@ -55,22 +56,15 @@ function colorToRow(c: Color): ColorRow {
 
 export default function ColorMasterPage(): React.JSX.Element {
   const { trackColorAdded, trackColorEdited, trackColorDeleted } = useTracker();
-  const [colors, setColors] = useState<ColorRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: rawColors = [], isLoading: loading } = useColorsQuery();
+  const invalidate = useInvalidate();
+  const colors = useMemo(() => rawColors.map(colorToRow), [rawColors]);
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [editingColor, setEditingColor] = useState<ColorRow | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const unsubscribe = subscribeColors((updated) => {
-      setColors(updated.map(colorToRow));
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
 
   const categories = useMemo(
     () => [...new Set(colors.map((c) => c.category))].sort(),
@@ -130,6 +124,7 @@ export default function ColorMasterPage(): React.JSX.Element {
         runningColor: data.runningColor,
       });
       trackColorEdited({ colorName: data.name, category: data.category });
+      invalidate.colors();
       setEditingColor(null);
     } else {
       const now = new Date().toISOString().slice(0, 10);
@@ -147,6 +142,7 @@ export default function ColorMasterPage(): React.JSX.Element {
         createdAt: now,
       });
       trackColorAdded({ colorName: data.name, category: data.category });
+      invalidate.colors();
     }
   }
 
@@ -163,6 +159,7 @@ export default function ColorMasterPage(): React.JSX.Element {
   async function handleDelete(id: string): Promise<void> {
     const color = colors.find((c) => c.id === id);
     await deleteColor(id);
+    invalidate.colors();
     if (color) {
       trackColorDeleted({ colorName: color.name, category: color.category });
     }

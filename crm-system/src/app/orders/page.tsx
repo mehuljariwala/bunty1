@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useRef, useState, useMemo, useCallback } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Search,
@@ -12,7 +12,7 @@ import {
   Eye,
   MapPin,
 } from "lucide-react";
-import { subscribeOrders } from "@/lib/orders";
+import { useOrdersQuery } from "@/hooks/use-queries";
 import { Order, OrderItem } from "@/lib/types";
 
 const ROUTES = ["LIMBAYAT", "SONAL", "BHATAR"] as const;
@@ -241,8 +241,7 @@ function OrderDetailModal({
 }
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: orders = [], isLoading: loading } = useOrdersQuery();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoutes, setSelectedRoutes] = useState<Set<RouteType>>(
     new Set()
@@ -251,15 +250,6 @@ export default function OrdersPage() {
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
 
   const parentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const unsubscribe = subscribeOrders((newOrders) => {
-      setOrders(newOrders);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {

@@ -32,11 +32,7 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { subscribeOrders } from "@/lib/orders";
-import { subscribeParties } from "@/lib/parties";
-import { subscribeColors } from "@/lib/colors";
-import { subscribeRoutes } from "@/lib/routes";
-import { getDashboardCache, setDashboardCache } from "@/lib/dashboard-cache";
+import { useOrdersQuery, usePartiesQuery, useColorsQuery, useRoutesQuery, useInvalidate } from "@/hooks/use-queries";
 import type { Order, Color, Party, RouteDoc } from "@/lib/types";
 
 const CHART_COLORS = ["#f5956b", "#5b5fc7", "#36b49f", "#e8b838", "#9b59b6", "#3498db"];
@@ -375,16 +371,19 @@ function ListShimmer({ rows = 5 }: { rows?: number }) {
 }
 
 export default function DashboardPage() {
-  const cached = useRef(getDashboardCache());
-  const [allOrders, setAllOrders] = useState<Order[]>(cached.current?.orders ?? []);
-  const [parties, setParties] = useState<Party[]>(cached.current?.parties ?? []);
-  const [colors, setColors] = useState<Color[]>(cached.current?.colors ?? []);
-  const routesRef = useRef<RouteDoc[]>(cached.current?.routes ?? []);
-  const [ordersLoaded, setOrdersLoaded] = useState(!!cached.current);
-  const [partiesLoaded, setPartiesLoaded] = useState(!!cached.current);
-  const [colorsLoaded, setColorsLoaded] = useState(!!cached.current);
-  const [refreshing, setRefreshing] = useState(false);
-  const [lastRefreshed, setLastRefreshed] = useState<number>(cached.current?.timestamp ?? 0);
+  const { data: allOrders = [], isLoading: ordersLoadingQ, isFetching: ordersFetching } = useOrdersQuery();
+  const { data: parties = [], isLoading: partiesLoadingQ } = usePartiesQuery();
+  const { data: colors = [], isLoading: colorsLoadingQ } = useColorsQuery();
+  const { data: routesData = [] } = useRoutesQuery();
+  const invalidate = useInvalidate();
+  const routesRef = useRef<RouteDoc[]>(routesData);
+  routesRef.current = routesData;
+
+  const ordersLoaded = !ordersLoadingQ;
+  const partiesLoaded = !partiesLoadingQ;
+  const colorsLoaded = !colorsLoadingQ;
+  const refreshing = ordersFetching;
+  const [lastRefreshed, setLastRefreshed] = useState<number>(Date.now());
   const [dateFrom, setDateFrom] = useState(getDefaultDateFrom);
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split("T")[0]);
   const [activePreset, setActivePreset] = useState<DatePreset | null>("1y");
@@ -394,39 +393,11 @@ export default function DashboardPage() {
   const [partyDropdownOpen, setPartyDropdownOpen] = useState(false);
   const [partySearch, setPartySearch] = useState("");
   const partyDropdownRef = useRef<HTMLDivElement>(null);
-  const unsubs = useRef<(() => void)[]>([]);
 
   const fetchFresh = useCallback(() => {
-    unsubs.current.forEach((u) => u());
-    unsubs.current = [];
-    setRefreshing(true);
-
-    let o: Order[] = [], p: Party[] = [], c: Color[] = [], r: RouteDoc[] = [];
-    let loaded = 0;
-    const done = (): void => {
-      loaded++;
-      if (loaded >= 4) {
-        setDashboardCache({ orders: o, parties: p, colors: c, routes: r });
-        setLastRefreshed(Date.now());
-        setRefreshing(false);
-        unsubs.current.forEach((u) => u());
-        unsubs.current = [];
-      }
-    };
-
-    const u1 = subscribeOrders((d) => { o = d; setAllOrders(d); setOrdersLoaded(true); done(); });
-    const u2 = subscribeParties((d) => { p = d; setParties(d); setPartiesLoaded(true); done(); });
-    const u3 = subscribeColors((d) => { c = d; setColors(d); setColorsLoaded(true); done(); });
-    const u4 = subscribeRoutes((d) => { r = d; routesRef.current = d; done(); });
-    unsubs.current = [u1, u2, u3, u4];
-  }, []);
-
-  useEffect(() => {
-    if (!cached.current) {
-      fetchFresh();
-    }
-    return () => { unsubs.current.forEach((u) => u()); };
-  }, [fetchFresh]);
+    invalidate.all();
+    setLastRefreshed(Date.now());
+  }, [invalidate]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

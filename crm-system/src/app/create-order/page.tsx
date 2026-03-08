@@ -6,8 +6,7 @@ import { Minus, Plus, Loader2, Sparkles } from "lucide-react";
 import AiOrderModal from "@/components/AiOrderModal";
 import { collection, addDoc, doc, writeBatch, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { subscribeParties } from "@/lib/parties";
-import { subscribeColors } from "@/lib/colors";
+import { usePartiesQuery, useColorsQuery, useInvalidate } from "@/hooks/use-queries";
 import { getOrder, updateOrder } from "@/lib/orders";
 import type { Party, Color } from "@/lib/types";
 
@@ -82,8 +81,9 @@ function CreateOrderPage() {
   const partyIdFromUrl = searchParams.get("partyId");
   const editOrderId = searchParams.get("edit");
 
-  const [parties, setParties] = useState<Party[]>([]);
-  const [colors, setColors] = useState<Color[]>([]);
+  const { data: parties = [], isLoading: partiesLoading } = usePartiesQuery();
+  const { data: colors = [] } = useColorsQuery();
+  const invalidate = useInvalidate();
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
   const [formDate, setFormDate] = useState(
     new Date()
@@ -97,22 +97,9 @@ function CreateOrderPage() {
   const [activeCat, setActiveCat] = useState("");
   const [selectedColors, setSelectedColors] = useState<SelectedColor[]>([]);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const loading = partiesLoading;
   const [editOrderCsvId, setEditOrderCsvId] = useState<number | null>(null);
   const [aiModalOpen, setAiModalOpen] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = subscribeParties((loaded) => {
-      setParties(loaded);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const unsub = subscribeColors(setColors);
-    return () => unsub();
-  }, []);
 
   useEffect(() => {
     if (!partyIdFromUrl || parties.length === 0 || selectedParty) return;
@@ -277,7 +264,12 @@ function CreateOrderPage() {
     setSaving(true);
 
     try {
-      const items = selectedColors.map((c) => ({
+      const sortedColors: SelectedColor[] = [];
+      for (const cat of categories) {
+        const catColors = summaryByCat[cat] ?? [];
+        sortedColors.push(...catColors);
+      }
+      const items = sortedColors.map((c) => ({
         category: c.category,
         material: c.subCategory,
         color: c.colour,
@@ -328,6 +320,8 @@ function CreateOrderPage() {
         }
       }
       await batch.commit();
+      invalidate.orders();
+      invalidate.colors();
 
       return ref.id;
     } catch (err) {

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Plus, Search, Filter, X, Pencil, Trash2, CircleCheck, CircleMinus, MapPin, Users, Loader2 } from "lucide-react";
 import AddRouteModal, { type RouteFormData } from "@/components/AddRouteModal";
-import { subscribeRoutes, addRoute, updateRoute, deleteRoute } from "@/lib/routes";
-import { subscribeParties } from "@/lib/parties";
-import type { RouteDoc, Party } from "@/lib/types";
+import { addRoute, updateRoute, deleteRoute } from "@/lib/routes";
+import { useRoutesQuery, usePartiesQuery, useInvalidate } from "@/hooks/use-queries";
+import type { RouteDoc } from "@/lib/types";
 
 type FilterState = {
   areas: string[];
@@ -15,31 +15,16 @@ type FilterState = {
 const EMPTY_FILTERS: FilterState = { areas: [], activeOnly: false };
 
 export default function RouteMasterPage(): React.JSX.Element {
-  const [routes, setRoutes] = useState<RouteDoc[]>([]);
-  const [parties, setParties] = useState<Party[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: routes = [], isLoading: routesLoading } = useRoutesQuery();
+  const { data: parties = [], isLoading: partiesLoading } = usePartiesQuery();
+  const invalidate = useInvalidate();
+  const loading = routesLoading || partiesLoading;
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRoute, setEditingRoute] = useState<RouteDoc | null>(null);
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const filterRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let routesLoaded = false;
-    let partiesLoaded = false;
-    const unsub1 = subscribeRoutes((updated) => {
-      setRoutes(updated);
-      routesLoaded = true;
-      if (partiesLoaded) setLoading(false);
-    });
-    const unsub2 = subscribeParties((updated) => {
-      setParties(updated);
-      partiesLoaded = true;
-      if (routesLoaded) setLoading(false);
-    });
-    return () => { unsub1(); unsub2(); };
-  }, []);
 
   const partyCountByRoute = useMemo(() => {
     const map = new Map<string, number>();
@@ -106,6 +91,7 @@ export default function RouteMasterPage(): React.JSX.Element {
         createdAt: new Date().toISOString(),
       });
     }
+    invalidate.routes();
   }
 
   function handleEdit(route: RouteDoc) {
@@ -120,6 +106,7 @@ export default function RouteMasterPage(): React.JSX.Element {
 
   async function handleDelete(id: string): Promise<void> {
     await deleteRoute(id);
+    invalidate.routes();
   }
 
   function toggleArea(area: string) {

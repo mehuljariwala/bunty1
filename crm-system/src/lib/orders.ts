@@ -3,6 +3,7 @@ import {
   query,
   orderBy,
   onSnapshot,
+  getDocs,
   doc,
   updateDoc,
   getDoc,
@@ -13,6 +14,9 @@ import { db } from "./firebase";
 import type { Order, OrderItem } from "./types";
 
 const COLLECTION = "orders";
+
+let ordersCache: Order[] | null = null;
+let ordersCachePromise: Promise<Order[]> | null = null;
 
 function docToOrder(id: string, data: Record<string, unknown>): Order {
   return {
@@ -37,8 +41,31 @@ export function subscribeOrders(callback: (orders: Order[]) => void): () => void
   });
 }
 
+export async function fetchOrders(): Promise<Order[]> {
+  const q = query(collection(db, COLLECTION), orderBy("csvId", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => docToOrder(d.id, d.data()));
+}
+
+export function fetchOrdersCached(): Promise<Order[]> {
+  if (ordersCache) return Promise.resolve(ordersCache);
+  if (ordersCachePromise) return ordersCachePromise;
+  ordersCachePromise = fetchOrders().then((data) => {
+    ordersCache = data;
+    ordersCachePromise = null;
+    return data;
+  });
+  return ordersCachePromise;
+}
+
+export function invalidateOrdersCache(): void {
+  ordersCache = null;
+  ordersCachePromise = null;
+}
+
 export async function markOrderComplete(orderId: string): Promise<void> {
   await updateDoc(doc(db, COLLECTION, orderId), { type: "Complete" });
+  invalidateOrdersCache();
 }
 
 export async function getOrder(orderId: string): Promise<Order | null> {
@@ -87,4 +114,5 @@ export async function updateOrder(
   },
 ): Promise<void> {
   await updateDoc(doc(db, COLLECTION, orderId), data);
+  invalidateOrdersCache();
 }
