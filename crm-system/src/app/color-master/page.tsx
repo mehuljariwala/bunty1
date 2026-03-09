@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Plus, Search, Filter, X, Pencil, Trash2, Loader2 } from "lucide-react";
 import AddColorModal, { type ColorFormData } from "@/components/AddColorModal";
 import { addColor, updateColor, deleteColor } from "@/lib/colors";

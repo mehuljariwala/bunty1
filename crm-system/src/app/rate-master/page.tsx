@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useMemo, useCallback } from "react";
+import { Fragment, useState, useMemo, useCallback, useEffect } from "react";
 import {
   Search,
   ChevronDown,
