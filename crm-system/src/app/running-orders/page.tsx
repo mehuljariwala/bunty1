@@ -11,7 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { subscribeOrders, getNextSeqNumber, subscribeSeqCounter } from "@/lib/orders";
+import { subscribeOrders, getNextSeqNumber, subscribeSeqCounter, markOrderComplete } from "@/lib/orders";
 import { useRoutesQuery } from "@/hooks/use-queries";
 import { savePhotoRecord } from "@/lib/photos";
 import BillLayout from "@/components/BillLayout";
@@ -115,6 +115,13 @@ export default function RunningOrdersPage() {
       return;
     }
 
+    // Mark order as done
+    try {
+      await markOrderComplete(order.id);
+    } catch {
+      // continue to print even if marking fails
+    }
+
     // Now print after successful save
     setPrintSeq(realSeq);
     setPrintOrder(order);
@@ -197,6 +204,11 @@ export default function RunningOrdersPage() {
 
   return (
     <div className="flex flex-col flex-1">
+      <style>{`
+        .order-card-hover-wrap .order-hover-popup {
+          display: none;
+        }
+      `}</style>
       <div className="flex flex-col flex-1">
         {/* Tabs */}
         <div className="flex justify-around shrink-0" style={{ borderBottom: "1px solid #DDDDDD", marginBottom: "15px" }}>
@@ -346,6 +358,31 @@ export default function RunningOrdersPage() {
                       <div
                         key={order.id}
                         onClick={() => setViewOrder(order)}
+                        className="order-card-hover-wrap"
+                        onMouseEnter={(e) => {
+                          const card = e.currentTarget;
+                          const popup = card.querySelector(".order-hover-popup") as HTMLElement | null;
+                          if (!popup) return;
+                          const rect = card.getBoundingClientRect();
+                          let top = rect.top - 8;
+                          let left = rect.left + rect.width / 2 - 130;
+                          // Keep within viewport
+                          if (left < 8) left = 8;
+                          if (left + 260 > window.innerWidth - 8) left = window.innerWidth - 268;
+                          // If no room above, show below
+                          if (top - 320 < 0) {
+                            popup.style.top = `${rect.bottom + 8}px`;
+                          } else {
+                            popup.style.bottom = `${window.innerHeight - top}px`;
+                            popup.style.top = "auto";
+                          }
+                          popup.style.left = `${left}px`;
+                          popup.style.display = "block";
+                        }}
+                        onMouseLeave={(e) => {
+                          const popup = e.currentTarget.querySelector(".order-hover-popup") as HTMLElement | null;
+                          if (popup) { popup.style.display = "none"; popup.style.top = ""; popup.style.bottom = ""; popup.style.left = ""; }
+                        }}
                         style={{
                           position: "relative",
                           background: "#fff",
@@ -359,6 +396,66 @@ export default function RunningOrdersPage() {
                           color: "rgba(0,0,0,0.87)",
                         }}
                       >
+                        {/* Hover summary popup — compact order detail */}
+                        {order.items && order.items.length > 0 && (
+                          <div className="order-hover-popup" style={{
+                            position: "fixed",
+                            zIndex: 9999,
+                            background: "#fff",
+                            borderRadius: "10px",
+                            border: "1px solid #e5e7eb",
+                            padding: "8px 10px",
+                            fontSize: "11px",
+                            width: "260px",
+                            maxHeight: "320px",
+                            overflowY: "auto",
+                            boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
+                            pointerEvents: "none",
+                          }}>
+                            {(() => {
+                              const catMap = new Map<string, Map<string, { color: string; ord: number; del: number }[]>>();
+                              for (const item of order.items!) {
+                                if (!catMap.has(item.category)) catMap.set(item.category, new Map());
+                                const matMap = catMap.get(item.category)!;
+                                if (!matMap.has(item.material)) matMap.set(item.material, []);
+                                matMap.get(item.material)!.push({ color: item.color, ord: item.orderedQty, del: item.deliveredQty });
+                              }
+                              return Array.from(catMap.entries()).map(([cat, matMap]) => {
+                                const catTotal = Array.from(matMap.values()).flat().reduce((s, c) => s + c.ord, 0);
+                                return (
+                                  <div key={cat} style={{ marginBottom: "6px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px dashed #ddd", paddingBottom: "2px", marginBottom: "3px" }}>
+                                      <span style={{ fontWeight: 700, fontSize: "12px", color: "#1460BD" }}>{cat}</span>
+                                      <span style={{ fontWeight: 700, fontSize: "11px", color: "#444" }}>{catTotal}</span>
+                                    </div>
+                                    {Array.from(matMap.entries()).map(([mat, colors]) => {
+                                      const matTotal = colors.reduce((s, c) => s + c.ord, 0);
+                                      return (
+                                        <div key={mat} style={{ marginBottom: "3px" }}>
+                                          <div style={{ fontWeight: 600, fontSize: "10.5px", color: "#666", marginBottom: "1px" }}>{mat}</div>
+                                          {colors.map((c, i) => (
+                                            <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "0 4px", lineHeight: "16px" }}>
+                                              <span style={{ color: "#333" }}>{c.color}</span>
+                                              <span style={{ fontWeight: 600, color: "#444" }}>{c.ord}</span>
+                                            </div>
+                                          ))}
+                                          <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px", borderTop: "1px solid #eee", fontWeight: 700, fontSize: "10.5px", color: "#333", lineHeight: "16px" }}>
+                                            <span>Total</span>
+                                            <span>{matTotal}</span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              });
+                            })()}
+                            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "2px solid #000", paddingTop: "3px", fontWeight: 800, fontSize: "12px", color: "#000" }}>
+                              <span>TOTAL</span>
+                              <span>{order.grandTotalOrdered ?? order.items!.reduce((s, i) => s + i.orderedQty, 0)}</span>
+                            </div>
+                          </div>
+                        )}
                         {/* Delivered badge — outside card on desktop, inline on mobile */}
                         <div className="hidden xs:flex" style={{
                           position: "absolute",

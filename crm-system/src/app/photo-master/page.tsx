@@ -48,7 +48,7 @@ export default function PhotoMasterPage() {
   const [photos, setPhotos] = useState<PhotoRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<PhotoRecord | null>(null);
-  const [tab, setTab] = useState<Tab>("all");
+  const [tab, setTab] = useState<Tab>("pending");
   const [marking, setMarking] = useState(false);
 
   useEffect(() => {
@@ -62,10 +62,10 @@ export default function PhotoMasterPage() {
   const completePhotos = useMemo(() => photos.filter((p) => p.status === "complete"), [photos]);
   const activePhotos = tab === "all" ? photos : tab === "pending" ? pendingPhotos : completePhotos;
 
-  // Group by date, sorted newest first. Within each date, sort by time descending.
+  // Group by date, sorted newest first. Within each date, sort by sequence number ascending (1 to N).
   const grouped = useMemo(() => {
     const sorted = [...activePhotos].sort(
-      (a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime()
+      (a, b) => (a.sequenceNumber ?? 0) - (b.sequenceNumber ?? 0)
     );
     const map = new Map<string, PhotoRecord[]>();
     for (const p of sorted) {
@@ -88,9 +88,9 @@ export default function PhotoMasterPage() {
   }
 
   const TABS: { key: Tab; label: string; count: number }[] = [
-    { key: "all", label: "All", count: photos.length },
     { key: "pending", label: "Pending", count: pendingPhotos.length },
     { key: "complete", label: "Complete", count: completePhotos.length },
+    { key: "all", label: "All", count: photos.length },
   ];
 
   if (loading) {
@@ -189,6 +189,7 @@ export default function PhotoMasterPage() {
             <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
               {datePhotos.map((photo) => {
                 const isPending = (photo.status ?? "pending") === "pending";
+                const totalDelivered = photo.orderSnapshot?.grandTotalDelivered ?? photo.orderSnapshot?.items?.reduce((s, i) => s + i.deliveredQty, 0) ?? 0;
                 return (
                   <div
                     key={photo.id}
@@ -245,6 +246,18 @@ export default function PhotoMasterPage() {
                       </span>
                       <span style={{
                         marginLeft: "auto",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        color: "#1460BD",
+                        background: "#e8f0fe",
+                        borderRadius: "4px",
+                        padding: "1px 5px",
+                      }}>
+                        {totalDelivered}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 10px 4px" }}>
+                      <span style={{
                         fontSize: "9px",
                         fontWeight: 700,
                         color: isPending ? "#f59e0b" : "#10b981",

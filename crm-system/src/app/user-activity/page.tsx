@@ -60,16 +60,39 @@ const DOT_MAP: Record<ActivityLog["type"], string> = {
   color_deleted: "bg-red-400",
 };
 
+interface StockChange {
+  colorName: string;
+  category?: string;
+  previousStock: number;
+  newStock: number;
+}
+
+function getStockChanges(log: ActivityLog): StockChange[] | null {
+  const d = log.details;
+  if (!d) return null;
+  if (Array.isArray(d.changes) && d.changes.length > 0) {
+    return d.changes as StockChange[];
+  }
+  if (typeof d.colorName === "string") {
+    return [{
+      colorName: d.colorName as string,
+      category: d.category as string | undefined,
+      previousStock: (d.prevStock ?? d.previousStock ?? 0) as number,
+      newStock: (d.newStock ?? 0) as number,
+    }];
+  }
+  return null;
+}
+
 function getActivityDetail(log: ActivityLog): string {
   switch (log.type) {
     case "page_visit":
       return log.pageName ?? log.page ?? "";
     case "stock_update": {
-      const d = log.details;
-      if (d && typeof d.colorName === "string") {
-        const prev = d.prevStock ?? "?";
-        const next = d.newStock ?? "?";
-        return `${d.colorName}: ${prev} → ${next}`;
+      const changes = getStockChanges(log);
+      if (changes && changes.length > 0) {
+        const total = log.details?.totalUpdated ?? changes.length;
+        return `${total} color${Number(total) !== 1 ? "s" : ""} updated`;
       }
       return "Stock updated";
     }
@@ -180,6 +203,54 @@ interface UserTimelineProps {
   logs: ActivityLog[];
 }
 
+function StockChangeDetail({ changes }: { changes: StockChange[] }) {
+  // Group changes by category
+  const grouped = useMemo(() => {
+    const map = new Map<string, StockChange[]>();
+    for (const c of changes) {
+      const cat = c.category || "Other";
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(c);
+    }
+    return map;
+  }, [changes]);
+
+  return (
+    <div className="mt-1.5 ml-[76px] mr-2 mb-1 bg-white rounded-xl border border-crm-border/60 overflow-hidden">
+      {Array.from(grouped.entries()).map(([cat, items]) => (
+        <div key={cat}>
+          <div className="px-3 py-1.5 bg-crm-bg/60 border-b border-crm-border/40">
+            <span className="text-[0.7rem] font-bold text-crm-text-muted uppercase tracking-wide">{cat}</span>
+          </div>
+          <div className="divide-y divide-crm-border/30">
+            {items.map((item, i) => {
+              const diff = item.newStock - item.previousStock;
+              const isPositive = diff > 0;
+              return (
+                <div key={i} className="flex items-center gap-2 px-3 py-1.5">
+                  <span className="text-[0.75rem] font-medium text-crm-text flex-1 min-w-0 truncate">
+                    {item.colorName}
+                  </span>
+                  <span className="text-[0.7rem] text-crm-text-muted tabular-nums">
+                    {item.previousStock}
+                  </span>
+                  <span className="text-[0.65rem] text-crm-text-muted">→</span>
+                  <span className="text-[0.7rem] font-semibold text-crm-text tabular-nums">
+                    {item.newStock}
+                  </span>
+                  <span className={`text-[0.65rem] font-bold tabular-nums px-1.5 py-0.5 rounded ${isPositive ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}>
+                    {isPositive ? "+" : ""}{diff}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function UserTimeline({ logs }: UserTimelineProps) {
   const sorted = useMemo(
     () =>
@@ -191,34 +262,61 @@ function UserTimeline({ logs }: UserTimelineProps) {
     [logs]
   );
 
+  const [expandedStockLogs, setExpandedStockLogs] = useState<Set<string>>(new Set());
+
+  function toggleStockLog(logId: string) {
+    setExpandedStockLogs((prev) => {
+      const next = new Set(prev);
+      if (next.has(logId)) next.delete(logId);
+      else next.add(logId);
+      return next;
+    });
+  }
+
   return (
     <div className="px-3 sm:px-6 py-3 bg-crm-bg/40 border-t border-crm-border/40">
-      <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+      <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
         {sorted.map((log) => {
           const detail = getActivityDetail(log);
           const timeStr =
             typeof log.timestamp?.toDate === "function"
               ? formatTimestamp(log.timestamp as { toDate: () => Date })
               : "--:--:--";
+          const stockChanges = log.type === "stock_update" ? getStockChanges(log) : null;
+          const isStockExpanded = expandedStockLogs.has(log.id);
 
           return (
-            <div
-              key={log.id}
-              className="flex items-start gap-3 py-1.5 px-2 rounded-xl hover:bg-crm-card/70 transition-colors"
-            >
-              <span className="text-[0.68rem] font-mono text-crm-text-muted tabular-nums w-16 shrink-0 pt-0.5">
-                {timeStr}
-              </span>
-              <TimelineBadge type={log.type} />
-              {detail && (
-                <span className="text-[0.75rem] text-crm-text flex-1 min-w-0 truncate pt-0.5">
-                  {detail}
+            <div key={log.id}>
+              <div
+                className={`flex items-start gap-3 py-1.5 px-2 rounded-xl hover:bg-crm-card/70 transition-colors ${stockChanges ? "cursor-pointer" : ""}`}
+                onClick={stockChanges ? () => toggleStockLog(log.id) : undefined}
+              >
+                <span className="text-[0.68rem] font-mono text-crm-text-muted tabular-nums w-16 shrink-0 pt-0.5">
+                  {timeStr}
                 </span>
-              )}
-              {log.durationMs !== undefined && log.durationMs > 0 && log.type === "page_visit" && (
-                <span className="text-[0.68rem] text-crm-text-muted tabular-nums shrink-0 pt-0.5">
-                  {formatDurationMs(log.durationMs)}
-                </span>
+                <TimelineBadge type={log.type} />
+                {detail && (
+                  <span className="text-[0.75rem] text-crm-text flex-1 min-w-0 truncate pt-0.5">
+                    {detail}
+                  </span>
+                )}
+                {stockChanges && (
+                  <span className="shrink-0 pt-0.5">
+                    {isStockExpanded ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-crm-text-muted" strokeWidth={2} />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-crm-text-muted" strokeWidth={2} />
+                    )}
+                  </span>
+                )}
+                {log.durationMs !== undefined && log.durationMs > 0 && log.type === "page_visit" && (
+                  <span className="text-[0.68rem] text-crm-text-muted tabular-nums shrink-0 pt-0.5">
+                    {formatDurationMs(log.durationMs)}
+                  </span>
+                )}
+              </div>
+              {isStockExpanded && stockChanges && (
+                <StockChangeDetail changes={stockChanges} />
               )}
             </div>
           );

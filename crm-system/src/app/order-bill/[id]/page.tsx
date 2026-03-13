@@ -68,18 +68,18 @@ export default function OrderBillPage({ params }: { params: Promise<{ id: string
     <>
       <style>{`
         @media print {
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          body * { visibility: hidden !important; }
-          .bill-print-area, .bill-print-area * { visibility: visible !important; }
-          .bill-print-area {
-            position: fixed !important;
-            top: 0; left: 0; right: 0;
-            z-index: 99999;
-            background: #fff;
-            padding: 0;
-            margin: 0;
-          }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
           .no-print { display: none !important; }
+          .bill-print-area {
+            position: absolute !important;
+            top: 0; left: 0; right: 0;
+            background: #fff;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+          }
           @page { margin: 0; }
         }
       `}</style>

@@ -76,7 +76,7 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
   const grandDelivered = order.grandTotalDelivered ?? groups.reduce((s, g) => s + g.totalDelivered, 0);
 
   return (
-    <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "#000", fontSize: "11px", fontWeight: 500, background: "#fff", width: "100%" }}>
+    <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "#000", fontSize: "13.5px", fontWeight: 500, background: "#fff", width: "100%" }}>
       <style>{`
         @media print {
           .bill-cat-header {
@@ -90,51 +90,58 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
       `}</style>
 
       {/* Header */}
-      <div style={{ padding: "6px 8px 2px" }}>
+      <div style={{ padding: "10px 10px 0", textAlign: "center" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: "14px", fontWeight: 700 }}>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: "20px", fontWeight: 500, color: "#1460bd" }}>
               {order.partyName.toUpperCase()}
             </div>
-            <div style={{ fontSize: "10px", marginTop: "1px" }}>
+            <div style={{ fontSize: "12.5px", marginTop: "1px", fontWeight: 700 }}>
               {order.partyAddress}
             </div>
             {order.partyAddressGu && (
-              <div style={{ fontSize: "10px" }}>
+              <div style={{ fontSize: "12.5px" }}>
                 {order.partyAddressGu}
               </div>
             )}
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>
             {sequenceNumber != null && (
-              <div style={{ fontSize: "20px", fontWeight: 800, lineHeight: 1 }}>
+              <div style={{ fontSize: "22px", fontWeight: 800, lineHeight: 1 }}>
                 {sequenceNumber}
               </div>
             )}
           </div>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2px", fontSize: "10px" }}>
-          <span><b>Date:</b> {formatDateBill(order.orderDate)}</span>
-          <span><b>Order ID:</b> #{order.csvId}</span>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "5px", fontSize: "12.5px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <span style={{ color: "#1460bd", fontWeight: 500 }}>Date :-</span>
+            <span>{formatDateBill(order.orderDate)}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <span style={{ color: "#1460bd", fontWeight: 500 }}>Order ID :-</span>
+            <span># {order.csvId}</span>
+          </div>
         </div>
-        <div style={{ borderBottom: "1px solid #000", marginTop: "3px" }} />
       </div>
 
       {/* Category sections */}
       {groups.map((group) => (
-        <div key={group.category} style={{ padding: "0 8px" }}>
+        <div key={group.category} style={{ padding: "0 10px" }}>
           {/* Category header — colored on screen, plain on print */}
           <h3 className="bill-cat-header" style={{
             textAlign: "center",
-            margin: "2px 0 1px",
-            padding: "2px 0",
-            fontSize: "12px",
+            margin: "0",
+            padding: "1px 0",
+            fontSize: "15px",
             fontWeight: 700,
             color: CATEGORY_COLORS[group.category] ? "#fff" : "#000",
             background: CATEGORY_COLORS[group.category] ?? "transparent",
             borderRadius: CATEGORY_COLORS[group.category] ? "3px" : "0",
-            borderTop: CATEGORY_COLORS[group.category] ? "none" : "1px dashed #000",
-            borderBottom: CATEGORY_COLORS[group.category] ? "none" : "1px dashed #000",
+            borderTop: "1px dashed #000",
+            borderBottom: "1px dashed #000",
+            borderLeft: "none",
+            borderRight: "none",
           }}>
             {group.category}
           </h3>
@@ -143,26 +150,26 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0" }}>
             {group.materials.map((mat) => (
               <div key={mat.material} style={{ padding: "0 2px" }}>
-                <h4 style={{ margin: "1px 0 0 4px", fontSize: "11px", fontWeight: 700 }}>{mat.material} :-</h4>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                <h4 style={{ margin: "0 0 0 4px", fontSize: "15px", fontWeight: 700 }}>{mat.material} :-</h4>
+                <table style={{ borderCollapse: "collapse", fontSize: "13.5px", marginBottom: "5px" }}>
                   <tbody>
                     {mat.items.map((item, idx) => (
                       <tr key={idx}>
-                        <td style={{ padding: "0 3px", fontWeight: 500, lineHeight: "15px" }}>{item.color}</td>
-                        <td style={{ padding: "0 3px", width: "40px", fontWeight: 600, lineHeight: "15px" }}>{item.orderedQty}&nbsp;-&gt;</td>
-                        <td style={{ padding: "0 3px", fontWeight: 600, lineHeight: "15px" }}>{item.deliveredQty}</td>
+                        <td style={{ padding: "0 4px", fontWeight: 500, lineHeight: "18px" }}>{item.color}</td>
+                        <td style={{ padding: "0 4px", width: "48px", fontWeight: 500, lineHeight: "18px", whiteSpace: "nowrap" }}>{item.orderedQty}&nbsp; -&gt;</td>
+                        <td style={{ padding: "0 4px", fontWeight: 500, lineHeight: "18px" }}>{item.deliveredQty}</td>
                       </tr>
                     ))}
-                    <tr style={{ fontWeight: 700 }}>
-                      <td style={{ padding: "0 3px", borderTop: "1px solid #000", lineHeight: "15px" }}>Total</td>
-                      <td style={{ padding: "0 3px", width: "40px", borderTop: "1px solid #000", lineHeight: "15px" }}>{mat.totalOrdered}&nbsp;-&gt;</td>
-                      <td style={{ padding: "0 3px", borderTop: "1px solid #000", lineHeight: "15px" }}>{mat.totalDelivered}</td>
+                    <tr style={{ fontWeight: 600, border: "1px solid #000" }}>
+                      <td style={{ padding: "0 4px", borderTop: "1px solid #000", lineHeight: "18px" }}>TOTAL</td>
+                      <td style={{ padding: "0 4px", width: "48px", borderTop: "1px solid #000", lineHeight: "18px", whiteSpace: "nowrap" }}>{mat.totalOrdered}&nbsp; -&gt;</td>
+                      <td style={{ padding: "0 4px", borderTop: "1px solid #000", lineHeight: "18px" }}>{mat.totalDelivered}</td>
                     </tr>
                     <tr>
                       <td colSpan={3} style={{ padding: "3px 3px 1px" }}>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: "3px", fontSize: "10px" }}>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: "3px", fontSize: "11px", border: "1px solid #000", padding: "4px 5px", minHeight: "22px" }}>
                           <span>Wt:</span>
-                          <span style={{ flex: 1, borderBottom: "1px solid #000", minHeight: "10px" }}>&nbsp;</span>
+                          <span style={{ flex: 1, minHeight: "14px" }}>&nbsp;</span>
                         </div>
                       </td>
                     </tr>
@@ -173,18 +180,29 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
           </div>
 
           {/* Category total */}
-          <div style={{ textAlign: "center", fontWeight: 700, fontSize: "11px", padding: "1px 0", margin: "0 8px" }}>
-            Grand Total&nbsp;&nbsp;{group.totalOrdered} -&gt; {group.totalDelivered}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "13.5px", padding: "2px 0", margin: "0 15px", borderTop: "0px solid transparent" }}>
+            <span>GRAND TOTAL</span>
+            <div style={{ fontWeight: 600 }}>
+              {group.totalOrdered} <span>-&gt;</span> <span>{group.totalDelivered}</span>
+            </div>
           </div>
         </div>
       ))}
 
       {/* Overall grand total (when multiple categories) */}
       {groups.length > 1 && (
-        <div style={{ textAlign: "center", fontWeight: 800, fontSize: "12px", padding: "2px 0", margin: "0 8px", borderTop: "2px solid #000", borderBottom: "2px solid #000" }}>
-          GRAND TOTAL&nbsp;&nbsp;{grandOrdered} -&gt; {grandDelivered}
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px", fontWeight: 800, fontSize: "14px", padding: "3px 0", margin: "0 10px", borderTop: "2px solid #000", borderBottom: "2px solid #000" }}>
+          <span>GRAND TOTAL</span>
+          <div>
+            {grandOrdered} <span>-&gt;</span> <span>{grandDelivered}</span>
+          </div>
         </div>
       )}
+
+      {/* BAG box */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", fontSize: "13px", fontWeight: 600, padding: "5px 10px", margin: "4px 10px 0" }}>
+        <span>BAG (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span>
+      </div>
 
     </div>
   );
