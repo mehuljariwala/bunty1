@@ -25,6 +25,22 @@ class YarnColor {
     required this.sortOrder,
   });
 
+  factory YarnColor.fromSupabase(Map<String, dynamic> data) {
+    return YarnColor(
+      id: data['id']?.toString() ?? '',
+      name: (data['name'] as String?) ?? '',
+      code: (data['code'] as String?) ?? '',
+      hex: (data['hex'] as String?) ?? '#000000',
+      category: (data['category'] as String?) ?? '',
+      subCategory: (data['sub_category'] as String?) ?? '',
+      minStock: (data['min_stock'] as num?)?.toInt() ?? 0,
+      maxStock: (data['max_stock'] as num?)?.toInt() ?? 0,
+      currentStock: (data['current_stock'] as num?)?.toInt() ?? 0,
+      runningColor: (data['running_color'] as bool?) ?? false,
+      sortOrder: (data['sort_order'] as num?)?.toInt() ?? 0,
+    );
+  }
+
   factory YarnColor.fromFirestore(String id, Map<String, dynamic> data) {
     return YarnColor(
       id: id,

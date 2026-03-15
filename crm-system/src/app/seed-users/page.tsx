@@ -1,23 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createUserWithEmailAndPassword, updateProfile, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-
-const SECONDARY_APP = initializeApp(
-  {
-    apiKey: "AIzaSyBUp2ODHF6k2pVaYY26jY4cyLCbou5kxXg",
-    authDomain: "meet-hub-3c03e.firebaseapp.com",
-    projectId: "meet-hub-3c03e",
-    storageBucket: "meet-hub-3c03e.firebasestorage.app",
-    messagingSenderId: "17836504239",
-    appId: "1:17836504239:web:0145ed139dafe24462d05a",
-  },
-  "seed-app"
-);
-const secondaryAuth = getAuth(SECONDARY_APP);
+import { supabase } from "@/lib/supabase";
 
 interface UserEntry {
   name: string;
@@ -52,9 +36,12 @@ export default function SeedUsersPage(): React.ReactElement {
 
     for (const u of USERS) {
       try {
-        const cred = await createUserWithEmailAndPassword(secondaryAuth, u.email, u.password);
-        await updateProfile(cred.user, { displayName: u.name });
-        await signOut(secondaryAuth);
+        const { data, error } = await supabase.auth.signUp({
+          email: u.email,
+          password: u.password,
+          options: { data: { display_name: u.name } }
+        });
+        if (error) throw error;
         results.push({ user: u.name, status: "success", message: `Created ${u.email}` });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Unknown error";
@@ -71,9 +58,9 @@ export default function SeedUsersPage(): React.ReactElement {
     <div className="min-h-screen flex items-center justify-center bg-crm-bg p-6">
       <div className="w-full max-w-lg bg-crm-card rounded-2xl border border-crm-border shadow-lg overflow-hidden">
         <div className="px-6 py-5 border-b border-crm-border/60">
-          <h1 className="text-lg font-bold text-crm-text">Seed Firebase Users</h1>
+          <h1 className="text-lg font-bold text-crm-text">Seed Users</h1>
           <p className="text-xs text-crm-text-muted mt-1">
-            Creates {USERS.length} users in Firebase Auth. Run this once.
+            Creates {USERS.length} users in Supabase Auth. Run this once.
           </p>
         </div>
 

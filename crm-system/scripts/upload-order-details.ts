@@ -1,19 +1,11 @@
-import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  query,
-  doc,
-  writeBatch,
-} from "firebase/firestore";
+import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-const firebaseConfig = {};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://gelxlxnfhefyxhikrhib.supabase.co",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlbHhseG5maGVmeXhoaWtyaGliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0ODU0MzcsImV4cCI6MjA4OTA2MTQzN30.OdCQ1YmMUT9rK52R-m05E-5Q2PAjI_xS1qZmV-zy4vw",
+);
 
 const BATCH_SIZE = 500;
 const DELAY_MS = 300;
@@ -45,21 +37,23 @@ async function upload(): Promise<void> {
   const csvIds = Object.keys(data);
   console.log(`Loaded ${csvIds.length} order details from JSON.`);
 
-  console.log("Fetching order docs from Firestore to map csvId -> docId...");
-  const snapshot = await getDocs(query(collection(db, "orders")));
+  console.log("Fetching order docs from Supabase to map csv_id -> id...");
+  const { data: orders, error: fetchError } = await supabase
+    .from("orders")
+    .select("id, csv_id");
+
+  if (fetchError) throw fetchError;
 
   const csvIdToDoc = new Map<number, string>();
-  snapshot.forEach((d) => {
-    const docData = d.data();
-    csvIdToDoc.set(docData.csvId, d.id);
-  });
-  console.log(`Found ${csvIdToDoc.size} order docs in Firestore.`);
+  for (const order of orders || []) {
+    csvIdToDoc.set(order.csv_id, order.id);
+  }
+  console.log(`Found ${csvIdToDoc.size} order docs in Supabase.`);
 
   let uploaded = 0;
   let skipped = 0;
   let totalItems = 0;
   let batchOps = 0;
-  let batch = writeBatch(db);
 
   for (const csvIdStr of csvIds) {
     const csvId = Number(csvIdStr);
@@ -71,22 +65,25 @@ async function upload(): Promise<void> {
       continue;
     }
 
-    const orderRef = doc(db, "orders", orderDocId);
-    batch.update(orderRef, {
-      items: detail.items,
-      grandTotalOrdered: detail.grandTotalOrdered,
-      grandTotalDelivered: detail.grandTotalDelivered,
-    });
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        items: detail.items,
+        grand_total_ordered: detail.grandTotalOrdered,
+        grand_total_delivered: detail.grandTotalDelivered,
+      })
+      .eq("id", orderDocId);
+
+    if (error) throw error;
+
     batchOps++;
     totalItems += detail.items.length;
     uploaded++;
 
     if (batchOps >= BATCH_SIZE) {
-      await batch.commit();
       console.log(
         `  Committed batch — ${uploaded} orders, ${totalItems} items so far`,
       );
-      batch = writeBatch(db);
       batchOps = 0;
       await delay(DELAY_MS);
     }
@@ -96,11 +93,6 @@ async function upload(): Promise<void> {
         `  Progress: ${uploaded}/${csvIds.length} orders (${totalItems} items, ${skipped} skipped)`,
       );
     }
-  }
-
-  if (batchOps > 0) {
-    await batch.commit();
-    console.log(`  Committed final batch`);
   }
 
   console.log(

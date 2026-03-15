@@ -1,18 +1,9 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs, query } from "firebase/firestore";
+import { createClient } from "@supabase/supabase-js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBUp2ODHF6k2pVaYY26jY4cyLCbou5kxXg",
-  authDomain: "meet-hub-3c03e.firebaseapp.com",
-  projectId: "meet-hub-3c03e",
-  storageBucket: "meet-hub-3c03e.firebasestorage.app",
-  messagingSenderId: "17836504239",
-  appId: "1:17836504239:web:0145ed139dafe24462d05a",
-  measurementId: "G-YNNNRP88PX",
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://gelxlxnfhefyxhikrhib.supabase.co",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlbHhseG5maGVmeXhoaWtyaGliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0ODU0MzcsImV4cCI6MjA4OTA2MTQzN30.OdCQ1YmMUT9rK52R-m05E-5Q2PAjI_xS1qZmV-zy4vw",
+);
 
 const ROUTES = [
   { name: "BHATAR", code: "RT-001" },
@@ -21,26 +12,30 @@ const ROUTES = [
 ];
 
 async function seed(): Promise<void> {
-  const existing = await getDocs(query(collection(db, "routes")));
-  if (existing.size > 0) {
-    console.log(`Routes already exist (${existing.size}). Skipping.`);
+  const { count } = await supabase
+    .from("routes")
+    .select("*", { count: "exact", head: true });
+
+  if (count && count > 0) {
+    console.log(`Routes already exist (${count}). Skipping.`);
     process.exit(0);
   }
 
   for (const r of ROUTES) {
-    await addDoc(collection(db, "routes"), {
+    const { error } = await supabase.from("routes").insert({
       name: r.name,
       code: r.code,
       area: "",
       description: "",
       active: true,
       parties: 0,
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     });
+    if (error) throw error;
     console.log(`  Added route: ${r.name}`);
   }
 
-  console.log(`\nSeeded ${ROUTES.length} routes to Firestore.`);
+  console.log(`\nSeeded ${ROUTES.length} routes to Supabase.`);
   process.exit(0);
 }
 

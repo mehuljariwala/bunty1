@@ -23,6 +23,27 @@ class Party {
     required this.rates,
   });
 
+  factory Party.fromSupabase(Map<String, dynamic> data) {
+    final rawRates = data['rates'] as Map<String, dynamic>? ?? {};
+    final rates = <String, Map<String, String>>{};
+    for (final catEntry in rawRates.entries) {
+      final inner = catEntry.value as Map<String, dynamic>? ?? {};
+      rates[catEntry.key] = inner.map((k, v) => MapEntry(k, v?.toString() ?? ''));
+    }
+    return Party(
+      id: data['id']?.toString() ?? '',
+      name: (data['name'] as String?) ?? '',
+      address: (data['address'] as String?) ?? '',
+      addressGu: (data['address_gu'] as String?) ?? '',
+      addressHi: (data['address_hi'] as String?) ?? '',
+      route: (data['route'] as String?) ?? '',
+      userId: (data['user_id'] as String?) ?? '',
+      password: (data['password'] as String?) ?? '',
+      status: (data['status'] as String?) ?? 'Enable',
+      rates: rates,
+    );
+  }
+
   factory Party.fromFirestore(String id, Map<String, dynamic> data) {
     final rawRates = data['rates'] as Map<String, dynamic>? ?? {};
     final rates = <String, Map<String, String>>{};
@@ -30,7 +51,6 @@ class Party {
       final inner = catEntry.value as Map<String, dynamic>? ?? {};
       rates[catEntry.key] = inner.map((k, v) => MapEntry(k, v?.toString() ?? ''));
     }
-
     return Party(
       id: id,
       name: (data['name'] as String?) ?? '',

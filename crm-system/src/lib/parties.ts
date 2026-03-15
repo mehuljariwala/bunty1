@@ -1,18 +1,5 @@
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  orderBy,
-  onSnapshot,
-} from "firebase/firestore";
-import { db } from "./firebase";
+import { supabase } from "./supabase";
 import type { Party, RateValues } from "./types";
-
-const COLLECTION = "parties";
 
 let partiesCache: Party[] | null = null;
 let partiesCachePromise: Promise<Party[]> | null = null;
@@ -28,34 +15,53 @@ function buildEmptyRates(categories: string[] = [], materials: string[] = []): R
   return rates;
 }
 
-function docToParty(id: string, data: Record<string, unknown>): Party {
+function rowToParty(row: Record<string, unknown>): Party {
   return {
-    id,
-    name: (data.name as string) ?? "",
-    address: (data.address as string) ?? "",
-    addressGu: (data.addressGu as string) ?? "",
-    addressHi: (data.addressHi as string) ?? "",
-    route: (data.route as string) ?? "",
-    userId: (data.userId as string) ?? "",
-    password: (data.password as string) ?? "",
-    status: (data.status as "Enable" | "Disable") ?? "Enable",
-    rates: (data.rates as RateValues) ?? buildEmptyRates(),
+    id: row.id as string,
+    name: (row.name as string) ?? "",
+    address: (row.address as string) ?? "",
+    addressGu: (row.address_gu as string) ?? "",
+    addressHi: (row.address_hi as string) ?? "",
+    route: (row.route as string) ?? "",
+    userId: (row.user_id as string) ?? "",
+    password: (row.password as string) ?? "",
+    status: (row.status as "Enable" | "Disable") ?? "Enable",
+    rates: (row.rates as RateValues) ?? buildEmptyRates(),
   };
 }
 
+function partyToRow(
+  data: Partial<Omit<Party, "id">>
+): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
+  if (data.name !== undefined) row.name = data.name;
+  if (data.address !== undefined) row.address = data.address;
+  if (data.addressGu !== undefined) row.address_gu = data.addressGu;
+  if (data.addressHi !== undefined) row.address_hi = data.addressHi;
+  if (data.route !== undefined) row.route = data.route;
+  if (data.userId !== undefined) row.user_id = data.userId;
+  if (data.password !== undefined) row.password = data.password;
+  if (data.status !== undefined) row.status = data.status;
+  if (data.rates !== undefined) row.rates = data.rates;
+  return row;
+}
+
 export async function fetchParties(): Promise<Party[]> {
-  const q = query(collection(db, COLLECTION), orderBy("name"));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => docToParty(d.id, d.data()));
+  const { data, error } = await supabase
+    .from("parties")
+    .select("*")
+    .order("name");
+  if (error) throw error;
+  return (data ?? []).map(rowToParty);
 }
 
 export function fetchPartiesCached(): Promise<Party[]> {
   if (partiesCache) return Promise.resolve(partiesCache);
   if (partiesCachePromise) return partiesCachePromise;
-  partiesCachePromise = fetchParties().then((data) => {
-    partiesCache = data;
+  partiesCachePromise = fetchParties().then((parties) => {
+    partiesCache = parties;
     partiesCachePromise = null;
-    return data;
+    return parties;
   });
   return partiesCachePromise;
 }
@@ -65,25 +71,49 @@ export function invalidatePartiesCache(): void {
   partiesCachePromise = null;
 }
 
-export function subscribeParties(callback: (parties: Party[]) => void): () => void {
-  const q = query(collection(db, COLLECTION), orderBy("name"));
-  return onSnapshot(q, (snap) => {
-    callback(snap.docs.map((d) => docToParty(d.id, d.data())));
-  });
+export function subscribeParties(
+  callback: (parties: Party[]) => void
+): () => void {
+  const channel = supabase
+    .channel("parties-changes")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "parties" },
+      () => {
+        fetchParties().then(callback);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
 export async function addParty(party: Omit<Party, "id">): Promise<string> {
-  const ref = await addDoc(collection(db, COLLECTION), party);
+  const row = partyToRow(party);
+  const { data, error } = await supabase
+    .from("parties")
+    .insert(row)
+    .select("id")
+    .single();
+  if (error) throw error;
   invalidatePartiesCache();
-  return ref.id;
+  return data.id;
 }
 
-export async function updateParty(id: string, data: Partial<Omit<Party, "id">>): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, id), data);
+export async function updateParty(
+  id: string,
+  data: Partial<Omit<Party, "id">>
+): Promise<void> {
+  const row = partyToRow(data);
+  const { error } = await supabase.from("parties").update(row).eq("id", id);
+  if (error) throw error;
   invalidatePartiesCache();
 }
 
 export async function deleteParty(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLLECTION, id));
+  const { error } = await supabase.from("parties").delete().eq("id", id);
+  if (error) throw error;
   invalidatePartiesCache();
 }

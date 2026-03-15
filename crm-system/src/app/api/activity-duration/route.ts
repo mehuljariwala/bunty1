@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const docId = request.nextUrl.searchParams.get("docId");
@@ -15,7 +14,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Invalid durationMs" }, { status: 400 });
     }
 
-    await updateDoc(doc(db, "activityLogs", docId), { durationMs });
+    const { error } = await supabase
+      .from('activity_logs')
+      .update({ duration_ms: durationMs })
+      .eq('id', docId);
+    if (error) throw error;
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });

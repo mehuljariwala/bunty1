@@ -8,20 +8,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-} from "firebase/auth";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  onSnapshot,
-} from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { supabase } from "./supabase";
 import { useRouter } from "next/navigation";
 
 export interface AppUser {
@@ -71,14 +58,14 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
       setLoading(false);
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (isSubAdminRef.current) return;
 
-      if (firebaseUser) {
+      if (session?.user) {
         setUser({
-          uid: firebaseUser.uid,
-          displayName: firebaseUser.displayName,
-          email: firebaseUser.email,
+          uid: session.user.id,
+          displayName: session.user.user_metadata?.full_name ?? null,
+          email: session.user.email ?? null,
           role: "admin",
         });
       } else {
@@ -86,45 +73,66 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
       }
       setLoading(false);
     });
-    return unsubscribe;
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
     if (!user || user.role !== "sub-admin") return;
 
-    return onSnapshot(doc(db, "subAdmins", user.uid), (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-      const pages = Array.isArray(data.allowedPages) ? (data.allowedPages as string[]) : undefined;
-      setUser((prev) => {
-        if (!prev) return prev;
-        const updated = { ...prev, allowedPages: pages };
-        sessionStorage.setItem(SUB_ADMIN_KEY, JSON.stringify(updated));
-        return updated;
-      });
-    });
+    const channel = supabase
+      .channel(`sub-admin-${user.uid}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "sub_admins",
+          filter: `id=eq.${user.uid}`,
+        },
+        (payload) => {
+          const data = payload.new;
+          const pages = Array.isArray(data.allowed_pages)
+            ? (data.allowed_pages as string[])
+            : undefined;
+          setUser((prev) => {
+            if (!prev) return prev;
+            const updated = { ...prev, allowedPages: pages };
+            sessionStorage.setItem(SUB_ADMIN_KEY, JSON.stringify(updated));
+            return updated;
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.uid, user?.role]);
 
   async function signIn(email: string, password: string): Promise<AppUser | null> {
     const trimmedEmail = email.trim().toLowerCase();
 
-    const q = query(
-      collection(db, "subAdmins"),
-      where("email", "==", trimmedEmail),
-    );
-    const snap = await getDocs(q);
+    const { data: subAdmins, error: subAdminError } = await supabase
+      .from("sub_admins")
+      .select("*")
+      .eq("email", trimmedEmail)
+      .limit(1);
 
-    if (!snap.empty) {
-      const d = snap.docs[0];
-      const data = d.data();
+    if (!subAdminError && subAdmins && subAdmins.length > 0) {
+      const data = subAdmins[0];
 
       if (String(data.password) === password) {
         const appUser: AppUser = {
-          uid: d.id,
+          uid: data.id,
           displayName: (data.name as string) ?? null,
           email: (data.email as string) ?? null,
           role: "sub-admin",
-          allowedPages: Array.isArray(data.allowedPages) ? (data.allowedPages as string[]) : undefined,
+          allowedPages: Array.isArray(data.allowed_pages)
+            ? (data.allowed_pages as string[])
+            : undefined,
         };
         isSubAdminRef.current = true;
         sessionStorage.setItem(SUB_ADMIN_KEY, JSON.stringify(appUser));
@@ -134,11 +142,19 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
     }
 
     isSubAdminRef.current = false;
-    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authError || !authData.user) {
+      throw authError ?? new Error("Sign-in failed");
+    }
+
     const adminUser: AppUser = {
-      uid: cred.user.uid,
-      displayName: cred.user.displayName,
-      email: cred.user.email,
+      uid: authData.user.id,
+      displayName: authData.user.user_metadata?.full_name ?? null,
+      email: authData.user.email ?? null,
       role: "admin",
     };
     setUser(adminUser);
@@ -151,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
     sessionStorage.removeItem(SUB_ADMIN_KEY);
     setUser(null);
     if (!wasSubAdmin) {
-      await firebaseSignOut(auth);
+      await supabase.auth.signOut();
     }
     router.push("/login");
   }

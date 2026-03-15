@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { collection, getDocs, addDoc, deleteDoc, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { supabase } from "@/lib/supabase";
 import { Loader2, Upload, CircleCheck, AlertTriangle, Trash2 } from "lucide-react";
 
 interface SeedColor {
@@ -172,6 +171,22 @@ function buildSeedData(): SeedColor[] {
   }));
 }
 
+function mapToSnakeCase(color: SeedColor) {
+  return {
+    name: color.name,
+    code: color.code,
+    hex: color.hex,
+    category: color.category,
+    sub_category: color.subCategory,
+    min_stock: color.minStock,
+    max_stock: color.maxStock,
+    current_stock: color.currentStock,
+    running_color: color.runningColor,
+    sort_order: color.sortOrder,
+    created_at: color.createdAt,
+  };
+}
+
 const TOTAL = CSV_DATA.length;
 const CATEGORIES = [...new Set(CSV_DATA.map((c) => c.category))].sort();
 const SUB_CATEGORIES = [...new Set(CSV_DATA.map((c) => c.subCategory))].sort();
@@ -183,8 +198,8 @@ export default function SeedColorsPage() {
   const [errorMsg, setErrorMsg] = useState("");
 
   async function checkExisting() {
-    const snap = await getDocs(query(collection(db, "colors")));
-    return snap.size;
+    const { count } = await supabase.from('colors').select('*', { count: 'exact', head: true });
+    return count ?? 0;
   }
 
   async function handleClearAndSeed() {
@@ -195,7 +210,7 @@ export default function SeedColorsPage() {
 
       if (count > 0) {
         const confirmed = window.confirm(
-          `There are ${count} colors in Firestore. Delete all and re-seed with ${TOTAL} colors from CSV?`
+          `There are ${count} colors in Supabase. Delete all and re-seed with ${TOTAL} colors from CSV?`
         );
         if (!confirmed) {
           setStatus("idle");
@@ -203,21 +218,20 @@ export default function SeedColorsPage() {
         }
 
         setStatus("clearing");
-        const snap = await getDocs(query(collection(db, "colors")));
-        const deleteBatch = snap.docs.map((d) => deleteDoc(d.ref));
-        await Promise.all(deleteBatch);
+        await supabase.from('colors').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       }
 
       setStatus("seeding");
       setSeededCount(0);
 
       const seedData = buildSeedData();
-      const colRef = collection(db, "colors");
 
       const BATCH_SIZE = 20;
       for (let i = 0; i < seedData.length; i += BATCH_SIZE) {
         const batch = seedData.slice(i, i + BATCH_SIZE);
-        await Promise.all(batch.map((color) => addDoc(colRef, color)));
+        const batchMapped = batch.map(mapToSnakeCase);
+        const { error } = await supabase.from('colors').insert(batchMapped);
+        if (error) throw error;
         setSeededCount(Math.min(i + BATCH_SIZE, seedData.length));
       }
 
@@ -234,12 +248,13 @@ export default function SeedColorsPage() {
       setSeededCount(0);
 
       const seedData = buildSeedData();
-      const colRef = collection(db, "colors");
 
       const BATCH_SIZE = 20;
       for (let i = 0; i < seedData.length; i += BATCH_SIZE) {
         const batch = seedData.slice(i, i + BATCH_SIZE);
-        await Promise.all(batch.map((color) => addDoc(colRef, color)));
+        const batchMapped = batch.map(mapToSnakeCase);
+        const { error } = await supabase.from('colors').insert(batchMapped);
+        if (error) throw error;
         setSeededCount(Math.min(i + BATCH_SIZE, seedData.length));
       }
 
@@ -253,9 +268,9 @@ export default function SeedColorsPage() {
   return (
     <div className="max-w-xl mx-auto py-12 space-y-6">
       <div className="bg-white rounded-2xl card-shadow p-8">
-        <h1 className="text-xl font-bold text-slate-800 mb-2">Seed Colors to Firestore</h1>
+        <h1 className="text-xl font-bold text-slate-800 mb-2">Seed Colors to Supabase</h1>
         <p className="text-[0.85rem] text-slate-500 mb-6">
-          Load {TOTAL} colors from <code className="px-1.5 py-0.5 bg-slate-50 rounded text-[0.8rem]">colours_details.csv</code> into Firestore.
+          Load {TOTAL} colors from <code className="px-1.5 py-0.5 bg-slate-50 rounded text-[0.8rem]">colours_details.csv</code> into Supabase.
         </p>
 
         <div className="grid grid-cols-3 gap-3 mb-4">

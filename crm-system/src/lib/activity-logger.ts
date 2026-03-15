@@ -1,16 +1,4 @@
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  doc,
-  query,
-  where,
-  orderBy,
-  getDocs,
-  serverTimestamp,
-  Timestamp,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { supabase } from "./supabase";
 
 export type ActivityType =
   | "page_visit"
@@ -30,7 +18,7 @@ export interface ActivityLog {
   pageName?: string;
   durationMs?: number;
   details?: Record<string, unknown>;
-  timestamp: Timestamp;
+  timestamp: string;
   date: string;
 }
 
@@ -45,19 +33,29 @@ interface LogActivityParams {
   details?: Record<string, unknown>;
 }
 
-const COLLECTION = "activityLogs";
-
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
 export async function logActivity(params: LogActivityParams): Promise<string> {
-  const ref = await addDoc(collection(db, COLLECTION), {
-    ...params,
-    timestamp: serverTimestamp(),
-    date: todayStr(),
-  });
-  return ref.id;
+  const { data, error } = await supabase
+    .from("activity_logs")
+    .insert({
+      user_id: params.userId,
+      user_name: params.userName,
+      user_email: params.userEmail,
+      type: params.type,
+      page: params.page,
+      page_name: params.pageName,
+      duration_ms: params.durationMs,
+      details: params.details,
+      date: todayStr(),
+    })
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return data.id;
 }
 
 export async function logPageVisit(
@@ -81,35 +79,43 @@ export async function updatePageDuration(
   docId: string,
   durationMs: number
 ): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, docId), { durationMs });
+  const { error } = await supabase
+    .from("activity_logs")
+    .update({ duration_ms: durationMs })
+    .eq("id", docId);
+
+  if (error) throw error;
 }
 
 export async function fetchActivityLogs(
   date: string,
   userId?: string
 ): Promise<ActivityLog[]> {
-  const constraints: ReturnType<typeof where>[] = [
-    where("date", "==", date),
-  ];
+  let query = supabase
+    .from("activity_logs")
+    .select("*")
+    .eq("date", date)
+    .order("timestamp", { ascending: false });
 
   if (userId) {
-    constraints.push(where("userId", "==", userId));
+    query = query.eq("user_id", userId);
   }
 
-  const q = query(collection(db, COLLECTION), ...constraints);
-  const snap = await getDocs(q);
+  const { data, error } = await query;
 
-  const logs = snap.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-  })) as ActivityLog[];
+  if (error) throw error;
 
-  // Sort client-side to avoid requiring a composite Firestore index
-  logs.sort((a, b) => {
-    const ta = a.timestamp?.toDate?.()?.getTime() ?? 0;
-    const tb = b.timestamp?.toDate?.()?.getTime() ?? 0;
-    return tb - ta;
-  });
-
-  return logs;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    userName: row.user_name,
+    userEmail: row.user_email,
+    type: row.type as ActivityType,
+    page: row.page ?? undefined,
+    pageName: row.page_name ?? undefined,
+    durationMs: row.duration_ms ?? undefined,
+    details: row.details ?? undefined,
+    timestamp: row.timestamp,
+    date: row.date,
+  }));
 }

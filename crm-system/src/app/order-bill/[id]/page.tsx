@@ -1,8 +1,7 @@
 "use client";
 
 import React, { use, useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { supabase } from "@/lib/supabase";
 import type { Order } from "@/lib/types";
 import { Printer, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -25,9 +24,25 @@ export default function OrderBillPage({ params }: { params: Promise<{ id: string
   useEffect(() => {
     async function load() {
       try {
-        const snap = await getDoc(doc(db, "orders", id));
-        if (!snap.exists()) { setError("Order not found"); return; }
-        setOrder({ id: snap.id, ...snap.data() } as Order);
+        const { data, error: fetchError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', id)
+          .single();
+        if (fetchError || !data) { setError("Order not found"); return; }
+        setOrder({
+          id: data.id,
+          csvId: data.csv_id,
+          partyName: data.party_name,
+          partyAddress: data.party_address,
+          partyAddressGu: data.party_address_gu || undefined,
+          route: data.route,
+          orderDate: data.order_date,
+          type: data.type,
+          items: data.items ?? [],
+          grandTotalOrdered: data.grand_total_ordered,
+          grandTotalDelivered: data.grand_total_delivered,
+        } as Order);
       } catch {
         setError("Failed to load order");
       } finally {

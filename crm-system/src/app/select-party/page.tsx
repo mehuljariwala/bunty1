@@ -3,24 +3,16 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Search, MapPin } from "lucide-react";
-import { usePartiesQuery, useRoutesQuery, useOrdersQuery } from "@/hooks/use-queries";
+import { usePartiesQuery, useRoutesQuery, useRunningPartyNamesQuery } from "@/hooks/use-queries";
 import type { Party } from "@/lib/types";
 
 export default function SelectPartyPage() {
   const router = useRouter();
   const { data: parties = [], isLoading: partiesLoading } = usePartiesQuery();
   const { data: routes = [], isLoading: routesLoading } = useRoutesQuery();
-  const { data: orders = [], isLoading: ordersLoading } = useOrdersQuery();
+  const { data: runningPartyNames = new Set<string>(), isLoading: ordersLoading } = useRunningPartyNamesQuery();
   const loading = partiesLoading || routesLoading || ordersLoading;
   const [search, setSearch] = useState("");
-
-  const runningPartyNames = useMemo(() => {
-    const names = new Set<string>();
-    for (const o of orders) {
-      if (o.type === "Running") names.add(o.partyName);
-    }
-    return names;
-  }, [orders]);
 
   const filteredParties = useMemo(() => {
     if (!search.trim()) return parties;

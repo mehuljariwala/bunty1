@@ -1,20 +1,11 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, writeBatch, doc, getDocs, query } from "firebase/firestore";
+import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBUp2ODHF6k2pVaYY26jY4cyLCbou5kxXg",
-  authDomain: "meet-hub-3c03e.firebaseapp.com",
-  projectId: "meet-hub-3c03e",
-  storageBucket: "meet-hub-3c03e.firebasestorage.app",
-  messagingSenderId: "17836504239",
-  appId: "1:17836504239:web:0145ed139dafe24462d05a",
-  measurementId: "G-YNNNRP88PX",
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://gelxlxnfhefyxhikrhib.supabase.co",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlbHhseG5maGVmeXhoaWtyaGliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0ODU0MzcsImV4cCI6MjA4OTA2MTQzN30.OdCQ1YmMUT9rK52R-m05E-5Q2PAjI_xS1qZmV-zy4vw",
+);
 
 function parseCSVLine(line: string): string[] {
   const fields: string[] = [];
@@ -39,9 +30,12 @@ function parseCSVLine(line: string): string[] {
 const BATCH_SIZE = 500;
 
 async function seed() {
-  const existing = await getDocs(query(collection(db, "orders")));
-  if (existing.size > 0) {
-    console.log(`Collection already has ${existing.size} documents. Skipping seed.`);
+  const { count } = await supabase
+    .from("orders")
+    .select("*", { count: "exact", head: true });
+
+  if (count && count > 0) {
+    console.log(`Collection already has ${count} documents. Skipping seed.`);
     console.log("Delete the collection first if you want to re-seed.");
     process.exit(0);
   }
@@ -51,41 +45,39 @@ async function seed() {
   const lines = raw.split("\n").filter((l) => l.trim());
   const rows = lines.slice(1).map((line) => parseCSVLine(line));
 
-  let count = 0;
-  let batch = writeBatch(db);
-  let batchCount = 0;
+  let totalCount = 0;
+  let batch: Record<string, unknown>[] = [];
 
   for (const row of rows) {
     const [csvId, partyName, partyAddress, route, orderDate, type] = row;
     if (!partyName) continue;
 
-    const ref = doc(collection(db, "orders"));
-    batch.set(ref, {
-      csvId: Number(csvId),
-      partyName,
-      partyAddress,
+    batch.push({
+      csv_id: Number(csvId),
+      party_name: partyName,
+      party_address: partyAddress,
       route,
-      orderDate,
+      order_date: orderDate,
       type,
     });
 
-    batchCount++;
-    count++;
+    totalCount++;
 
-    if (batchCount === BATCH_SIZE) {
-      await batch.commit();
-      console.log(`  Committed batch — ${count} docs so far`);
-      batch = writeBatch(db);
-      batchCount = 0;
+    if (batch.length === BATCH_SIZE) {
+      const { error } = await supabase.from("orders").insert(batch);
+      if (error) throw error;
+      console.log(`  Committed batch — ${totalCount} docs so far`);
+      batch = [];
     }
   }
 
-  if (batchCount > 0) {
-    await batch.commit();
-    console.log(`  Committed final batch — ${count} docs total`);
+  if (batch.length > 0) {
+    const { error } = await supabase.from("orders").insert(batch);
+    if (error) throw error;
+    console.log(`  Committed final batch — ${totalCount} docs total`);
   }
 
-  console.log(`\nSeeded ${count} orders to Firestore.`);
+  console.log(`\nSeeded ${totalCount} orders to Supabase.`);
   process.exit(0);
 }
 

@@ -1,45 +1,46 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/color_model.dart';
 import '../models/party_model.dart';
 import '../models/order_model.dart' as models;
 
 class FirebaseService {
-  static final _firestore = FirebaseFirestore.instance;
+  static SupabaseClient get _client => Supabase.instance.client;
 
   // --- Auth ---
   static Future<Party?> login(String userId, String password) async {
-    final snap = await _firestore.collection('parties').get();
-    for (final doc in snap.docs) {
-      final data = doc.data();
-      if (data['userId'] == userId && data['password'] == password) {
-        final party = Party.fromFirestore(doc.id, data);
-        if (party.status == 'Disable') return null;
-        return party;
-      }
-    }
-    return null;
+    final response = await _client
+        .from('parties')
+        .select()
+        .eq('user_id', userId)
+        .eq('password', password)
+        .limit(1)
+        .maybeSingle();
+    if (response == null) return null;
+    final party = Party.fromSupabase(response);
+    if (party.status == 'Disable') return null;
+    return party;
   }
 
   // --- Colors ---
   static Future<List<YarnColor>> fetchColorsByCategory(String category) async {
-    final snap = await _firestore
-        .collection('colors')
-        .orderBy('sortOrder')
-        .get();
-    return snap.docs
-        .map((doc) => YarnColor.fromFirestore(doc.id, doc.data()))
-        .where((c) => c.category == category)
+    final response = await _client
+        .from('colors')
+        .select()
+        .eq('category', category)
+        .order('sort_order');
+    return (response as List)
+        .map((row) => YarnColor.fromSupabase(row))
         .toList();
   }
 
   static Future<List<String>> getCategories() async {
-    final snap = await _firestore
-        .collection('colors')
-        .orderBy('sortOrder')
-        .get();
+    final response = await _client
+        .from('colors')
+        .select('category')
+        .order('sort_order');
     final categories = <String>{};
-    for (final doc in snap.docs) {
-      final cat = doc.data()['category'] as String? ?? '';
+    for (final row in response) {
+      final cat = row['category'] as String? ?? '';
       if (cat.isNotEmpty) categories.add(cat);
     }
     return categories.toList();
@@ -47,13 +48,13 @@ class FirebaseService {
 
   // --- Orders ---
   static Future<List<models.Order>> fetchOrdersByParty(String partyName) async {
-    final snap = await _firestore
-        .collection('orders')
-        .orderBy('csvId', descending: true)
-        .get();
-    return snap.docs
-        .map((doc) => models.Order.fromFirestore(doc.id, doc.data()))
-        .where((o) => o.partyName == partyName)
+    final response = await _client
+        .from('orders')
+        .select()
+        .eq('party_name', partyName)
+        .order('csv_id', ascending: false);
+    return (response as List)
+        .map((row) => models.Order.fromSupabase(row))
         .toList();
   }
 
@@ -66,28 +67,27 @@ class FirebaseService {
     required int grandTotalOrdered,
     required int grandTotalDelivered,
   }) async {
-    final lastSnap = await _firestore
-        .collection('orders')
-        .orderBy('csvId', descending: true)
+    final lastOrder = await _client
+        .from('orders')
+        .select('csv_id')
+        .order('csv_id', ascending: false)
         .limit(1)
-        .get();
-    final lastCsvId = lastSnap.docs.isEmpty
-        ? 0
-        : (lastSnap.docs.first.data()['csvId'] as num?)?.toInt() ?? 0;
+        .maybeSingle();
+    final lastCsvId = (lastOrder?['csv_id'] as num?)?.toInt() ?? 0;
     final nextCsvId = lastCsvId + 1;
 
-    final ref = await _firestore.collection('orders').add({
-      'csvId': nextCsvId,
-      'partyName': partyName,
-      'partyAddress': partyAddress,
+    final response = await _client.from('orders').insert({
+      'csv_id': nextCsvId,
+      'party_name': partyName,
+      'party_address': partyAddress,
       'route': route,
-      'orderDate': DateTime.now().toIso8601String().split('T')[0],
+      'order_date': DateTime.now().toIso8601String().split('T')[0],
       'type': type,
       'items': items.map((i) => i.toMap()).toList(),
-      'grandTotalOrdered': grandTotalOrdered,
-      'grandTotalDelivered': grandTotalDelivered,
-      'createdAt': DateTime.now().toIso8601String(),
-    });
-    return ref.id;
+      'grand_total_ordered': grandTotalOrdered,
+      'grand_total_delivered': grandTotalDelivered,
+      'created_at': DateTime.now().toIso8601String(),
+    }).select('id').single();
+    return response['id'] as String;
   }
 }

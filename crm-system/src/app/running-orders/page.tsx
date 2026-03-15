@@ -11,7 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { subscribeOrders, getNextSeqNumber, subscribeSeqCounter, markOrderComplete } from "@/lib/orders";
+import { subscribeRunningOrders, fetchCompleteOrdersByDate, getNextSeqNumber, subscribeSeqCounter, markOrderComplete } from "@/lib/orders";
 import { useRoutesQuery } from "@/hooks/use-queries";
 import { savePhotoRecord } from "@/lib/photos";
 import BillLayout from "@/components/BillLayout";
@@ -71,6 +71,8 @@ export default function RunningOrdersPage() {
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const [printOrder, setPrintOrder] = useState<Order | null>(null);
   const [cardTips, setCardTips] = useState<Record<string, string>>({});
+  const [completeOrders, setCompleteOrders] = useState<Order[]>([]);
+  const [completeLoading, setCompleteLoading] = useState(false);
   const [seqCounter, setSeqCounter] = useState(0);
   const [printSeq, setPrintSeq] = useState<number | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
@@ -133,7 +135,7 @@ export default function RunningOrdersPage() {
   }, [showCardTip, seqCounter]);
 
   useEffect(() => {
-    const unsubOrders = subscribeOrders((loaded) => {
+    const unsubOrders = subscribeRunningOrders((loaded) => {
       setOrders(loaded);
       setLoading(false);
       setCachedOrders(loaded, routes);
@@ -146,6 +148,14 @@ export default function RunningOrdersPage() {
       unsubSeq();
     };
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== "Complete") return;
+    setCompleteLoading(true);
+    fetchCompleteOrdersByDate(completeDate)
+      .then(setCompleteOrders)
+      .finally(() => setCompleteLoading(false));
+  }, [completeDate, activeTab]);
 
   useEffect(() => {
     const onAfterPrint = () => {
@@ -165,31 +175,31 @@ export default function RunningOrdersPage() {
   }, []);
 
   const filteredOrders = useMemo(() => {
+    if (activeTab === "Complete") {
+      return [...completeOrders].sort((a, b) => a.csvId - b.csvId);
+    }
     return orders
       .filter((o) => {
         if (activeTab === "Pending") {
           if (!hasPendingItems(o)) return false;
           if (o.orderDate < oneWeekAgo) return false;
-        } else if (activeTab === "Complete") {
-          if (o.type !== "Complete") return false;
-          if (o.orderDate !== completeDate) return false;
         } else {
           if (o.type !== activeTab) return false;
         }
         return true;
       })
       .sort((a, b) => a.csvId - b.csvId);
-  }, [orders, activeTab, oneWeekAgo, completeDate]);
+  }, [orders, completeOrders, activeTab, oneWeekAgo]);
 
   const tabCounts = useMemo(() => {
     const counts: Record<TabStatus, number> = { Running: 0, Pending: 0, Complete: 0 };
     for (const o of orders) {
       if (o.type === "Running") counts.Running++;
       if (hasPendingItems(o) && o.orderDate >= oneWeekAgo) counts.Pending++;
-      if (o.type === "Complete" && o.orderDate === completeDate) counts.Complete++;
     }
+    counts.Complete = completeOrders.length;
     return counts;
-  }, [orders, oneWeekAgo, completeDate]);
+  }, [orders, completeOrders, oneWeekAgo]);
 
   const routeGroups = useMemo(() => {
     const map = new Map<string, Order[]>();
@@ -301,7 +311,7 @@ export default function RunningOrdersPage() {
 
         {/* Scrollable content */}
         <div style={{ padding: "0 15px 15px" }}>
-          {loading ? (
+          {(loading || (activeTab === "Complete" && completeLoading)) ? (
             <div>
               {[1, 2].map((g) => (
                 <div key={g} style={{ marginBottom: "10px" }}>

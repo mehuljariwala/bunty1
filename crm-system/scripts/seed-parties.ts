@@ -1,20 +1,11 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs, query } from "firebase/firestore";
+import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBUp2ODHF6k2pVaYY26jY4cyLCbou5kxXg",
-  authDomain: "meet-hub-3c03e.firebaseapp.com",
-  projectId: "meet-hub-3c03e",
-  storageBucket: "meet-hub-3c03e.firebasestorage.app",
-  messagingSenderId: "17836504239",
-  appId: "1:17836504239:web:0145ed139dafe24462d05a",
-  measurementId: "G-YNNNRP88PX",
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://gelxlxnfhefyxhikrhib.supabase.co",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlbHhseG5maGVmeXhoaWtyaGliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0ODU0MzcsImV4cCI6MjA4OTA2MTQzN30.OdCQ1YmMUT9rK52R-m05E-5Q2PAjI_xS1qZmV-zy4vw",
+);
 
 function buildEmptyRates(): Record<string, Record<string, string>> {
   const rates: Record<string, Record<string, string>> = {};
@@ -48,9 +39,12 @@ function parseCSVLine(line: string): string[] {
 }
 
 async function seed() {
-  const existing = await getDocs(query(collection(db, "parties")));
-  if (existing.size > 0) {
-    console.log(`Collection already has ${existing.size} documents. Skipping seed.`);
+  const { count } = await supabase
+    .from("parties")
+    .select("*", { count: "exact", head: true });
+
+  if (count && count > 0) {
+    console.log(`Collection already has ${count} documents. Skipping seed.`);
     console.log("Delete the collection first if you want to re-seed.");
     process.exit(0);
   }
@@ -61,26 +55,27 @@ async function seed() {
 
   const rows = lines.slice(1).map((line) => parseCSVLine(line));
 
-  let count = 0;
+  let count2 = 0;
   for (const row of rows) {
     const [csvId, name, address, route, userId, password, status] = row;
     if (!name) continue;
 
-    await addDoc(collection(db, "parties"), {
-      csvId: Number(csvId),
+    const { error } = await supabase.from("parties").insert({
+      csv_id: Number(csvId),
       name,
       address,
       route,
-      userId,
+      user_id: userId,
       password,
       status: status || "Enable",
       rates: buildEmptyRates(),
     });
-    count++;
+    if (error) throw error;
+    count2++;
     console.log(`  Added: ${name}`);
   }
 
-  console.log(`\nSeeded ${count} parties to Firestore.`);
+  console.log(`\nSeeded ${count2} parties to Supabase.`);
   process.exit(0);
 }
 

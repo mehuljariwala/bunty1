@@ -4,8 +4,7 @@ import { Fragment, Suspense, useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Minus, Plus, Loader2, Sparkles } from "lucide-react";
 import AiOrderModal from "@/components/AiOrderModal";
-import { collection, addDoc, doc, writeBatch, query, orderBy, limit, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { supabase } from "@/lib/supabase";
 import { usePartiesQuery, useColorsQuery, useInvalidate } from "@/hooks/use-queries";
 import { getOrder, updateOrder } from "@/lib/orders";
 import type { Party, Color } from "@/lib/types";
@@ -285,27 +284,32 @@ function CreateOrderPage() {
         return editOrderId;
       }
 
-      const lastOrderSnap = await getDocs(
-        query(collection(db, "orders"), orderBy("csvId", "desc"), limit(1)),
-      );
-      const lastCsvId = lastOrderSnap.empty ? 0 : (lastOrderSnap.docs[0].data().csvId as number) ?? 0;
+      const { data: lastOrder } = await supabase
+        .from('orders')
+        .select('csv_id')
+        .order('csv_id', { ascending: false })
+        .limit(1);
+      const lastCsvId = lastOrder?.[0]?.csv_id ?? 0;
       const nextCsvId = lastCsvId + 1;
 
-      const ref = await addDoc(collection(db, "orders"), {
-        csvId: nextCsvId,
-        partyName: selectedParty.name,
-        partyAddress: selectedParty.address,
-        ...(selectedParty.addressGu ? { partyAddressGu: selectedParty.addressGu } : {}),
-        route: selectedParty.route,
-        orderDate: new Date().toISOString().split("T")[0],
-        type,
-        items,
-        grandTotalOrdered,
-        grandTotalDelivered,
-        createdAt: new Date().toISOString(),
-      });
+      const { data: newOrder } = await supabase
+        .from('orders')
+        .insert({
+          csv_id: nextCsvId,
+          party_name: selectedParty.name,
+          party_address: selectedParty.address,
+          ...(selectedParty.addressGu ? { party_address_gu: selectedParty.addressGu } : {}),
+          route: selectedParty.route,
+          order_date: new Date().toISOString().split("T")[0],
+          type,
+          items,
+          grand_total_ordered: grandTotalOrdered,
+          grand_total_delivered: grandTotalDelivered,
+          created_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
 
-      const batch = writeBatch(db);
       for (const sc of selectedColors) {
         const colorDoc = colors.find(
           (c) =>
@@ -314,16 +318,16 @@ function CreateOrderPage() {
             c.subCategory === sc.subCategory,
         );
         if (colorDoc) {
-          batch.update(doc(db, "colors", colorDoc.id), {
-            currentStock: colorDoc.currentStock - sc.deliveredQty,
-          });
+          await supabase
+            .from('colors')
+            .update({ current_stock: colorDoc.currentStock - sc.deliveredQty })
+            .eq('id', colorDoc.id);
         }
       }
-      await batch.commit();
       invalidate.orders();
       invalidate.colors();
 
-      return ref.id;
+      return newOrder?.id ?? null;
     } catch (err) {
       console.error("Failed to create order:", err);
       setSaving(false);

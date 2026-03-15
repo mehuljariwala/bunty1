@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useMemo, useCallback } from "react";
+import { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Search,
@@ -11,8 +11,10 @@ import {
   Calendar,
   Eye,
   MapPin,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { useOrdersQuery } from "@/hooks/use-queries";
+import { useOrdersPaginatedQuery } from "@/hooks/use-queries";
 import { Order, OrderItem } from "@/lib/types";
 
 const ROUTES = ["LIMBAYAT", "SONAL", "BHATAR"] as const;
@@ -241,39 +243,45 @@ function OrderDetailModal({
 }
 
 export default function OrdersPage() {
-  const { data: orders = [], isLoading: loading } = useOrdersQuery();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoutes, setSelectedRoutes] = useState<Set<RouteType>>(
     new Set()
   );
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("All");
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
 
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      const matchesSearch =
-        searchQuery === "" ||
-        order.partyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.partyAddress.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.route.toLowerCase().includes(searchQuery.toLowerCase());
+  // Build server-side filter params
+  const activeType = typeFilter === "All" ? undefined : typeFilter;
+  const activeRoute =
+    selectedRoutes.size === 1
+      ? Array.from(selectedRoutes)[0]
+      : undefined;
+  const searchFilter =
+    searchQuery.trim().length >= 2 ? searchQuery.trim() : undefined;
 
-      const matchesRoute =
-        selectedRoutes.size === 0 || selectedRoutes.has(order.route as RouteType);
+  const { data: result, isLoading: loading } = useOrdersPaginatedQuery({
+    page,
+    pageSize: PAGE_SIZE,
+    type: activeType as "Running" | "Complete" | undefined,
+    route: activeRoute,
+    search: searchFilter,
+  });
 
-      const matchesType =
-        typeFilter === "All" || order.type === typeFilter;
+  const orders = result?.orders ?? [];
+  const totalCount = result?.total ?? 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-      return matchesSearch && matchesRoute && matchesType;
-    });
-  }, [orders, searchQuery, selectedRoutes, typeFilter]);
-
-  const runningCount = orders.filter((o) => o.type === "Running").length;
-  const completeCount = orders.filter((o) => o.type === "Complete").length;
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedRoutes, typeFilter]);
 
   const rowVirtualizer = useVirtualizer({
-    count: filteredOrders.length,
+    count: orders.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 48,
     overscan: 10,
@@ -310,7 +318,7 @@ export default function OrdersPage() {
                 Total Orders
               </p>
               <p className="text-[1.65rem] font-bold text-slate-900 leading-none">
-                {orders.length.toLocaleString()}
+                {totalCount.toLocaleString()}
               </p>
             </div>
             <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center">
@@ -326,7 +334,9 @@ export default function OrdersPage() {
                 Running
               </p>
               <p className="text-[1.65rem] font-bold text-slate-900 leading-none">
-                {runningCount.toLocaleString()}
+                {typeFilter === "Running"
+                  ? totalCount.toLocaleString()
+                  : "-"}
               </p>
             </div>
             <div className="w-11 h-11 rounded-full bg-orange-50 flex items-center justify-center">
@@ -342,7 +352,9 @@ export default function OrdersPage() {
                 Complete
               </p>
               <p className="text-[1.65rem] font-bold text-slate-900 leading-none">
-                {completeCount.toLocaleString()}
+                {typeFilter === "Complete"
+                  ? totalCount.toLocaleString()
+                  : "-"}
               </p>
             </div>
             <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center">
@@ -415,8 +427,13 @@ export default function OrdersPage() {
         </div>
 
         <div className="text-[0.76rem] text-slate-600">
-          Showing {filteredOrders.length.toLocaleString()} of{" "}
-          {orders.length.toLocaleString()} orders
+          Showing {orders.length.toLocaleString()} of{" "}
+          {totalCount.toLocaleString()} orders
+          {totalPages > 1 && (
+            <span className="ml-2">
+              (Page {page} of {totalPages})
+            </span>
+          )}
         </div>
       </div>
 
@@ -425,7 +442,7 @@ export default function OrdersPage() {
           <div className="flex items-center justify-center h-96">
             <Loader className="w-8 h-8 text-blue-500 animate-spin" />
           </div>
-        ) : filteredOrders.length === 0 ? (
+        ) : orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-96 text-crm-text-muted">
             <Package className="w-12 h-12 mb-3 opacity-30" />
             <p className="text-[0.9rem] font-medium">No orders found</p>
@@ -458,7 +475,7 @@ export default function OrdersPage() {
             <div
               ref={parentRef}
               className="overflow-auto"
-              style={{ height: "calc(100vh - 420px)" }}
+              style={{ height: "calc(100vh - 480px)" }}
             >
               <div
                 style={{
@@ -468,7 +485,7 @@ export default function OrdersPage() {
                 }}
               >
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                  const order = filteredOrders[virtualRow.index];
+                  const order = orders[virtualRow.index];
                   const isEven = virtualRow.index % 2 === 0;
 
                   return (
@@ -514,6 +531,58 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white rounded-2xl px-5 py-3.5 card-shadow">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-xl text-[0.82rem] font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-white border border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Previous
+          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Show page numbers around current page */}
+            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 7) {
+                pageNum = i + 1;
+              } else if (page <= 4) {
+                pageNum = i + 1;
+              } else if (page >= totalPages - 3) {
+                pageNum = totalPages - 6 + i;
+              } else {
+                pageNum = page - 3 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  className={`w-9 h-9 rounded-xl text-[0.82rem] font-medium transition-all ${
+                    page === pageNum
+                      ? "bg-blue-500 text-white shadow-sm"
+                      : "bg-white border border-slate-200 text-slate-600 hover:border-blue-300"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-xl text-[0.82rem] font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-white border border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50"
+          >
+            Next
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {viewOrder && (
         <OrderDetailModal

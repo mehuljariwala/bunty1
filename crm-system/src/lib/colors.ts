@@ -1,58 +1,124 @@
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  orderBy,
-  onSnapshot,
-} from "firebase/firestore";
-import { db } from "./firebase";
+import { supabase } from "./supabase";
 import type { Color } from "./types";
 
-const COLLECTION = "colors";
+const TABLE = "colors";
 
-function docToColor(id: string, data: Record<string, unknown>): Color {
+/* ── snake_case DB row type ── */
+interface ColorRow {
+  id: string;
+  name: string;
+  code: string;
+  hex: string;
+  category: string;
+  sub_category: string;
+  min_stock: number;
+  max_stock: number;
+  current_stock: number;
+  running_color: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+/* ── mapping helpers ── */
+
+function rowToColor(row: ColorRow): Color {
   return {
-    id,
-    name: (data.name as string) ?? "",
-    code: (data.code as string) ?? "",
-    hex: (data.hex as string) ?? "#000000",
-    category: (data.category as string) ?? "",
-    subCategory: (data.subCategory as string) ?? "",
-    minStock: Number(data.minStock) || 0,
-    maxStock: Number(data.maxStock) || 0,
-    currentStock: Number(data.currentStock) || 0,
-    runningColor: (data.runningColor as boolean) ?? false,
-    sortOrder: Number(data.sortOrder) || 0,
-    createdAt: (data.createdAt as string) ?? "",
+    id: row.id,
+    name: row.name ?? "",
+    code: row.code ?? "",
+    hex: row.hex ?? "#000000",
+    category: row.category ?? "",
+    subCategory: row.sub_category ?? "",
+    minStock: Number(row.min_stock) || 0,
+    maxStock: Number(row.max_stock) || 0,
+    currentStock: Number(row.current_stock) || 0,
+    runningColor: row.running_color ?? false,
+    sortOrder: Number(row.sort_order) || 0,
+    createdAt: row.created_at ?? "",
   };
 }
 
+const camelToSnake: Record<string, string> = {
+  subCategory: "sub_category",
+  minStock: "min_stock",
+  maxStock: "max_stock",
+  currentStock: "current_stock",
+  runningColor: "running_color",
+  sortOrder: "sort_order",
+  createdAt: "created_at",
+};
+
+function colorToRow(data: Partial<Omit<Color, "id">>): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    const snakeKey = camelToSnake[key] ?? key;
+    row[snakeKey] = value;
+  }
+  return row;
+}
+
+/* ── public API ── */
+
 export function subscribeColors(callback: (colors: Color[]) => void): () => void {
-  const q = query(collection(db, COLLECTION), orderBy("sortOrder"));
-  return onSnapshot(q, (snap) => {
-    callback(snap.docs.map((d) => docToColor(d.id, d.data())));
-  });
+  // Initial fetch
+  fetchColors().then(callback);
+
+  // Realtime subscription – refetch full list on any change
+  const channel = supabase
+    .channel("colors-changes")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: TABLE },
+      () => {
+        fetchColors().then(callback);
+      },
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
 export async function fetchColors(): Promise<Color[]> {
-  const q = query(collection(db, COLLECTION), orderBy("sortOrder"));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => docToColor(d.id, d.data()));
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("*")
+    .order("sort_order");
+
+  if (error) throw error;
+  return (data as ColorRow[]).map(rowToColor);
 }
 
 export async function addColor(color: Omit<Color, "id">): Promise<string> {
-  const ref = await addDoc(collection(db, COLLECTION), color);
-  return ref.id;
+  const row = colorToRow(color);
+
+  const { data, error } = await supabase
+    .from(TABLE)
+    .insert(row)
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return data.id as string;
 }
 
 export async function updateColor(id: string, data: Partial<Omit<Color, "id">>): Promise<void> {
-  await updateDoc(doc(db, COLLECTION, id), data);
+  const row = colorToRow(data);
+
+  const { error } = await supabase
+    .from(TABLE)
+    .update(row)
+    .eq("id", id);
+
+  if (error) throw error;
 }
 
 export async function deleteColor(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLLECTION, id));
+  const { error } = await supabase
+    .from(TABLE)
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
 }

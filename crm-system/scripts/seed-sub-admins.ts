@@ -1,18 +1,9 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, writeBatch, doc, getDocs, query } from "firebase/firestore";
+import { createClient } from "@supabase/supabase-js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBUp2ODHF6k2pVaYY26jY4cyLCbou5kxXg",
-  authDomain: "meet-hub-3c03e.firebaseapp.com",
-  projectId: "meet-hub-3c03e",
-  storageBucket: "meet-hub-3c03e.firebasestorage.app",
-  messagingSenderId: "17836504239",
-  appId: "1:17836504239:web:0145ed139dafe24462d05a",
-  measurementId: "G-YNNNRP88PX",
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://gelxlxnfhefyxhikrhib.supabase.co",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlbHhseG5maGVmeXhoaWtyaGliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0ODU0MzcsImV4cCI6MjA4OTA2MTQzN30.OdCQ1YmMUT9rK52R-m05E-5Q2PAjI_xS1qZmV-zy4vw",
+);
 
 const SUB_ADMINS = [
   { csvId: 7, name: "anuj",      password: "1234",      email: "bantyjariwala@gmail.com" },
@@ -24,25 +15,33 @@ const SUB_ADMINS = [
 ];
 
 async function seed() {
-  const col = collection(db, "subAdmins");
-  const existing = await getDocs(query(col));
-  if (existing.size > 0) {
-    console.log(`Collection already has ${existing.size} docs. Clearing...`);
-    const clearBatch = writeBatch(db);
-    existing.docs.forEach((d) => clearBatch.delete(d.ref));
-    await clearBatch.commit();
+  const { count } = await supabase
+    .from("sub_admins")
+    .select("*", { count: "exact", head: true });
+
+  if (count && count > 0) {
+    console.log(`Collection already has ${count} docs. Clearing...`);
+    const { error: deleteError } = await supabase
+      .from("sub_admins")
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000");
+    if (deleteError) throw deleteError;
     console.log("Cleared.");
   }
 
-  const batch = writeBatch(db);
   const now = new Date().toISOString().split("T")[0];
 
-  for (const admin of SUB_ADMINS) {
-    const ref = doc(col);
-    batch.set(ref, { ...admin, createdAt: now });
-  }
+  const { error } = await supabase.from("sub_admins").insert(
+    SUB_ADMINS.map((a) => ({
+      csv_id: a.csvId,
+      name: a.name,
+      password: a.password,
+      email: a.email,
+      created_at: now,
+    })),
+  );
+  if (error) throw error;
 
-  await batch.commit();
   console.log(`Seeded ${SUB_ADMINS.length} sub admins.`);
   process.exit(0);
 }

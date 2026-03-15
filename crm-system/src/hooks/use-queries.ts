@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchParties } from "@/lib/parties";
 import { fetchRoutes } from "@/lib/routes";
-import { fetchOrders } from "@/lib/orders";
+import { fetchOrders, fetchOrdersByType, fetchRunningPartyNames, fetchOrdersPaginated } from "@/lib/orders";
 import { fetchColors } from "@/lib/colors";
 
 export const queryKeys = {
@@ -9,6 +9,8 @@ export const queryKeys = {
   routes: ["routes"] as const,
   orders: ["orders"] as const,
   colors: ["colors"] as const,
+  runningOrders: ["orders", "running"] as const,
+  runningPartyNames: ["orders", "runningPartyNames"] as const,
 };
 
 export function usePartiesQuery() {
@@ -40,6 +42,36 @@ export function useColorsQuery() {
     queryKey: queryKeys.colors,
     queryFn: fetchColors,
     staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useRunningOrdersQuery() {
+  return useQuery({
+    queryKey: queryKeys.runningOrders,
+    queryFn: () => fetchOrdersByType("Running"),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useRunningPartyNamesQuery() {
+  return useQuery({
+    queryKey: queryKeys.runningPartyNames,
+    queryFn: fetchRunningPartyNames,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useOrdersPaginatedQuery(opts: {
+  page: number;
+  pageSize: number;
+  type?: "Running" | "Complete";
+  route?: string;
+  search?: string;
+}) {
+  return useQuery({
+    queryKey: ["orders", "paginated", opts],
+    queryFn: () => fetchOrdersPaginated(opts),
+    staleTime: 30 * 1000,
   });
 }
 

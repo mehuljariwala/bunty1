@@ -39,7 +39,7 @@ class Order {
   final String partyAddress;
   final String route;
   final String orderDate;
-  final String type; // "Running" | "Complete"
+  final String type;
   final List<OrderItem> items;
   final int grandTotalOrdered;
   final int grandTotalDelivered;
@@ -57,12 +57,30 @@ class Order {
     required this.grandTotalDelivered,
   });
 
+  factory Order.fromSupabase(Map<String, dynamic> data) {
+    final rawItems = data['items'] as List<dynamic>? ?? [];
+    final items = rawItems
+        .map((i) => OrderItem.fromMap(i as Map<String, dynamic>))
+        .toList();
+    return Order(
+      id: data['id']?.toString() ?? '',
+      csvId: (data['csv_id'] as num?)?.toInt() ?? 0,
+      partyName: (data['party_name'] as String?) ?? '',
+      partyAddress: (data['party_address'] as String?) ?? '',
+      route: (data['route'] as String?) ?? '',
+      orderDate: (data['order_date'] as String?) ?? '',
+      type: (data['type'] as String?) ?? 'Complete',
+      items: items,
+      grandTotalOrdered: (data['grand_total_ordered'] as num?)?.toInt() ?? 0,
+      grandTotalDelivered: (data['grand_total_delivered'] as num?)?.toInt() ?? 0,
+    );
+  }
+
   factory Order.fromFirestore(String id, Map<String, dynamic> data) {
     final rawItems = data['items'] as List<dynamic>? ?? [];
     final items = rawItems
         .map((i) => OrderItem.fromMap(i as Map<String, dynamic>))
         .toList();
-
     return Order(
       id: id,
       csvId: (data['csvId'] as num?)?.toInt() ?? 0,

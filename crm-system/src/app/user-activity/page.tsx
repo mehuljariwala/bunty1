@@ -28,8 +28,8 @@ function formatDurationMs(ms: number): string {
   return `${minutes}m`;
 }
 
-function formatTimestamp(ts: { toDate: () => Date }): string {
-  const d = ts.toDate();
+function formatTimestamp(ts: string | { toDate: () => Date }): string {
+  const d = typeof ts === "string" ? new Date(ts) : ts.toDate();
   const hh = String(d.getHours()).padStart(2, "0");
   const mm = String(d.getMinutes()).padStart(2, "0");
   const ss = String(d.getSeconds()).padStart(2, "0");
@@ -255,8 +255,8 @@ function UserTimeline({ logs }: UserTimelineProps) {
   const sorted = useMemo(
     () =>
       [...logs].sort((a, b) => {
-        const ta = a.timestamp?.toDate?.()?.getTime() ?? 0;
-        const tb = b.timestamp?.toDate?.()?.getTime() ?? 0;
+        const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
         return ta - tb;
       }),
     [logs]
@@ -278,9 +278,8 @@ function UserTimeline({ logs }: UserTimelineProps) {
       <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
         {sorted.map((log) => {
           const detail = getActivityDetail(log);
-          const timeStr =
-            typeof log.timestamp?.toDate === "function"
-              ? formatTimestamp(log.timestamp as { toDate: () => Date })
+          const timeStr = log.timestamp
+              ? formatTimestamp(log.timestamp)
               : "--:--:--";
           const stockChanges = log.type === "stock_update" ? getStockChanges(log) : null;
           const isStockExpanded = expandedStockLogs.has(log.id);
