@@ -20,9 +20,10 @@ export interface AppUser {
 }
 
 export function getDefaultPage(user: AppUser): string {
-  if (user.role === "admin" || !user.allowedPages) return "/running-orders";
-  if (user.allowedPages.length === 0) return "/running-orders";
-  return user.allowedPages[0];
+  if (user.role === "admin") return "/running-orders";
+  // Sub-admin: land on first allowed page
+  if (user.allowedPages && user.allowedPages.length > 0) return user.allowedPages[0];
+  return "/dashboard";
 }
 
 interface AuthContextValue {

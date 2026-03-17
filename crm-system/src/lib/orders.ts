@@ -129,7 +129,11 @@ export async function getOrder(orderId: string): Promise<Order | null> {
 }
 
 export async function getNextSeqNumber(): Promise<number> {
-  const { data } = await supabase.rpc("get_next_seq_number");
+  const today = new Date().toISOString().split("T")[0];
+  const { data } = await supabase.rpc("get_next_seq_number", {
+    counter_id: "seqCounter",
+    counter_date: today,
+  });
   return data ?? 1;
 }
 

@@ -64,9 +64,13 @@ export default function PhotoMasterPage() {
 
   // Group by date, sorted newest first. Within each date, sort by sequence number ascending (1 to N).
   const grouped = useMemo(() => {
-    const sorted = [...activePhotos].sort(
-      (a, b) => (a.sequenceNumber ?? 0) - (b.sequenceNumber ?? 0)
-    );
+    // Sort by date desc first, then by sequence number asc within each date
+    const sorted = [...activePhotos].sort((a, b) => {
+      const dateA = new Date(a.capturedAt).setHours(0, 0, 0, 0);
+      const dateB = new Date(b.capturedAt).setHours(0, 0, 0, 0);
+      if (dateA !== dateB) return dateB - dateA; // newest date first
+      return (a.sequenceNumber ?? 0) - (b.sequenceNumber ?? 0); // sequence asc within date
+    });
     const map = new Map<string, PhotoRecord[]>();
     for (const p of sorted) {
       const key = formatGroupDate(p.capturedAt);
