@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Minus, Plus, Loader2, Sparkles } from "lucide-react";
 import AiOrderModal from "@/components/AiOrderModal";
 import { supabase } from "@/lib/supabase";
-import { usePartiesQuery, useColorsQuery, useInvalidate } from "@/hooks/use-queries";
+import { usePartiesLiteQuery, useColorsQuery, useInvalidate } from "@/hooks/use-queries";
 import { getOrder, updateOrder } from "@/lib/orders";
 import type { Party, Color } from "@/lib/types";
 
@@ -80,7 +80,7 @@ function CreateOrderPage() {
   const partyIdFromUrl = searchParams.get("partyId");
   const editOrderId = searchParams.get("edit");
 
-  const { data: parties = [], isLoading: partiesLoading } = usePartiesQuery();
+  const { data: parties = [], isLoading: partiesLoading } = usePartiesLiteQuery();
   const { data: colors = [] } = useColorsQuery();
   const invalidate = useInvalidate();
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
@@ -137,10 +137,20 @@ function CreateOrderPage() {
     });
   }, [editOrderId, parties, colors]);
 
-  const categories = useMemo(
-    () => [...new Set(colors.map((c) => c.category))],
-    [colors],
-  );
+  const PRESET_CATEGORIES = ["3 Tar", "5 Tar", "Yarn", "3 Tar Button", "5 Tar Button", "6 Tar Button"];
+
+  const categories = useMemo(() => {
+    const all = [...new Set([...PRESET_CATEGORIES, ...colors.map((c) => c.category)])];
+    const order = PRESET_CATEGORIES;
+    return all.sort((a, b) => {
+      const ai = order.indexOf(a);
+      const bi = order.indexOf(b);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }, [colors]);
 
   useEffect(() => {
     if (categories.length > 0 && !categories.includes(activeCat)) {
@@ -533,7 +543,7 @@ function CreateOrderPage() {
                   (s, c) => s + c.deliveredQty,
                   0,
                 );
-                const CATEGORY_COLORS: Record<string, string> = { "3 Tar": "#f5956b", "5 Tar": "#5b5fc7", "Yarn": "#36b49f" };
+                const CATEGORY_COLORS: Record<string, string> = { "3 Tar": "#f5956b", "5 Tar": "#5b5fc7", "Yarn": "#36b49f", "3 Tar Button": "#e8b838", "5 Tar Button": "#9b59b6", "6 Tar Button": "#3498db" };
                 const headerBg = CATEGORY_COLORS[cat] ?? "#5b5fc7";
                 return (
                   <div key={cat}>

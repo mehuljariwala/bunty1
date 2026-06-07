@@ -49,10 +49,32 @@ function partyToRow(
 export async function fetchParties(): Promise<Party[]> {
   const { data, error } = await supabase
     .from("parties")
-    .select("*")
+    .select("id,name,address,address_gu,address_hi,route,user_id,password,status,rates")
     .order("name");
   if (error) throw error;
   return (data ?? []).map(rowToParty);
+}
+
+/** Lightweight fetch — only fields needed for order creation (skips heavy rates JSONB) */
+export async function fetchPartiesLite(): Promise<Party[]> {
+  const { data, error } = await supabase
+    .from("parties")
+    .select("id,name,address,address_gu,route,status")
+    .eq("status", "Enable")
+    .order("name");
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    name: (row.name as string) ?? "",
+    address: (row.address as string) ?? "",
+    addressGu: (row.address_gu as string) ?? "",
+    addressHi: "",
+    route: (row.route as string) ?? "",
+    userId: "",
+    password: "",
+    status: "Enable" as const,
+    rates: {},
+  }));
 }
 
 export function fetchPartiesCached(): Promise<Party[]> {

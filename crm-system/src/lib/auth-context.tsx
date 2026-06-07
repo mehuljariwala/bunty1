@@ -126,12 +126,13 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
       const data = subAdmins[0];
 
       if (String(data.password) === password) {
+        const userRole = (data.role === "admin") ? "admin" : "sub-admin";
         const appUser: AppUser = {
           uid: data.id,
           displayName: (data.name as string) ?? null,
           email: (data.email as string) ?? null,
-          role: "sub-admin",
-          allowedPages: Array.isArray(data.allowed_pages)
+          role: userRole,
+          allowedPages: userRole === "sub-admin" && Array.isArray(data.allowed_pages)
             ? (data.allowed_pages as string[])
             : undefined,
         };

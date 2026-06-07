@@ -1,11 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchParties } from "@/lib/parties";
+import { fetchParties, fetchPartiesLite } from "@/lib/parties";
 import { fetchRoutes } from "@/lib/routes";
 import { fetchOrders, fetchOrdersByType, fetchRunningPartyNames, fetchOrdersPaginated } from "@/lib/orders";
 import { fetchColors } from "@/lib/colors";
 
 export const queryKeys = {
   parties: ["parties"] as const,
+  partiesLite: ["parties", "lite"] as const,
   routes: ["routes"] as const,
   orders: ["orders"] as const,
   colors: ["colors"] as const,
@@ -73,6 +74,24 @@ export function useOrdersPaginatedQuery(opts: {
     queryFn: () => fetchOrdersPaginated(opts),
     staleTime: 30 * 1000,
   });
+}
+
+/** Lightweight parties query for create-order page (no rates JSONB, only enabled parties) */
+export function usePartiesLiteQuery() {
+  return useQuery({
+    queryKey: queryKeys.partiesLite,
+    queryFn: fetchPartiesLite,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** Prefetch parties + colors so create-order page loads instantly */
+export function usePrefetchCreateOrder() {
+  const qc = useQueryClient();
+  return () => {
+    qc.prefetchQuery({ queryKey: queryKeys.partiesLite, queryFn: fetchPartiesLite, staleTime: 5 * 60 * 1000 });
+    qc.prefetchQuery({ queryKey: queryKeys.colors, queryFn: fetchColors, staleTime: 2 * 60 * 1000 });
+  };
 }
 
 export function useInvalidate() {

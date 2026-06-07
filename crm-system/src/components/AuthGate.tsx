@@ -24,7 +24,11 @@ export default function AuthGate({ children }: { children: ReactNode }): React.R
     if (user && isLoginPage) {
       router.replace(getDefaultPage(user));
     }
-  }, [user, loading, isLoginPage, router]);
+    // Redirect admin users from /dashboard to /running-orders
+    if (user && user.role === "admin" && pathname === "/dashboard") {
+      router.replace("/running-orders");
+    }
+  }, [user, loading, isLoginPage, pathname, router]);
 
   if (loading) {
     return (

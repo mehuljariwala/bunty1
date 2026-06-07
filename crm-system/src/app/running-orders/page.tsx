@@ -12,7 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { subscribeRunningOrders, fetchCompleteOrdersByDate, getNextSeqNumber, subscribeSeqCounter, markOrderComplete } from "@/lib/orders";
-import { useRoutesQuery } from "@/hooks/use-queries";
+import { useRoutesQuery, usePrefetchCreateOrder } from "@/hooks/use-queries";
 import { savePhotoRecord } from "@/lib/photos";
 import BillLayout from "@/components/BillLayout";
 import type { Order, RouteDoc } from "@/lib/types";
@@ -62,6 +62,7 @@ function PrintView({ order, sequenceNumber }: { order: Order; sequenceNumber?: n
 }
 
 export default function RunningOrdersPage() {
+  const prefetchCreateOrder = usePrefetchCreateOrder();
   const cachedRO = useRef(getCachedOrders());
   const [orders, setOrders] = useState<Order[]>(cachedRO.current?.orders ?? []);
   const { data: routes = cachedRO.current?.routes ?? [] } = useRoutesQuery();
@@ -316,7 +317,7 @@ export default function RunningOrdersPage() {
               {[1, 2].map((g) => (
                 <div key={g} style={{ marginBottom: "10px" }}>
                   <div className="animate-[shimmer_1.5s_ease-in-out_infinite] bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded h-4 w-28" style={{ margin: "10px 0" }} />
-                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 xs:gap-x-[38px] xs:gap-y-3" style={{ padding: "4px 4px 0" }}>
+                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 xs:gap-x-[38px] xs:gap-y-3" style={{ padding: "4px 4px 0" }}>
                     {Array.from({ length: g === 1 ? 4 : 3 }).map((_, i) => (
                       <div
                         key={i}
@@ -361,7 +362,7 @@ export default function RunningOrdersPage() {
                   No orders in this route
                 </p>
               ) : (
-                <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 xs:gap-x-[38px] xs:gap-y-3" style={{ padding: "4px 4px 0" }}>
+                <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 xs:gap-x-[38px] xs:gap-y-3" style={{ padding: "4px 4px 0" }}>
                   {routeOrders.map((order) => {
                     const delivered = order.grandTotalDelivered ?? order.items?.reduce((s, i) => s + i.deliveredQty, 0) ?? 0;
                     return (
@@ -542,6 +543,16 @@ export default function RunningOrdersPage() {
                             <FileText className="w-3 h-3" strokeWidth={1.8} />
                             Invoice
                           </Link>
+                          <div style={{ width: "1px", height: "16px", background: "#f0f0f0" }} />
+                          <Link
+                            href={`/temp-invoice/${order.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", padding: "7px 0", fontSize: "11.5px", fontWeight: 500, color: "#8D9293", textDecoration: "none", transition: "0.2s" }}
+                            className="hover:!text-[#1460BD] hover:!bg-[#f7f7f7]"
+                          >
+                            <FileText className="w-3 h-3" strokeWidth={1.8} />
+                            Temp
+                          </Link>
                         </div>
 
                         {cardTips[order.id] && (
@@ -560,6 +571,8 @@ export default function RunningOrdersPage() {
           <div className="flex justify-center" style={{ marginTop: "15px", paddingBottom: "10px" }}>
             <Link
               href="/select-party"
+              onMouseEnter={prefetchCreateOrder}
+              onTouchStart={prefetchCreateOrder}
               style={{
                 display: "inline-flex",
                 alignItems: "center",

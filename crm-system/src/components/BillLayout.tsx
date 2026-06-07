@@ -68,9 +68,16 @@ function formatDateBill(d: string): string {
 interface BillLayoutProps {
   order: Order;
   sequenceNumber?: number;
+  /** When provided, Wt fields become editable inputs. Key = "category||material" */
+  weights?: Record<string, string>;
+  onWeightChange?: (key: string, value: string) => void;
+  /** Formatted bag summary string to display in BAG ( ) */
+  bagSummary?: string;
+  /** When provided, BAG becomes a clickable button */
+  onBagClick?: () => void;
 }
 
-export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
+export default function BillLayout({ order, sequenceNumber, weights, onWeightChange, bagSummary, onBagClick }: BillLayoutProps) {
   const groups = groupItems(order.items ?? []);
   const grandOrdered = order.grandTotalOrdered ?? groups.reduce((s, g) => s + g.totalOrdered, 0);
   const grandDelivered = order.grandTotalDelivered ?? groups.reduce((s, g) => s + g.totalDelivered, 0);
@@ -167,10 +174,23 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
                     </tr>
                     <tr>
                       <td colSpan={3} style={{ padding: "3px 3px 1px" }}>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: "3px", fontSize: "11px", border: "1px solid #000", padding: "4px 5px", minHeight: "22px" }}>
-                          <span>Wt:</span>
-                          <span style={{ flex: 1, minHeight: "14px" }}>&nbsp;</span>
-                        </div>
+                        {onWeightChange ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", padding: "2px 0", minHeight: "22px" }}>
+                            <span style={{ fontWeight: 600 }}>Wt:</span>
+                            <input
+                              type="text"
+                              placeholder="0.000"
+                              value={weights?.[`${group.category}||${mat.material}`] ?? ""}
+                              onChange={(e) => onWeightChange(`${group.category}||${mat.material}`, e.target.value)}
+                              style={{ flex: 1, border: "1.5px solid #1460bd", borderRadius: "4px", outline: "none", fontSize: "12px", fontWeight: 600, minWidth: 0, background: "#f0f7ff", padding: "3px 6px", color: "#1460bd" }}
+                            />
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", alignItems: "baseline", gap: "3px", fontSize: "11px", border: "1px solid #000", padding: "4px 5px", minHeight: "22px" }}>
+                            <span>Wt:</span>
+                            <span style={{ flex: 1, minHeight: "14px" }}>&nbsp;</span>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   </tbody>
@@ -200,9 +220,28 @@ export default function BillLayout({ order, sequenceNumber }: BillLayoutProps) {
       )}
 
       {/* BAG box */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", fontSize: "13px", fontWeight: 600, padding: "5px 10px", margin: "4px 10px 0" }}>
-        <span>BAG (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</span>
-      </div>
+      {onBagClick ? (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "5px 10px", margin: "4px 10px 0" }}>
+          <button
+            type="button"
+            onClick={onBagClick}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "4px",
+              fontSize: "13px", fontWeight: 600, padding: "5px 16px",
+              border: "1.5px solid #1460bd", borderRadius: "6px",
+              background: bagSummary ? "#e8f4fd" : "#f0f7ff",
+              color: "#1460bd", cursor: "pointer",
+            }}
+          >
+            BAG ({bagSummary ? <span style={{ fontWeight: 700 }}>{bagSummary}</span> : <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>})
+            <span style={{ fontSize: "10px", marginLeft: "4px", opacity: 0.7 }}>&#9998;</span>
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", fontSize: "13px", fontWeight: 600, padding: "5px 10px", margin: "4px 10px 0" }}>
+          <span>BAG ({bagSummary || <>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</>})</span>
+        </div>
+      )}
 
     </div>
   );

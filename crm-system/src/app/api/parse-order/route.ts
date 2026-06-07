@@ -35,15 +35,25 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const prompt = `You are an order parser for a textile/lace business. Parse the following order text into structured JSON.
 
-The order text has CATEGORIES (like "5 TAR", "3 TAR", "Yarn") as headers, followed by lines with a color name and quantity.
+The order text has CATEGORIES (like "5 TAR", "3 TAR", "Yarn", "3 Tar Button", "5 Tar Button", "6 Tar Button") as headers, followed by lines with a color name and quantity.
 
 AVAILABLE COLORS PER CATEGORY:
 ${colorsSection}
 
 RULES:
-1. Normalize categories: "5 TAR"/"5TAR"/"5 tar" → "5 Tar", "3 TAR" → "3 Tar", "YARN" → "Yarn"
-2. Match each color to the EXACT name from the available list for THAT category. Use fuzzy matching for typos/casing/hyphens (e.g., "N-BLUE" → "N Blue", "MAHENDI" → "Mahendi", "MAHROON" → "Maroon").
-3. ONLY use color names from the available list above. If a color cannot be matched to any name in the list, use the original text as-is.
+1. Normalize categories: "5 TAR"/"5TAR"/"5 tar" → "5 Tar", "3 TAR" → "3 Tar", "YARN" → "Yarn", "3 tar buttan"/"3 TAR BUTTON" → "3 Tar Button", "5 tar buttan"/"5 TAR BUTTON" → "5 Tar Button", "6 tar buttan"/"6 TAR BUTTON" → "6 Tar Button"
+2. Match each color to the CLOSEST name from the available list for THAT category. Use aggressive fuzzy matching — customers frequently misspell colors. Consider phonetic similarity, missing/extra letters, swapped letters, and shorthand. Common corrections include:
+   - "Yellow" → "Golden"
+   - "pitch"/"peach" → "Pitch"
+   - "Rani Muty"/"Rani Multy" → "R.Multi"
+   - "Mahoom"/"Mahoon" → "Maroon"
+   - "Onion"/"Oninen" → "Onion" (match closest from list)
+   - "Cream" → "B. Cream"
+   - "N-BLUE"/"N BLUE"/"Nblue" → "N Blue"
+   - "MAHENDI"/"Mehendi"/"Mehndi" → "Mahendi"
+   - "MAHROON"/"Marun"/"Mehrun" → "Maroon"
+   Always pick the closest matching color from the available list even if the spelling is very different. Think about what the customer likely meant based on sound and context.
+3. ONLY use color names from the available list above. If a color truly cannot be matched to any name in the list, use the original text as-is.
 4. NEVER output duplicate entries — each color should appear at most ONCE per category. If the same color appears multiple times in the input, sum up the quantities.
 5. Return ONLY valid JSON, no markdown, no code fences.
 
@@ -58,7 +68,7 @@ Return this exact JSON structure:
   try {
     const completion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "llama-3.3-70b-versatile",
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
       temperature: 0,
       max_tokens: 4096,
     });

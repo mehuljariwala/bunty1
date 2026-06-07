@@ -255,10 +255,20 @@ export default function StockInventoryPage(): React.JSX.Element {
     });
   }, [dbStock]);
 
-  const categories = useMemo(
-    () => [...new Set(localStock.map((s) => s.category))].sort(),
-    [localStock]
-  );
+  const PRESET_CATEGORIES = ["3 Tar", "5 Tar", "Yarn", "3 Tar Button", "5 Tar Button", "6 Tar Button"];
+
+  const categories = useMemo(() => {
+    const all = [...new Set([...PRESET_CATEGORIES, ...localStock.map((s) => s.category)])];
+    const order = PRESET_CATEGORIES;
+    return all.sort((a, b) => {
+      const ai = order.indexOf(a);
+      const bi = order.indexOf(b);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }, [localStock]);
 
   useEffect(() => {
     if (!activeTab && categories.length > 0) {

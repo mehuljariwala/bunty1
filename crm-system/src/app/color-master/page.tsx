@@ -66,13 +66,24 @@ export default function ColorMasterPage(): React.JSX.Element {
   const [editingColor, setEditingColor] = useState<ColorRow | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  const categories = useMemo(
-    () => [...new Set(colors.map((c) => c.category))].sort(),
-    [colors]
-  );
+  const PRESET_CATEGORIES = ["3 Tar", "5 Tar", "Yarn", "3 Tar Button", "5 Tar Button", "6 Tar Button"];
+  const PRESET_SUB_CATEGORIES = ["Celtionic", "Litchy", "Multy", "Polyester", "Rani multy", "ANT/ANMLIPANI", "PAL MAT", "SILVER"];
+
+  const categories = useMemo(() => {
+    const all = [...new Set([...PRESET_CATEGORIES, ...colors.map((c) => c.category)])];
+    const order = PRESET_CATEGORIES;
+    return all.sort((a, b) => {
+      const ai = order.indexOf(a);
+      const bi = order.indexOf(b);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }, [colors]);
 
   const subCategories = useMemo(
-    () => [...new Set(colors.map((c) => c.subCategory).filter(Boolean))].sort(),
+    () => [...new Set([...PRESET_SUB_CATEGORIES, ...colors.map((c) => c.subCategory).filter(Boolean)])].sort(),
     [colors]
   );
 

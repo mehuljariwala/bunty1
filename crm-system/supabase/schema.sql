@@ -95,6 +95,7 @@ CREATE TABLE sub_admins (
     name            text,
     password        text,
     email           text        UNIQUE,
+    role            text        DEFAULT 'sub-admin',
     allowed_pages   text[]      DEFAULT '{}',
     created_at      timestamptz DEFAULT now()
 );

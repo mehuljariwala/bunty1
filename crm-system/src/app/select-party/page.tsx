@@ -3,14 +3,15 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Search, MapPin } from "lucide-react";
-import { usePartiesQuery, useRoutesQuery, useRunningPartyNamesQuery } from "@/hooks/use-queries";
+import { usePartiesLiteQuery, useRoutesQuery, useRunningPartyNamesQuery, usePrefetchCreateOrder } from "@/hooks/use-queries";
 import type { Party } from "@/lib/types";
 
 export default function SelectPartyPage() {
   const router = useRouter();
-  const { data: parties = [], isLoading: partiesLoading } = usePartiesQuery();
+  const { data: parties = [], isLoading: partiesLoading } = usePartiesLiteQuery();
   const { data: routes = [], isLoading: routesLoading } = useRoutesQuery();
   const { data: runningPartyNames = new Set<string>(), isLoading: ordersLoading } = useRunningPartyNamesQuery();
+  const prefetchCreateOrder = usePrefetchCreateOrder();
   const loading = partiesLoading || routesLoading || ordersLoading;
   const [search, setSearch] = useState("");
 
@@ -104,6 +105,8 @@ export default function SelectPartyPage() {
                     <button
                       key={party.id}
                       onClick={() => handleSelect(party)}
+                      onMouseEnter={prefetchCreateOrder}
+                      onTouchStart={prefetchCreateOrder}
                       className="group text-left bg-white hover:bg-crm-primary-muted border border-crm-border/60 hover:border-crm-primary/40 rounded-xl overflow-hidden transition-all hover:shadow-sm active:scale-[0.97]"
                     >
                       <div className="px-3 py-2.5">

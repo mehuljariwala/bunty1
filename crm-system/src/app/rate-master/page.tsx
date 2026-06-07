@@ -14,6 +14,7 @@ import {
   Save,
 } from "lucide-react";
 import { updateParty } from "@/lib/parties";
+import { supabase } from "@/lib/supabase";
 import { usePartiesQuery, useColorsQuery, useInvalidate } from "@/hooks/use-queries";
 import type { Party, RateValues } from "@/lib/types";
 
@@ -302,19 +303,38 @@ export default function RateMasterPage(): React.JSX.Element {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Load default rates into common rate card on mount
   useEffect(() => {
     if (rateCategories.length > 0 && rateMaterials.length > 0 && Object.keys(rateCard).length === 0) {
-      setRateCard(buildEmptyRateCard(rateCategories, rateMaterials));
+      const defaultParty = parties.find((p) => p.name === "__DEFAULT_RATES__");
+      if (defaultParty && defaultParty.rates && Object.keys(defaultParty.rates).length > 0) {
+        // Merge default rates with empty card to ensure all categories/materials exist
+        const card = buildEmptyRateCard(rateCategories, rateMaterials);
+        for (const cat of Object.keys(defaultParty.rates)) {
+          const matchedCat = rateCategories.find((c) => c.toLowerCase() === cat.toLowerCase()) ?? cat;
+          if (!card[matchedCat]) card[matchedCat] = {};
+          for (const mat of Object.keys(defaultParty.rates[cat] ?? {})) {
+            const val = defaultParty.rates[cat]?.[mat];
+            if (val) card[matchedCat][mat] = val;
+          }
+        }
+        setRateCard(card);
+      } else {
+        setRateCard(buildEmptyRateCard(rateCategories, rateMaterials));
+      }
     }
-  }, [rateCategories, rateMaterials, rateCard]);
+  }, [rateCategories, rateMaterials, rateCard, parties]);
 
   const uniqueRoutes = useMemo(
     () => [...new Set(parties.map((p) => p.route).filter(Boolean))].sort(),
     [parties]
   );
 
+  // Filter out __DEFAULT_RATES__ system record
+  const visibleParties = useMemo(() => parties.filter((p) => p.name !== "__DEFAULT_RATES__"), [parties]);
+
   const filtered = useMemo(() => {
-    return parties.filter((p) => {
+    return visibleParties.filter((p) => {
       const q = search.toLowerCase();
       const matchesSearch =
         !q ||
@@ -323,14 +343,14 @@ export default function RateMasterPage(): React.JSX.Element {
       const matchesRoute = !activeRoute || p.route === activeRoute;
       return matchesSearch && matchesRoute;
     });
-  }, [parties, search, activeRoute]);
+  }, [visibleParties, search, activeRoute]);
 
   const allSelected = filtered.length > 0 && filtered.every((p) => selectedIds.has(p.id));
   const someSelected = filtered.some((p) => selectedIds.has(p.id));
 
   const selectedParties = useMemo(
-    () => parties.filter((p) => selectedIds.has(p.id)),
-    [parties, selectedIds]
+    () => visibleParties.filter((p) => selectedIds.has(p.id)),
+    [visibleParties, selectedIds]
   );
 
   function toggleSelectAll() {
@@ -415,8 +435,28 @@ export default function RateMasterPage(): React.JSX.Element {
     setCommonApplying(true);
     setCommonResult(null);
 
+    // Also save as default rates for temp invoice
+    try {
+      const { data: defaultParty } = await supabase
+        .from("parties")
+        .select("id")
+        .eq("name", "__DEFAULT_RATES__")
+        .limit(1)
+        .single();
+      if (defaultParty) {
+        await updateParty(defaultParty.id, { rates: rateCard });
+      } else {
+        await supabase.from("parties").insert({
+          name: "__DEFAULT_RATES__",
+          address: "System config - do not delete",
+          status: "Disable",
+          rates: rateCard,
+        });
+      }
+    } catch { /* ignore default rates save failure */ }
+
     const results = await Promise.all(
-      parties.map(async (party) => {
+      parties.filter((p) => p.name !== "__DEFAULT_RATES__").map(async (party) => {
         const merged: RateValues = {};
         for (const cat of rateCategories) {
           merged[cat] = {};
@@ -434,7 +474,7 @@ export default function RateMasterPage(): React.JSX.Element {
     );
 
     const success = results.filter(Boolean).length;
-    setCommonResult({ success, total: parties.length });
+    setCommonResult({ success, total: results.length });
     setTimeout(() => setCommonResult(null), 3000);
     setCommonApplying(false);
   }
@@ -461,7 +501,7 @@ export default function RateMasterPage(): React.JSX.Element {
           <div>
             <h2 className="text-[0.9rem] sm:text-[0.95rem] font-semibold text-crm-text">Common Rate Card</h2>
             <p className="text-[0.74rem] sm:text-[0.78rem] text-crm-text-muted mt-0.5">
-              Set rates and apply across all {parties.length} parties
+              Set rates and apply across all {visibleParties.length} parties
             </p>
           </div>
           {rateCardFilled > 0 && (
@@ -490,7 +530,7 @@ export default function RateMasterPage(): React.JSX.Element {
             ) : (
               <Save className="w-4 h-4" strokeWidth={2} />
             )}
-            {commonApplying ? "Applying..." : `Apply to All ${parties.length}`}
+            {commonApplying ? "Applying..." : `Apply to All ${visibleParties.length}`}
           </button>
         </div>
       </div>
