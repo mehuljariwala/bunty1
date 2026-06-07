@@ -18,7 +18,7 @@ export function usePartiesQuery() {
   return useQuery({
     queryKey: queryKeys.parties,
     queryFn: fetchParties,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 min — parties rarely change
   });
 }
 
@@ -26,7 +26,7 @@ export function useRoutesQuery() {
   return useQuery({
     queryKey: queryKeys.routes,
     queryFn: fetchRoutes,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 60 * 1000, // 1 hour — routes are very static
   });
 }
 
@@ -34,7 +34,7 @@ export function useOrdersQuery() {
   return useQuery({
     queryKey: queryKeys.orders,
     queryFn: fetchOrders,
-    staleTime: 30 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 min — orders change but realtime handles it
   });
 }
 
@@ -42,7 +42,7 @@ export function useColorsQuery() {
   return useQuery({
     queryKey: queryKeys.colors,
     queryFn: fetchColors,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 min — stock changes but not real-time critical
   });
 }
 

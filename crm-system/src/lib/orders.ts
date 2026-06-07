@@ -3,8 +3,7 @@ import type { Order, OrderItem } from "./types";
 
 const TABLE = "orders";
 
-let ordersCache: Order[] | null = null;
-let ordersCachePromise: Promise<Order[]> | null = null;
+// Caching handled by React Query — no manual cache needed
 
 /* ------------------------------------------------------------------ */
 /*  Mapping helpers                                                    */
@@ -217,18 +216,26 @@ export async function fetchRunningPartyNames(): Promise<Set<string>> {
 export function subscribeRunningOrders(callback: (orders: Order[]) => void): () => void {
   fetchOrdersByType("Running").then(callback);
 
+  // Debounce refetch to batch rapid changes (e.g., multiple stock updates)
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  const debouncedFetch = () => {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      fetchOrdersByType("Running").then(callback);
+    }, 500);
+  };
+
   const channel = supabase
     .channel("running-orders-realtime")
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: TABLE },
-      () => {
-        fetchOrdersByType("Running").then(callback);
-      },
+      debouncedFetch,
     )
     .subscribe();
 
   return () => {
+    if (debounceTimer) clearTimeout(debounceTimer);
     supabase.removeChannel(channel);
   };
 }

@@ -320,20 +320,20 @@ function CreateOrderPage() {
         .select('id')
         .single();
 
-      for (const sc of selectedColors) {
-        const colorDoc = colors.find(
-          (c) =>
-            c.name === sc.colour &&
-            c.category === sc.category &&
-            c.subCategory === sc.subCategory,
-        );
-        if (colorDoc) {
-          await supabase
+      // Batch all color stock updates in parallel
+      const stockUpdates = selectedColors
+        .map((sc) => {
+          const colorDoc = colors.find(
+            (c) => c.name === sc.colour && c.category === sc.category && c.subCategory === sc.subCategory,
+          );
+          if (!colorDoc) return null;
+          return supabase
             .from('colors')
             .update({ current_stock: colorDoc.currentStock - sc.deliveredQty })
             .eq('id', colorDoc.id);
-        }
-      }
+        })
+        .filter(Boolean);
+      await Promise.all(stockUpdates);
       invalidate.orders();
       invalidate.colors();
 
