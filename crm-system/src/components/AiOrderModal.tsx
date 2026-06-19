@@ -38,7 +38,7 @@ interface AiOrderModalProps {
   onApply: (items: SelectedColor[]) => void;
 }
 
-const PLACEHOLDER_TEXT = `5 TAR
+const PLACEHOLDER_TEXT = `5 TAR BULLET
 
 RED       :  1
 RAMA      :  1
@@ -48,7 +48,7 @@ BLACK     :  2
 MAHENDI   :  2
 SKY       :  1
 
-3 TAR
+3 TAR BULLET
 
 RED       :  2
 WHITE     :  1
@@ -65,14 +65,12 @@ RED       :  1
 BLACK     :  1`;
 
 const CATEGORY_COLORS: Record<string, string> = {
-  "3 Tar": "#f5956b",
-  "5 Tar": "#5b5fc7",
+  "3 Tar Bullet": "#f5956b",
+  "5 Tar Bullet": "#5b5fc7",
   "Yarn": "#36b49f",
   "3 Tar Button": "#e8b838",
   "5 Tar Button": "#9b59b6",
   "6 Tar Button": "#3498db",
-  "3 Tar Bullet": "#e74c3c",
-  "5 Tar Bullet": "#27ae60",
 };
 
 function EditableRow({

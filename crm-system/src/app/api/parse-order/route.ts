@@ -35,13 +35,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const prompt = `You are an order parser for a textile/lace business. Parse the following order text into structured JSON.
 
-The order text has CATEGORIES (like "5 TAR", "3 TAR", "Yarn", "3 Tar Button", "5 Tar Button", "6 Tar Button") as headers, followed by lines with a color name and quantity.
+The order text has CATEGORIES (like "3 TAR BULLET", "5 TAR BULLET", "Yarn", "3 Tar Button", "5 Tar Button", "6 Tar Button") as headers, followed by lines with a color name and quantity.
 
 AVAILABLE COLORS PER CATEGORY:
 ${colorsSection}
 
 RULES:
-1. Normalize categories: "5 TAR"/"5TAR"/"5 tar" → "5 Tar", "3 TAR" → "3 Tar", "YARN" → "Yarn", "3 tar buttan"/"3 TAR BUTTON" → "3 Tar Button", "5 tar buttan"/"5 TAR BUTTON" → "5 Tar Button", "6 tar buttan"/"6 TAR BUTTON" → "6 Tar Button", "3 tar bullet"/"3 TAR BULLET"/"3 TAR BULLT"/"3 tar bullt" → "3 Tar Bullet", "5 tar bullet"/"5 TAR BULLET"/"5 TAR BULLT"/"5 tar bullt" → "5 Tar Bullet"
+1. Normalize categories: "3 TAR"/"3TAR"/"3 tar"/"3 TAR BULLET"/"3 tar bullet"/"3 TAR BULLT"/"3 tar bullt" → "3 Tar Bullet", "5 TAR"/"5TAR"/"5 tar"/"5 TAR BULLET"/"5 tar bullet"/"5 TAR BULLT"/"5 tar bullt" → "5 Tar Bullet", "YARN" → "Yarn", "3 tar buttan"/"3 TAR BUTTON" → "3 Tar Button", "5 tar buttan"/"5 TAR BUTTON" → "5 Tar Button", "6 tar buttan"/"6 TAR BUTTON" → "6 Tar Button". IMPORTANT: a header containing "BUTTON"/"BUTTAN" is a Button category; a header containing "BULLET"/"BULLT" OR a plain "3 TAR"/"5 TAR" is a Bullet category — never confuse Button with Bullet.
 2. Match each color to the CLOSEST name from the available list for THAT category. Use aggressive fuzzy matching — customers frequently misspell colors. Consider phonetic similarity, missing/extra letters, swapped letters, and shorthand. Common corrections include:
    - "Yellow" → "Golden"
    - "pitch"/"peach" → "Pitch"
@@ -64,7 +64,7 @@ ${orderText}
 ---
 
 Return this exact JSON structure:
-{"items":[{"category":"5 Tar","colorName":"Red","quantity":1}]}`;
+{"items":[{"category":"5 Tar Bullet","colorName":"Red","quantity":1}]}`;
 
   try {
     const completion = await groq.chat.completions.create({

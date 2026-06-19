@@ -12,6 +12,8 @@ interface CategoryGroup {
 const CATEGORY_COLORS: Record<string, string> = {
   "3 Tar": "#f5956b",
   "5 Tar": "#5b5fc7",
+  "3 Tar Bullet": "#f5956b",
+  "5 Tar Bullet": "#5b5fc7",
   "Yarn": "#36b49f",
   "3 Tar Button": "#e8b838",
   "5 Tar Button": "#9b59b6",
