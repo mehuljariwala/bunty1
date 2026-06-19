@@ -3,7 +3,10 @@ import type { Order, OrderItem } from "./types";
 
 const TABLE = "orders";
 
-// Caching handled by React Query — no manual cache needed
+// Lightweight module-level cache used by fetchOrdersCached (CommandPalette).
+// React Query handles caching elsewhere; this backs the non-hook callers.
+let ordersCache: Order[] | null = null;
+let ordersCachePromise: Promise<Order[]> | null = null;
 
 /* ------------------------------------------------------------------ */
 /*  Mapping helpers                                                    */
