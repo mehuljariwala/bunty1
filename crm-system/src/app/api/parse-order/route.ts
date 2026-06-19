@@ -41,7 +41,7 @@ AVAILABLE COLORS PER CATEGORY:
 ${colorsSection}
 
 RULES:
-1. Normalize categories: "5 TAR"/"5TAR"/"5 tar" → "5 Tar", "3 TAR" → "3 Tar", "YARN" → "Yarn", "3 tar buttan"/"3 TAR BUTTON" → "3 Tar Button", "5 tar buttan"/"5 TAR BUTTON" → "5 Tar Button", "6 tar buttan"/"6 TAR BUTTON" → "6 Tar Button"
+1. Normalize categories: "5 TAR"/"5TAR"/"5 tar" → "5 Tar", "3 TAR" → "3 Tar", "YARN" → "Yarn", "3 tar buttan"/"3 TAR BUTTON" → "3 Tar Button", "5 tar buttan"/"5 TAR BUTTON" → "5 Tar Button", "6 tar buttan"/"6 TAR BUTTON" → "6 Tar Button", "3 tar bullet"/"3 TAR BULLET"/"3 TAR BULLT"/"3 tar bullt" → "3 Tar Bullet", "5 tar bullet"/"5 TAR BULLET"/"5 TAR BULLT"/"5 tar bullt" → "5 Tar Bullet"
 2. Match each color to the CLOSEST name from the available list for THAT category. Use aggressive fuzzy matching — customers frequently misspell colors. Consider phonetic similarity, missing/extra letters, swapped letters, and shorthand. Common corrections include:
    - "Yellow" → "Golden"
    - "pitch"/"peach" → "Pitch"
@@ -74,7 +74,9 @@ Return this exact JSON structure:
     });
 
     const text = (completion.choices[0]?.message?.content ?? "").trim();
-    const jsonStr = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    let jsonStr = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (jsonMatch) jsonStr = jsonMatch[0];
     const parsed = JSON.parse(jsonStr) as {
       items: { category: string; colorName: string; quantity: number }[];
     };

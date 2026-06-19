@@ -137,7 +137,7 @@ function CreateOrderPage() {
     });
   }, [editOrderId, parties, colors]);
 
-  const PRESET_CATEGORIES = ["3 Tar", "5 Tar", "Yarn", "3 Tar Button", "5 Tar Button", "6 Tar Button"];
+  const PRESET_CATEGORIES = ["3 Tar", "5 Tar", "Yarn", "3 Tar Button", "5 Tar Button", "6 Tar Button", "3 Tar Bullet", "5 Tar Bullet"];
 
   const categories = useMemo(() => {
     const all = [...new Set([...PRESET_CATEGORIES, ...colors.map((c) => c.category)])];
@@ -543,7 +543,7 @@ function CreateOrderPage() {
                   (s, c) => s + c.deliveredQty,
                   0,
                 );
-                const CATEGORY_COLORS: Record<string, string> = { "3 Tar": "#f5956b", "5 Tar": "#5b5fc7", "Yarn": "#36b49f", "3 Tar Button": "#e8b838", "5 Tar Button": "#9b59b6", "6 Tar Button": "#3498db" };
+                const CATEGORY_COLORS: Record<string, string> = { "3 Tar": "#f5956b", "5 Tar": "#5b5fc7", "Yarn": "#36b49f", "3 Tar Button": "#e8b838", "5 Tar Button": "#9b59b6", "6 Tar Button": "#3498db", "3 Tar Bullet": "#e74c3c", "5 Tar Bullet": "#27ae60" };
                 const headerBg = CATEGORY_COLORS[cat] ?? "#5b5fc7";
                 return (
                   <div key={cat}>
