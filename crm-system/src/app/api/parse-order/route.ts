@@ -55,7 +55,8 @@ RULES:
    Always pick the closest matching color from the available list even if the spelling is very different. Think about what the customer likely meant based on sound and context.
 3. ONLY use color names from the available list above. If a color truly cannot be matched to any name in the list, use the original text as-is.
 4. NEVER output duplicate entries — each color should appear at most ONCE per category. If the same color appears multiple times in the input, sum up the quantities.
-5. Return ONLY valid JSON, no markdown, no code fences.
+5. ALWAYS output every color line from the order, even if the category has NO available colors listed above (use the original color text as-is for that category). Never refuse, never explain, never skip lines.
+6. Return ONLY valid JSON, no markdown, no code fences, no explanatory text.
 
 ORDER TEXT:
 ---
@@ -71,15 +72,26 @@ Return this exact JSON structure:
       model: "meta-llama/llama-4-scout-17b-16e-instruct",
       temperature: 0,
       max_tokens: 4096,
+      response_format: { type: "json_object" },
     });
 
     const text = (completion.choices[0]?.message?.content ?? "").trim();
     let jsonStr = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
     const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
     if (jsonMatch) jsonStr = jsonMatch[0];
-    const parsed = JSON.parse(jsonStr) as {
-      items: { category: string; colorName: string; quantity: number }[];
-    };
+
+    let parsed: { items: { category: string; colorName: string; quantity: number }[] };
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      return NextResponse.json(
+        { error: "AI could not parse this order. Please check the format and try again." },
+        { status: 422 },
+      );
+    }
+    if (!parsed.items || !Array.isArray(parsed.items)) {
+      parsed = { items: [] };
+    }
 
     const deduped = new Map<string, { category: string; colorName: string; quantity: number }>();
     for (const item of parsed.items) {
