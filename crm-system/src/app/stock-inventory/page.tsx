@@ -255,7 +255,7 @@ export default function StockInventoryPage(): React.JSX.Element {
     });
   }, [dbStock]);
 
-  const PRESET_CATEGORIES = ["3 Tar", "5 Tar", "Yarn", "3 Tar Button", "5 Tar Button", "6 Tar Button"];
+  const PRESET_CATEGORIES = ["3 Tar Bullet", "5 Tar Bullet", "Yarn", "3 Tar Button", "5 Tar Button", "6 Tar Button"];
 
   const categories = useMemo(() => {
     const all = [...new Set([...PRESET_CATEGORIES, ...localStock.map((s) => s.category)])];
@@ -408,6 +408,29 @@ export default function StockInventoryPage(): React.JSX.Element {
 
   const changeCount = pendingChanges.size;
 
+  const footerStats = useMemo(() => {
+    const items = localStock.filter((i) => i.category === activeTab);
+    let added = 0;
+    const changes: { id: string; name: string; hex: string; delta: number }[] = [];
+    for (const [id, c] of pendingChanges.entries()) {
+      if (c.category === activeTab) {
+        const delta = c.updated - c.original;
+        added += delta;
+        if (delta !== 0) changes.push({ id, name: c.name, hex: c.hex, delta });
+      }
+    }
+    changes.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+    return {
+      count: items.length,
+      totalStock: items.reduce((s, i) => s + i.currentStock, 0),
+      added,
+      changed: changes.length,
+      changes,
+      belowMin: items.filter((i) => i.currentStock >= 0 && i.currentStock < i.minStock).length,
+      negative: items.filter((i) => i.currentStock < 0).length,
+    };
+  }, [localStock, activeTab, pendingChanges]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -432,32 +455,33 @@ export default function StockInventoryPage(): React.JSX.Element {
   }
 
   return (
-    <div ref={contentRef} className="flex flex-col flex-1">
-      <div className="flex flex-col flex-1">
+    <div ref={contentRef} className="flex flex-col flex-1 min-w-0">
+      <div className="flex flex-col flex-1 min-w-0">
 
         {/* Top bar: Save button when changes exist */}
         {changeCount > 0 && (
-          <div className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-5 py-3 bg-crm-primary-muted/80 backdrop-blur-sm border-b border-crm-border/40 animate-[fadeIn_150ms_ease-out]">
-            <p className="text-[0.82rem] font-medium text-crm-text">
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-crm-primary text-white text-[0.68rem] font-bold mr-2">
+          <div className="sticky top-0 z-20 flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-crm-primary-muted/80 backdrop-blur-sm border-b border-crm-border/40 animate-[fadeIn_150ms_ease-out]">
+            <p className="text-[0.8rem] sm:text-[0.82rem] font-medium text-crm-text min-w-0 truncate">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-crm-primary text-white text-[0.68rem] font-bold mr-2 shrink-0">
                 {changeCount}
               </span>
               unsaved change{changeCount !== 1 && "s"}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={discardChanges}
-                className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-crm-border text-[0.78rem] font-medium text-crm-text-muted hover:bg-crm-card transition-colors"
+                className="flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-lg border border-crm-border text-[0.78rem] font-medium text-crm-text-muted hover:bg-crm-card transition-colors"
               >
                 <X className="w-3.5 h-3.5" strokeWidth={2} />
-                Discard
+                <span className="hidden sm:inline">Discard</span>
               </button>
               <button
                 onClick={() => setSummaryOpen(true)}
-                className="flex items-center gap-1.5 h-8 px-4 rounded-lg bg-crm-primary text-white text-[0.78rem] font-semibold hover:bg-[#4845a2] transition-colors shadow-sm"
+                className="flex items-center gap-1.5 h-8 px-3 sm:px-4 rounded-lg bg-crm-primary text-white text-[0.78rem] font-semibold hover:bg-[#4845a2] transition-colors shadow-sm"
               >
                 <Save className="w-3.5 h-3.5" strokeWidth={2} />
-                Review & Save
+                <span className="sm:hidden">Save</span>
+                <span className="hidden sm:inline">Review &amp; Save</span>
               </button>
             </div>
           </div>
@@ -477,9 +501,7 @@ export default function StockInventoryPage(): React.JSX.Element {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0 sm:gap-3 px-3 sm:px-5 pt-1 sm:pt-4 pb-0 border-b border-crm-border/40 shrink-0">
           <div className="flex gap-0 overflow-x-auto pb-0">
             {categories.map((cat) => {
-              const t = tabTotals[cat];
               const active = activeTab === cat;
-              const catChanges = Array.from(pendingChanges.values()).filter((c) => c.category === cat).length;
               return (
                 <button
                   key={cat}
@@ -496,6 +518,22 @@ export default function StockInventoryPage(): React.JSX.Element {
             })}
           </div>
 
+          {/* Mobile search */}
+          <div className="relative pb-2 pt-1 shrink-0 sm:hidden">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-crm-text-muted"
+              strokeWidth={1.8}
+            />
+            <input
+              type="text"
+              placeholder="Search colour..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full h-9 pl-9 pr-3 rounded-lg bg-crm-bg/40 border border-crm-border text-[0.85rem] text-crm-text placeholder:text-crm-text-muted focus:outline-none focus:ring-2 focus:ring-crm-primary/30 focus:border-crm-primary/50 transition-all"
+            />
+          </div>
+
+          {/* Desktop search */}
           <div className="relative pb-2 shrink-0 hidden sm:block">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-crm-text-muted"
@@ -512,153 +550,17 @@ export default function StockInventoryPage(): React.JSX.Element {
         </div>
 
         {/* Desktop table */}
-        <div className="hidden sm:block overflow-y-auto overflow-x-auto flex-1 min-h-0">
+        <div className="hidden sm:block overflow-y-auto flex-1 min-h-0">
           <table className="w-full">
             <thead>
               <tr className="border-b-2 border-crm-border">
-                <th className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10" colSpan={2}>
+                <th colSpan={2} className="text-left px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">
                   Colour
                 </th>
-                <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">
-                  Min
-                </th>
-                <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">
-                  Max
-                </th>
-                <th className="text-right px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">
-                  Stock
-                </th>
-                <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {tabItems.map((item, idx) => {
-                const pct = stockPct(item.currentStock, item.maxStock);
-                const minPct = stockPct(item.minStock, item.maxStock);
-                const highlighted = highlightKey === item.id;
-                const hasChange = pendingChanges.has(item.id);
-                const isLastTouched = lastTouchedId === item.id;
-                const rowBase =
-                  idx % 2 === 0 ? "bg-crm-bg/30" : "bg-crm-card";
-
-                return (
-                  <tr
-                    key={item.id}
-                    data-stock-key={item.id}
-                    className={`border-b border-crm-border/40 transition-colors hover:bg-crm-primary-muted/20 ${
-                      highlighted
-                        ? "!bg-crm-primary-muted/40 ring-2 ring-inset ring-crm-primary/40"
-                        : isLastTouched
-                        ? "!bg-emerald-100/70 !border-b-emerald-300/50"
-                        : rowBase
-                    }`}
-                  >
-                    <td className="pl-5 py-3 w-10">
-                      <div
-                        className={`w-7 h-7 rounded-lg shrink-0 ${
-                          isLight(item.hex) ? "border border-crm-border" : ""
-                        }`}
-                        style={{ backgroundColor: item.hex }}
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2">
-                        <p className="text-[0.84rem] text-crm-text font-semibold">
-                          {item.name}
-                        </p>
-                        {hasChange && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-crm-primary shrink-0" />
-                        )}
-                      </div>
-                      <div className="relative h-1.5 rounded-full bg-crm-bg overflow-hidden max-w-[180px] mt-1.5">
-                        <div
-                          className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${barColor(
-                            item.currentStock,
-                            item.minStock,
-                            item.maxStock
-                          )}`}
-                          style={{
-                            width: item.currentStock < 0 ? "100%" : `${pct}%`,
-                          }}
-                        />
-                        <div
-                          className="absolute top-0 bottom-0 w-px bg-crm-border"
-                          style={{ left: `${minPct}%` }}
-                          title={`Min: ${item.minStock}`}
-                        />
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-center text-[0.84rem] text-crm-text-muted tabular-nums">
-                      {item.minStock}
-                    </td>
-                    <td className="px-5 py-3 text-center text-[0.84rem] text-crm-text-muted tabular-nums">
-                      {item.maxStock}
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <span
-                        className={`text-[0.88rem] font-bold tabular-nums ${stockValueColor(
-                          item.currentStock,
-                          item.minStock
-                        )}`}
-                      >
-                        {item.currentStock}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          onClick={() => adjustStock(item.id, -1)}
-                          className="flex items-center gap-0.5 h-7 px-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors shrink-0"
-                        >
-                          <Minus className="w-3.5 h-3.5" strokeWidth={2.2} />
-                          <span className="text-[0.68rem] font-bold">1</span>
-                        </button>
-                        <input
-                          type="number"
-                          value={editingId === item.id ? editValue : getDelta(item.id)}
-                          onFocus={() => startEdit(item.id)}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && commitEdit(item.id)
-                          }
-                          onBlur={() => commitEdit(item.id)}
-                          className="w-16 h-7 text-center rounded-lg bg-crm-bg/50 border border-crm-border text-[0.75rem] font-bold text-crm-text focus:outline-none focus:ring-1 focus:ring-crm-primary/30 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <button
-                          onClick={() => adjustStock(item.id, 3)}
-                          className="flex items-center gap-0.5 h-7 px-2 rounded-lg bg-crm-primary-muted text-crm-primary hover:bg-crm-primary-muted/70 transition-colors shrink-0"
-                        >
-                          <Plus className="w-3.5 h-3.5" strokeWidth={2.2} />
-                          <span className="text-[0.68rem] font-bold">3</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {tabItems.length === 0 && (
-            <div className="py-14 text-center">
-              <Package className="w-8 h-8 text-crm-border mx-auto mb-2" strokeWidth={1.5} />
-              <p className="text-[0.9rem] text-crm-text-muted">No colours found</p>
-              <p className="text-[0.78rem] text-crm-border mt-1">Try a different search</p>
-            </div>
-          )}
-        </div>
-
-        {/* Mobile table */}
-        <div className="sm:hidden overflow-y-auto overflow-x-auto flex-1 min-h-0">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b-2 border-crm-border">
-                <th className="text-left pl-3 pr-1 py-2.5 text-[0.72rem] font-bold text-crm-text w-8 bg-crm-card sticky top-0 z-10">#</th>
-                <th className="text-left px-2 py-2.5 text-[0.72rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">Colour Name</th>
-                <th className="text-center px-2 py-2.5 text-[0.72rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">Stock</th>
-                <th className="text-center px-2 pr-3 py-2.5 text-[0.72rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">Action</th>
+                <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">Min</th>
+                <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">Max</th>
+                <th className="text-right px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">Stock</th>
+                <th className="text-center px-5 py-3.5 text-[0.8rem] font-bold text-crm-text bg-crm-card sticky top-0 z-10">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -669,87 +571,56 @@ export default function StockInventoryPage(): React.JSX.Element {
                 const hasChange = pendingChanges.has(item.id);
                 const isLastTouched = lastTouchedId === item.id;
                 const rowBase = idx % 2 === 0 ? "bg-crm-bg/30" : "bg-crm-card";
-
                 return (
                   <tr
                     key={item.id}
                     data-stock-key={item.id}
-                    className={`border-b border-crm-border/40 transition-colors ${
-                      highlighted
-                        ? "!bg-crm-primary-muted/40 ring-2 ring-inset ring-crm-primary/40"
-                        : isLastTouched
-                        ? "!bg-emerald-100/70 !border-b-emerald-300/50"
-                        : rowBase
-                    }`}
+                    className={`border-b border-crm-border/40 transition-colors hover:bg-crm-primary-muted/20 ${
+                      highlighted ? "!bg-crm-primary-muted/40 ring-2 ring-inset ring-crm-primary/40"
+                        : isLastTouched ? "!bg-emerald-100/70 !border-b-emerald-300/50"
+                        : rowBase}`}
                   >
-                    <td className="pl-3 pr-1 py-2 align-middle">
-                      <div
-                        className={`w-7 h-7 rounded-lg shrink-0 ${
-                          isLight(item.hex) ? "border border-crm-border" : ""
-                        }`}
-                        style={{ backgroundColor: item.hex }}
-                      />
+                    <td className="pl-5 py-3 w-10">
+                      <div className={`w-7 h-7 rounded-lg shrink-0 ${isLight(item.hex) ? "border border-crm-border" : ""}`}
+                        style={{ backgroundColor: item.hex }} />
                     </td>
-                    <td className="px-2 py-2 align-middle">
-                      <div className="flex items-center gap-1">
-                        <span className="text-[0.78rem] font-semibold text-crm-text">
-                          {item.name}
-                        </span>
-                        {hasChange && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-crm-primary shrink-0" />
-                        )}
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[0.84rem] text-crm-text font-semibold">{item.name}</p>
+                        {hasChange && <span className="w-1.5 h-1.5 rounded-full bg-crm-primary shrink-0" />}
                       </div>
-                      <div className="relative h-1 rounded-full bg-crm-bg overflow-hidden mt-1 max-w-[120px]">
-                        <div
-                          className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${barColor(
-                            item.currentStock,
-                            item.minStock,
-                            item.maxStock
-                          )}`}
-                          style={{
-                            width: item.currentStock < 0 ? "100%" : `${pct}%`,
-                          }}
-                        />
-                        <div
-                          className="absolute top-0 bottom-0 w-px bg-crm-border"
-                          style={{ left: `${minPct}%` }}
-                        />
+                      <div className="relative h-1.5 rounded-full bg-crm-bg overflow-hidden max-w-[180px] mt-1.5">
+                        <div className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${barColor(item.currentStock, item.minStock, item.maxStock)}`}
+                          style={{ width: item.currentStock < 0 ? "100%" : `${pct}%` }} />
+                        <div className="absolute top-0 bottom-0 w-px bg-crm-border" style={{ left: `${minPct}%` }} title={`Min: ${item.minStock}`} />
                       </div>
                     </td>
-                    <td className="px-2 py-2 text-center align-middle">
-                      <span
-                        className={`text-[0.84rem] font-bold tabular-nums ${stockValueColor(
-                          item.currentStock,
-                          item.minStock
-                        )}`}
-                      >
+                    <td className="px-5 py-3 text-center text-[0.84rem] text-crm-text-muted tabular-nums">{item.minStock}</td>
+                    <td className="px-5 py-3 text-center text-[0.84rem] text-crm-text-muted tabular-nums">{item.maxStock}</td>
+                    <td className="px-5 py-3 text-right">
+                      <span className={`text-[0.88rem] font-bold tabular-nums ${stockValueColor(item.currentStock, item.minStock)}`}>
                         {item.currentStock}
                       </span>
                     </td>
-                    <td className="px-2 pr-3 py-2 align-middle">
-                      <div className="flex items-center justify-center gap-0.5">
-                        <button
-                          onClick={() => adjustStock(item.id, -1)}
-                          className="flex items-center justify-center w-7 h-7 rounded-md bg-red-50 text-red-500 active:bg-red-100 transition-colors"
-                        >
-                          <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                    <td className="px-5 py-3">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button onClick={() => adjustStock(item.id, -1)}
+                          className="flex items-center gap-0.5 h-7 px-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors shrink-0">
+                          <Minus className="w-3.5 h-3.5" strokeWidth={2.2} />
+                          <span className="text-[0.68rem] font-bold">1</span>
                         </button>
-                        <input
-                          type="number"
+                        <input type="number"
                           value={editingId === item.id ? editValue : getDelta(item.id)}
                           onFocus={() => startEdit(item.id)}
                           onChange={(e) => setEditValue(e.target.value)}
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && commitEdit(item.id)
-                          }
+                          onKeyDown={(e) => e.key === "Enter" && commitEdit(item.id)}
                           onBlur={() => commitEdit(item.id)}
-                          className="w-10 h-7 text-center rounded-md bg-crm-bg/50 border border-crm-border text-[0.75rem] font-bold text-crm-text focus:outline-none focus:ring-1 focus:ring-crm-primary/30 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-16 h-7 text-center rounded-lg bg-crm-bg/50 border border-crm-border text-[0.75rem] font-bold text-crm-text focus:outline-none focus:ring-1 focus:ring-crm-primary/30 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
-                        <button
-                          onClick={() => adjustStock(item.id, 3)}
-                          className="flex items-center justify-center w-7 h-7 rounded-md bg-crm-primary-muted text-crm-primary active:bg-crm-primary-muted/70 transition-colors"
-                        >
-                          <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                        <button onClick={() => adjustStock(item.id, 3)}
+                          className="flex items-center gap-0.5 h-7 px-2 rounded-lg bg-crm-primary-muted text-crm-primary hover:bg-crm-primary-muted/70 transition-colors shrink-0">
+                          <Plus className="w-3.5 h-3.5" strokeWidth={2.2} />
+                          <span className="text-[0.68rem] font-bold">3</span>
                         </button>
                       </div>
                     </td>
@@ -757,8 +628,58 @@ export default function StockInventoryPage(): React.JSX.Element {
                 );
               })}
             </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-crm-border">
+                <td colSpan={4} className="px-5 py-2 bg-crm-card sticky bottom-0 z-10 align-middle">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2 flex-wrap text-[0.78rem]">
+                      <span className="text-crm-text-muted">
+                        <span className="font-semibold text-crm-text">{footerStats.count}</span> colours in{" "}
+                        <span className="font-semibold text-crm-text">{activeTab}</span>
+                      </span>
+                      {footerStats.changed > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-crm-primary-muted text-crm-primary font-semibold">{footerStats.changed} changed</span>}
+                      {footerStats.belowMin > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 font-semibold">{footerStats.belowMin} below min</span>}
+                      {footerStats.negative > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-semibold">{footerStats.negative} negative</span>}
+                    </div>
+                    {footerStats.changes.length > 0 && (
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
+                        <span className="text-[0.62rem] font-bold uppercase tracking-wide text-crm-text-muted shrink-0">Added</span>
+                        {footerStats.changes.map((c) => (
+                          <span key={c.id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-crm-bg/60 border border-crm-border/60 shrink-0">
+                            <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${isLight(c.hex) ? "border border-crm-border" : ""}`} style={{ backgroundColor: c.hex }} />
+                            <span className="text-[0.72rem] font-medium text-crm-text whitespace-nowrap">{c.name}</span>
+                            <span className={`text-[0.72rem] font-bold tabular-nums ${c.delta > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                              {c.delta > 0 ? "+" : ""}{c.delta}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td className="px-5 py-2.5 text-right bg-crm-card sticky bottom-0 z-10 align-middle">
+                  <div className="flex flex-col items-end leading-tight">
+                    <span className="text-[0.6rem] uppercase tracking-wide text-crm-text-muted">Total Stock</span>
+                    <span className={`text-[0.95rem] font-bold tabular-nums ${footerStats.totalStock < 0 ? "text-red-500" : "text-crm-text"}`}>
+                      {footerStats.totalStock.toLocaleString()}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-5 py-2.5 bg-crm-card sticky bottom-0 z-10 align-middle">
+                  {footerStats.changed > 0 ? (
+                    <div className="flex flex-col items-center leading-tight">
+                      <span className="text-[0.6rem] uppercase tracking-wide text-crm-text-muted">Added</span>
+                      <span className={`text-[0.95rem] font-bold tabular-nums ${footerStats.added > 0 ? "text-emerald-600" : footerStats.added < 0 ? "text-red-500" : "text-crm-text-muted"}`}>
+                        {footerStats.added > 0 ? "+" : ""}{footerStats.added.toLocaleString()}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="block text-center text-[0.72rem] text-crm-border">—</span>
+                  )}
+                </td>
+              </tr>
+            </tfoot>
           </table>
-
           {tabItems.length === 0 && (
             <div className="py-14 text-center">
               <Package className="w-8 h-8 text-crm-border mx-auto mb-2" strokeWidth={1.5} />
@@ -768,23 +689,131 @@ export default function StockInventoryPage(): React.JSX.Element {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-crm-border bg-crm-card shrink-0">
-          <p className="text-[0.78rem] text-crm-text-muted">
-            {tabItems.length} colours in{" "}
-            <span className="font-semibold text-crm-text">{activeTab}</span>
-          </p>
-          {tabTotals[activeTab] && (
-            <p
-              className={`text-[0.82rem] font-bold tabular-nums ${
-                tabTotals[activeTab].total < 0
-                  ? "text-red-500"
-                  : "text-crm-text"
-              }`}
-            >
-              Total: {tabTotals[activeTab].total.toLocaleString()}
-            </p>
-          )}
+        {/* Mobile compact table */}
+        <div className="sm:hidden flex flex-col flex-1 min-h-0 min-w-0">
+          <div className="overflow-y-auto flex-1 min-h-0">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b-2 border-crm-border">
+                  <th colSpan={2} className="text-left pl-3 pr-1 py-2 text-[0.66rem] font-bold uppercase tracking-wide text-crm-text-muted bg-crm-card sticky top-0 z-10">Colour</th>
+                  <th className="text-right px-1 py-2 text-[0.66rem] font-bold uppercase tracking-wide text-crm-text-muted bg-crm-card sticky top-0 z-10">Stk</th>
+                  <th className="text-center px-1 pr-2 py-2 text-[0.66rem] font-bold uppercase tracking-wide text-crm-text-muted bg-crm-card sticky top-0 z-10">Adjust</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tabItems.map((item, idx) => {
+                  const highlighted = highlightKey === item.id;
+                  const hasChange = pendingChanges.has(item.id);
+                  const isLastTouched = lastTouchedId === item.id;
+                  const rowBase = idx % 2 === 0 ? "bg-crm-bg/30" : "bg-crm-card";
+                  return (
+                    <tr
+                      key={item.id}
+                      data-stock-key={item.id}
+                      className={`border-b border-crm-border/40 ${
+                        highlighted ? "!bg-crm-primary-muted/40 ring-2 ring-inset ring-crm-primary/40"
+                          : isLastTouched ? "!bg-emerald-100/70"
+                          : rowBase}`}
+                    >
+                      {/* swatch */}
+                      <td className="pl-3 pr-1 py-1.5 w-8 align-middle">
+                        <div className={`w-6 h-6 rounded-md shrink-0 ${isLight(item.hex) ? "border border-crm-border" : ""}`}
+                          style={{ backgroundColor: item.hex }} />
+                      </td>
+                      {/* name + min/max */}
+                      <td className="px-1 py-1.5 align-middle">
+                        <div className="flex items-center gap-1">
+                          <span className="text-[0.8rem] font-semibold text-crm-text truncate max-w-[120px]">{item.name}</span>
+                          {hasChange && <span className="w-1.5 h-1.5 rounded-full bg-crm-primary shrink-0" />}
+                        </div>
+                        {/* <span className="text-[0.58rem] text-crm-text-muted tabular-nums">{item.minStock}–{item.maxStock}</span> */}
+                      </td>
+                      {/* stock */}
+                      <td className="px-1 py-1.5 text-right align-middle">
+                        <span className={`text-[0.85rem] font-bold tabular-nums ${stockValueColor(item.currentStock, item.minStock)}`}>
+                          {item.currentStock}
+                        </span>
+                      </td>
+                      {/* adjust */}
+                      <td className="px-1 pr-2 py-1.5 align-middle">
+                        <div className="flex items-center justify-end gap-0.5">
+                          <button onClick={() => adjustStock(item.id, -1)}
+                            className="flex items-center justify-center w-7 h-7 rounded-md bg-red-50 text-red-500 active:bg-red-100 transition-colors shrink-0">
+                            <Minus className="w-3.5 h-3.5" strokeWidth={2.4} />
+                          </button>
+                          <input
+                            type="number"
+                            value={editingId === item.id ? editValue : getDelta(item.id)}
+                            onFocus={() => startEdit(item.id)}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && commitEdit(item.id)}
+                            onBlur={() => commitEdit(item.id)}
+                            className="w-9 h-7 text-center rounded-md bg-crm-bg/50 border border-crm-border text-[0.72rem] font-bold text-crm-text focus:outline-none focus:ring-1 focus:ring-crm-primary/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <button onClick={() => adjustStock(item.id, 3)}
+                            className="flex items-center justify-center w-7 h-7 rounded-md bg-crm-primary-muted text-crm-primary active:bg-crm-primary-muted/70 transition-colors shrink-0">
+                            <Plus className="w-3.5 h-3.5" strokeWidth={2.4} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {tabItems.length === 0 && (
+              <div className="py-14 text-center">
+                <Package className="w-8 h-8 text-crm-border mx-auto mb-2" strokeWidth={1.5} />
+                <p className="text-[0.9rem] text-crm-text-muted">No colours found</p>
+                <p className="text-[0.78rem] text-crm-border mt-1">Try a different search</p>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile sticky footer */}
+          <div className="shrink-0 border-t-2 border-crm-border bg-crm-card px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap text-[0.72rem] min-w-0">
+                <span className="text-crm-text-muted">
+                  <span className="font-semibold text-crm-text">{footerStats.count}</span> in{" "}
+                  <span className="font-semibold text-crm-text">{activeTab}</span>
+                </span>
+                {footerStats.changed > 0 && <span className="px-1.5 py-0.5 rounded-full bg-crm-primary-muted text-crm-primary font-semibold">{footerStats.changed} chg</span>}
+                {footerStats.belowMin > 0 && <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-600 font-semibold">{footerStats.belowMin} low</span>}
+                {footerStats.negative > 0 && <span className="px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 font-semibold">{footerStats.negative} neg</span>}
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="flex flex-col items-center leading-tight">
+                  <span className="text-[0.55rem] uppercase tracking-wide text-crm-text-muted">Total</span>
+                  <span className={`text-[0.88rem] font-bold tabular-nums ${footerStats.totalStock < 0 ? "text-red-500" : "text-crm-text"}`}>
+                    {footerStats.totalStock.toLocaleString()}
+                  </span>
+                </div>
+                {footerStats.changed > 0 && (
+                  <div className="flex flex-col items-center leading-tight">
+                    <span className="text-[0.55rem] uppercase tracking-wide text-crm-text-muted">Added</span>
+                    <span className={`text-[0.88rem] font-bold tabular-nums ${footerStats.added > 0 ? "text-emerald-600" : footerStats.added < 0 ? "text-red-500" : "text-crm-text-muted"}`}>
+                      {footerStats.added > 0 ? "+" : ""}{footerStats.added.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            {footerStats.changes.length > 0 && (
+              <div className="flex items-center gap-1 overflow-x-auto mt-1.5 pb-0.5 [scrollbar-width:thin]">
+                {footerStats.changes.map((c) => (
+                  <span key={c.id} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-crm-bg/60 border border-crm-border/60 shrink-0">
+                    <span className={`w-2 h-2 rounded-sm shrink-0 ${isLight(c.hex) ? "border border-crm-border" : ""}`} style={{ backgroundColor: c.hex }} />
+                    <span className="text-[0.66rem] font-medium text-crm-text whitespace-nowrap">{c.name}</span>
+                    <span className={`text-[0.66rem] font-bold tabular-nums ${c.delta > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                      {c.delta > 0 ? "+" : ""}{c.delta}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

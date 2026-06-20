@@ -58,10 +58,10 @@ export default function AuthGate({ children }: { children: ReactNode }): React.R
 
   return (
     <ActivityTrackerProvider>
-      <div className="flex min-h-screen">
+      <div className="flex h-screen overflow-hidden">
         <Sidebar />
         <MainContent>
-          <main className="flex-1 flex flex-col px-2 sm:px-3 lg:px-4 py-2 sm:py-3">{children}</main>
+          <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-x-hidden overflow-y-auto px-2 sm:px-3 lg:px-4 py-2 sm:py-3">{children}</main>
         </MainContent>
       </div>
       <CommandPalette />

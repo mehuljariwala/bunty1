@@ -38,6 +38,7 @@ export default function TempInvoicePage({ params }: { params: Promise<{ id: stri
   const [error, setError] = useState<string | null>(null);
   const [partyRates, setPartyRates] = useState<Record<string, Record<string, string>>>({});
   const [defaultRates, setDefaultRates] = useState<Record<string, Record<string, string>>>({});
+  const [partyAddress, setPartyAddress] = useState({ en: "", gu: "", hi: "" });
 
   // Bag modal state
   interface BagRow { bag: string; theli: string; cartoon: string }
@@ -122,12 +123,17 @@ export default function TempInvoicePage({ params }: { params: Promise<{ id: stri
 
         // Fetch party rates + default rates in parallel
         const [partyRes, defaultRes] = await Promise.all([
-          supabase.from("parties").select("rates").eq("name", data.party_name).limit(1).single(),
+          supabase.from("parties").select("rates,address,address_gu,address_hi").eq("name", data.party_name).limit(1).single(),
           supabase.from("parties").select("rates").eq("name", "__DEFAULT_RATES__").limit(1).single(),
         ]);
         if (partyRes.data?.rates && typeof partyRes.data.rates === "object") {
           setPartyRates(partyRes.data.rates as Record<string, Record<string, string>>);
         }
+        setPartyAddress({
+          en: (partyRes.data?.address as string) || data.party_address || "",
+          gu: (partyRes.data?.address_gu as string) || data.party_address_gu || "",
+          hi: (partyRes.data?.address_hi as string) || "",
+        });
         if (defaultRes.data?.rates && typeof defaultRes.data.rates === "object") {
           setDefaultRates(defaultRes.data.rates as Record<string, Record<string, string>>);
         }
@@ -371,6 +377,19 @@ export default function TempInvoicePage({ params }: { params: Promise<{ id: stri
             {/* Challan Header */}
             <div className="text-center mb-4">
               <h1 className="text-xl font-bold text-crm-text tracking-wider">CHALLAN</h1>
+              {(partyAddress.gu || partyAddress.hi || partyAddress.en) && (
+                <div className="mt-1.5 space-y-0.5">
+                  {partyAddress.gu && (
+                    <p className="text-sm font-semibold text-crm-text">{partyAddress.gu}</p>
+                  )}
+                  {partyAddress.hi && (
+                    <p className="text-sm font-semibold text-crm-text">{partyAddress.hi}</p>
+                  )}
+                  {!partyAddress.gu && !partyAddress.hi && partyAddress.en && (
+                    <p className="text-sm font-semibold text-crm-text">{partyAddress.en}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
