@@ -4,15 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { X, Loader2, ImageIcon, CheckCircle2, Clock } from "lucide-react";
 import { subscribePhotos, markPhotoComplete } from "@/lib/photos";
 import BillLayout from "@/components/BillLayout";
+import { CATEGORY_COLORS } from "@/lib/colors";
 import type { PhotoRecord } from "@/lib/types";
-
-const CATEGORY_COLORS: Record<string, string> = {
-  "3 Tar": "#f5956b",
-  "5 Tar": "#5b5fc7",
-  "3 Tar Bullet": "#f5956b",
-  "5 Tar Bullet": "#5b5fc7",
-  "Yarn": "#36b49f",
-};
 
 function getCategoryBadges(photo: PhotoRecord): { name: string; color: string }[] {
   const items = photo.orderSnapshot?.items;

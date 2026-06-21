@@ -12,6 +12,7 @@ import {
   Pencil,
 } from "lucide-react";
 import type { Color } from "@/lib/types";
+import { CATEGORY_COLORS } from "@/lib/colors";
 
 interface ParsedItem {
   category: string;
@@ -64,14 +65,6 @@ Yarn
 RED       :  1
 BLACK     :  1`;
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "3 Tar Bullet": "#f5956b",
-  "5 Tar Bullet": "#5b5fc7",
-  "Yarn": "#36b49f",
-  "3 Tar Button": "#e8b838",
-  "5 Tar Button": "#9b59b6",
-  "6 Tar Button": "#3498db",
-};
 
 function EditableRow({
   item,

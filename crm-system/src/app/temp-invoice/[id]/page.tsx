@@ -3,9 +3,10 @@
 import React, { use, useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Order, OrderItem } from "@/lib/types";
-import { Printer, ArrowLeft, Loader2 } from "lucide-react";
+import { Printer, ArrowLeft, Loader2, Package, Handbag, Box } from "lucide-react";
 import Link from "next/link";
 import TempBillLayout from "@/components/TempBillLayout";
+import PrintChallan from "@/components/PrintChallan";
 
 function formatDate(d: string): string {
   const dt = new Date(d + "T00:00:00");
@@ -31,6 +32,13 @@ interface RowState {
   rate: string;
 }
 
+const COMPANY = {
+  name: "JAY JALARAM JARI",
+  address: "33, SHIV AASHISH SOC. B/H NAVJIVAN CAR SHOWROOM,UDHANA,SURAT,SURAT",
+  mobile: "9998478787",
+  gstin: "24AJXPJ9003A1ZD",
+};
+
 export default function TempInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [order, setOrder] = useState<Order | null>(null);
@@ -39,6 +47,7 @@ export default function TempInvoicePage({ params }: { params: Promise<{ id: stri
   const [partyRates, setPartyRates] = useState<Record<string, Record<string, string>>>({});
   const [defaultRates, setDefaultRates] = useState<Record<string, Record<string, string>>>({});
   const [partyAddress, setPartyAddress] = useState({ en: "", gu: "", hi: "" });
+  const [partyGstin, setPartyGstin] = useState("");
 
   // Bag modal state
   interface BagRow { bag: string; theli: string; cartoon: string }
@@ -129,10 +138,11 @@ export default function TempInvoicePage({ params }: { params: Promise<{ id: stri
         if (partyRes.data?.rates && typeof partyRes.data.rates === "object") {
           setPartyRates(partyRes.data.rates as Record<string, Record<string, string>>);
         }
+        const pd = partyRes.data;
         setPartyAddress({
-          en: (partyRes.data?.address as string) || data.party_address || "",
-          gu: (partyRes.data?.address_gu as string) || data.party_address_gu || "",
-          hi: (partyRes.data?.address_hi as string) || "",
+          en: String(pd?.address ?? "") || data.party_address || "",
+          gu: String(pd?.address_gu ?? ""),
+          hi: String(pd?.address_hi ?? ""),
         });
         if (defaultRes.data?.rates && typeof defaultRes.data.rates === "object") {
           setDefaultRates(defaultRes.data.rates as Record<string, Record<string, string>>);
@@ -366,261 +376,317 @@ export default function TempInvoicePage({ params }: { params: Promise<{ id: stri
               )}
               onWeightChange={(key, value) => updateRow(key, "grossWt", value)}
               bagSummary={bagSummary}
+              bagRows={bagRows}
               onBagClick={() => setBagModalOpen(true)}
             />
           </div>
-        </div>
 
-        {/* Right: Challan Form */}
-        <div className="lg:flex-1 w-full">
-          <div className="bg-crm-card border border-crm-border rounded-xl p-4 print:border-2 print:border-black">
-            {/* Challan Header */}
-            <div className="text-center mb-4">
-              <h1 className="text-xl font-bold text-crm-text tracking-wider">CHALLAN</h1>
-              {(partyAddress.gu || partyAddress.hi || partyAddress.en) && (
-                <div className="mt-1.5 space-y-0.5">
-                  {partyAddress.gu && (
-                    <p className="text-sm font-semibold text-crm-text">{partyAddress.gu}</p>
-                  )}
-                  {partyAddress.hi && (
-                    <p className="text-sm font-semibold text-crm-text">{partyAddress.hi}</p>
-                  )}
-                  {!partyAddress.gu && !partyAddress.hi && partyAddress.en && (
-                    <p className="text-sm font-semibold text-crm-text">{partyAddress.en}</p>
-                  )}
-                </div>
+          {/* Sticker Card — Order No, Gujarati address, Party Name, Bag Details */}
+          {bagRows.some((r) => parseInt(r.bag) || parseInt(r.theli) || parseInt(r.cartoon)) && (
+            <div className="mt-4 rounded-2xl border-2 border-dashed border-crm-primary/30 bg-white p-8">
+              {/* Order No — top left */}
+              <div className="text-lg font-bold text-crm-text-muted mb-4">#{order.csvId}</div>
+
+              {/* Gujarati address — big center */}
+              {partyAddress.gu && (
+                <p className="text-center text-4xl font-bold text-crm-text leading-snug mb-3">{partyAddress.gu}</p>
               )}
-            </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-              <div className="flex items-center gap-2">
-                <label className="font-semibold text-crm-text whitespace-nowrap">SALE BOOK:</label>
-                <select className="flex-1 border border-crm-border rounded px-2 py-1 text-xs bg-white">
-                  <option>TAX INVOICE GST</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="font-semibold text-crm-text whitespace-nowrap">CHALLAN NO:</label>
-                <input
-                  type="text"
-                  value={order.csvId}
-                  readOnly
-                  className="flex-1 border border-crm-border rounded px-2 py-1 text-xs bg-gray-50"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="font-semibold text-crm-text whitespace-nowrap">CHALLAN DATE:</label>
-                <input
-                  type="text"
-                  value={formatDate(order.orderDate)}
-                  readOnly
-                  className="flex-1 border border-crm-border rounded px-2 py-1 text-xs bg-gray-50"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="font-semibold text-crm-text whitespace-nowrap">PARTY NAME:</label>
-                <input
-                  type="text"
-                  value={order.partyName}
-                  readOnly
-                  className="flex-1 border border-crm-border rounded px-2 py-1 text-xs bg-gray-50 truncate"
-                />
-              </div>
-            </div>
+              {/* Party Name */}
+              <p className="text-center text-xl font-semibold text-crm-text-muted mb-6">{order.partyName}</p>
 
-            {/* Items Table */}
-            <div className="overflow-x-auto mb-4">
-              <table className="w-full text-xs border-collapse border border-crm-border">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-crm-border px-1 py-1">Sr</th>
-                    <th className="border border-crm-border px-1 py-1">Item Name</th>
-                    <th className="border border-crm-border px-1 py-1">Color</th>
-                    <th className="border border-crm-border px-1 py-1">Gross Wt</th>
-                    <th className="border border-crm-border px-1 py-1">PCS</th>
-                    <th className="border border-crm-border px-1 py-1">PCS Wt</th>
-                    <th className="border border-crm-border px-1 py-1">Tot Tr Wt</th>
-                    <th className="border border-crm-border px-1 py-1">Bag</th>
-                    <th className="border border-crm-border px-1 py-1">Bag Wt</th>
-                    <th className="border border-crm-border px-1 py-1">Net Wt</th>
-                    <th className="border border-crm-border px-1 py-1">Rate</th>
-                    <th className="border border-crm-border px-1 py-1">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {groupedItems.map((g, idx) => {
-                    const rs = rowStates[g.key] || { grossWt: "", pcsWt: "0.070", bag: "", bagWt: "0.000", rate: "" };
-                    const calc = rowCalcs[g.key] || { totTrWt: 0, netWt: 0, amount: 0 };
-                    return (
-                      <tr key={g.key} className="hover:bg-gray-50">
-                        <td className="border border-crm-border px-1 py-1 text-center">{idx + 1}</td>
-                        <td className="border border-crm-border px-1 py-1 whitespace-nowrap">
-                          {g.category} {g.material}
-                        </td>
-                        <td className="border border-crm-border px-1 py-1 whitespace-nowrap">
-                          {g.colors.join(", ")}
-                        </td>
-                        <td className="border border-crm-border px-1 py-0">
-                          <input
-                            type="text"
-                            value={rs.grossWt}
-                            onChange={(e) => updateRow(g.key, "grossWt", e.target.value)}
-                            className="w-14 px-1 py-0.5 text-xs border-0 bg-transparent text-center focus:outline-none focus:ring-1 focus:ring-crm-primary rounded"
-                          />
-                        </td>
-                        <td className="border border-crm-border px-1 py-1 text-center">{g.pcs}</td>
-                        <td className="border border-crm-border px-1 py-0">
-                          <input
-                            type="text"
-                            value={rs.pcsWt}
-                            onChange={(e) => updateRow(g.key, "pcsWt", e.target.value)}
-                            className="w-14 px-1 py-0.5 text-xs border-0 bg-transparent text-center focus:outline-none focus:ring-1 focus:ring-crm-primary rounded"
-                          />
-                        </td>
-                        <td className="border border-crm-border px-1 py-1 text-center">
-                          {calc.totTrWt.toFixed(3)}
-                        </td>
-                        <td className="border border-crm-border px-1 py-0">
-                          <input
-                            type="text"
-                            value={rs.bag}
-                            onChange={(e) => updateRow(g.key, "bag", e.target.value)}
-                            className="w-10 px-1 py-0.5 text-xs border-0 bg-transparent text-center focus:outline-none focus:ring-1 focus:ring-crm-primary rounded"
-                          />
-                        </td>
-                        <td className="border border-crm-border px-1 py-0">
-                          <input
-                            type="text"
-                            value={rs.bagWt}
-                            onChange={(e) => updateRow(g.key, "bagWt", e.target.value)}
-                            className="w-14 px-1 py-0.5 text-xs border-0 bg-transparent text-center focus:outline-none focus:ring-1 focus:ring-crm-primary rounded"
-                          />
-                        </td>
-                        <td className="border border-crm-border px-1 py-1 text-center">
-                          {calc.netWt.toFixed(3)}
-                        </td>
-                        <td className="border border-crm-border px-1 py-0">
-                          <input
-                            type="text"
-                            value={rs.rate}
-                            onChange={(e) => updateRow(g.key, "rate", e.target.value)}
-                            className="w-14 px-1 py-0.5 text-xs border-0 bg-transparent text-center focus:outline-none focus:ring-1 focus:ring-crm-primary rounded"
-                          />
-                        </td>
-                        <td className="border border-crm-border px-1 py-1 text-right font-medium">
-                          {calc.amount.toFixed(2)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                {/* Totals rows */}
-                <tfoot>
-                  <tr className="bg-gray-100 font-semibold">
-                    <td className="border border-crm-border px-1 py-1" colSpan={3} />
-                    <td className="border border-crm-border px-1 py-1 text-center">{totals.grossWt.toFixed(3)}</td>
-                    <td className="border border-crm-border px-1 py-1 text-center">{totals.pcs}</td>
-                    <td className="border border-crm-border px-1 py-1" />
-                    <td className="border border-crm-border px-1 py-1 text-center">{totals.totTrWt.toFixed(3)}</td>
-                    <td className="border border-crm-border px-1 py-1" colSpan={2} />
-                    <td className="border border-crm-border px-1 py-1 text-center">{totals.netWt.toFixed(3)}</td>
-                    <td className="border border-crm-border px-1 py-1" />
-                    <td className="border border-crm-border px-1 py-1 text-right">{totals.amount.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td colSpan={11} className="border border-crm-border px-2 py-1 text-right text-xs font-semibold">TOTAL AMT.</td>
-                    <td className="border border-crm-border px-2 py-1 text-right text-xs font-semibold">{totals.amount.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td colSpan={11} className="border border-crm-border px-2 py-1 text-right text-xs font-semibold">TRANS. CH.</td>
-                    <td className="border border-crm-border px-1 py-0">
-                      <input type="text" value={transCh} onChange={(e) => setTransCh(e.target.value)}
-                        className="w-full px-1 py-0.5 text-xs border-0 bg-transparent text-right font-medium focus:outline-none focus:ring-1 focus:ring-crm-primary rounded" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan={11} className="border border-crm-border px-2 py-1 text-right text-xs font-semibold">ADD/LESS</td>
-                    <td className="border border-crm-border px-1 py-0">
-                      <input type="text" value={addLess} onChange={(e) => setAddLess(e.target.value)}
-                        className="w-full px-1 py-0.5 text-xs border-0 bg-transparent text-right font-medium focus:outline-none focus:ring-1 focus:ring-crm-primary rounded" />
-                    </td>
-                  </tr>
-                  <tr className="bg-green-800 text-white">
-                    <td colSpan={11} className="border border-green-700 px-2 py-1.5 text-right text-xs font-bold">NET AMT.</td>
-                    <td className="border border-green-700 px-2 py-1.5 text-right font-bold text-sm">{totals.netAmt.toFixed(2)}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+              {/* Bag details — plain text like (1/2) or (1+1+1) */}
+              <div className="flex items-center justify-center gap-2 text-3xl font-bold text-crm-text mb-6 flex-wrap">
+                <span>(</span>
+                {bagRows.filter((r) => parseInt(r.bag) || parseInt(r.theli) || parseInt(r.cartoon)).map((r, i, arr) => {
+                  const b = parseInt(r.bag) || 0;
+                  const t = parseInt(r.theli) || 0;
+                  const c = parseInt(r.cartoon) || 0;
+                  const items: React.ReactNode[] = [];
+                  if (b) items.push(<span key="b" className="inline-flex items-center gap-1"><Package className="w-7 h-7" />{b}</span>);
+                  if (t) items.push(<span key="t" className="inline-flex items-center gap-1"><Handbag className="w-7 h-7" />{t}</span>);
+                  if (c) items.push(<span key="c" className="inline-flex items-center gap-1"><Box className="w-7 h-7" />{c}</span>);
+                  return (
+                    <span key={i} className="inline-flex items-center gap-1">
+                      {items.map((item, j) => (
+                        <span key={j} className="inline-flex items-center gap-1">
+                          {j > 0 && <span className="mx-1">+</span>}
+                          {item}
+                        </span>
+                      ))}
+                      {i < arr.length - 1 && <span className="mx-2">/</span>}
+                    </span>
+                  );
+                })}
+                <span>)</span>
+              </div>
 
-            {/* Remark */}
-            <div className="flex items-center gap-2 mb-4 text-sm">
-              <label className="font-semibold text-crm-text">REMARK:</label>
-              <input
-                type="text"
-                value={remark}
-                onChange={(e) => setRemark(e.target.value)}
-                className="flex-1 border border-crm-border rounded px-2 py-1 text-xs"
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3 print:hidden">
-              <button
-                onClick={handlePrint}
-                disabled={saving}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-crm-primary text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
-              >
-                <Printer className="w-4 h-4" />
-                {saving ? "Saving..." : "Print Challan"}
-              </button>
-              <Link
-                href="/running-orders"
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-crm-border text-crm-text rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </Link>
-            </div>
-          {/* Recent Challans */}
-          {recentChallans.length > 0 && (
-            <div className="mt-4 bg-crm-card border border-crm-border rounded-xl p-4 print:hidden">
-              <h3 className="text-sm font-bold text-crm-text mb-3">Previous Challans — {order.partyName}</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs border-collapse border border-crm-border">
-                  <thead>
-                    <tr className="bg-crm-primary text-white">
-                      <th className="border border-crm-primary/50 px-2 py-1.5">Date</th>
-                      <th className="border border-crm-primary/50 px-2 py-1.5">Challan No</th>
-                      <th className="border border-crm-primary/50 px-2 py-1.5">Item Name</th>
-                      <th className="border border-crm-primary/50 px-2 py-1.5">PCS</th>
-                      <th className="border border-crm-primary/50 px-2 py-1.5">QTY (Wt)</th>
-                      <th className="border border-crm-primary/50 px-2 py-1.5">Rate</th>
-                      <th className="border border-crm-primary/50 px-2 py-1.5">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentChallans.flatMap((ch) =>
-                      (ch.items || []).map((item, idx) => (
-                        <tr key={`${ch.id}-${idx}`} className={idx === 0 ? "border-t-2 border-crm-border" : ""}>
-                          <td className="border border-crm-border px-2 py-1 text-crm-primary font-medium">{idx === 0 ? formatDate(ch.challan_date) : ""}</td>
-                          <td className="border border-crm-border px-2 py-1 text-center font-semibold">{idx === 0 ? ch.challan_no : ""}</td>
-                          <td className="border border-crm-border px-2 py-1">{item.category} {item.material}</td>
-                          <td className="border border-crm-border px-2 py-1 text-center tabular-nums">{item.pcs}</td>
-                          <td className="border border-crm-border px-2 py-1 text-center tabular-nums">{item.netWt?.toFixed(3)}</td>
-                          <td className="border border-crm-border px-2 py-1 text-center tabular-nums">{item.rate}</td>
-                          <td className="border border-crm-border px-2 py-1 text-right tabular-nums font-medium">{item.amount?.toFixed(2)}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+              {/* Print Sticker Button */}
+              <div className="flex justify-center">
+                <button type="button" onClick={() => {
+                  const stickerEl = document.getElementById("sticker-print");
+                  if (!stickerEl) return;
+                  const win = window.open("", "_blank");
+                  if (!win) return;
+                  win.document.write(`<html><head><title>Sticker</title><style>
+                    body { margin: 0; padding: 20px; font-family: sans-serif; }
+                    .sticker { text-align: center; padding: 24px; }
+                    .order-no { text-align: left; font-size: 18px; font-weight: bold; color: #666; margin-bottom: 12px; }
+                    .gu-addr { font-size: 36px; font-weight: bold; margin-bottom: 8px; }
+                    .party { font-size: 20px; color: #666; margin-bottom: 16px; }
+                    .bags { font-size: 28px; font-weight: bold; }
+                  </style></head><body><div class="sticker">
+                    <div class="order-no">#${order.csvId}</div>
+                    <div class="gu-addr">${partyAddress.gu || ""}</div>
+                    <div class="party">${order.partyName}</div>
+                    <div class="bags">${(() => {
+                      const filledRows = bagRows.filter((r: { bag: string; theli: string; cartoon: string }) => parseInt(r.bag) || parseInt(r.theli) || parseInt(r.cartoon));
+                      if (!filledRows.length) return "";
+                      return "(" + filledRows.map((r: { bag: string; theli: string; cartoon: string }) => {
+                        const parts: string[] = [];
+                        if (parseInt(r.bag)) parts.push("Bag:" + r.bag);
+                        if (parseInt(r.theli)) parts.push("Theli:" + r.theli);
+                        if (parseInt(r.cartoon)) parts.push("Crtn:" + r.cartoon);
+                        return parts.join(" + ");
+                      }).join(" / ") + ")";
+                    })()}</div>
+                  </div></body></html>`);
+                  win.document.close();
+                  win.print();
+                }}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-crm-primary text-white text-sm font-bold rounded-lg hover:bg-crm-sidebar-active transition-colors">
+                  <Printer className="w-4 h-4" />
+                  Print Sticker
+                </button>
               </div>
             </div>
           )}
+        </div>
+
+        {/* Right: Challan Form */}
+        <div className="lg:flex-1 w-full print:hidden">
+          <div className="bg-white border border-crm-border rounded-xl overflow-hidden">
+
+            {/* Party address label */}
+            <div className="text-center px-4 py-2 text-xs text-crm-text-muted bg-crm-bg/30">
+              ({partyAddress.gu || partyAddress.hi || partyAddress.en || order.partyName})
+            </div>
+
+            {/* Company Header */}
+            <div className="text-center border-t border-b border-crm-border px-4 py-3">
+              <h1 className="text-xl font-bold tracking-wide text-crm-text">{COMPANY.name}</h1>
+              <p className="text-[11px] text-crm-text-muted mt-0.5">{COMPANY.address}</p>
+              <p className="text-xs text-crm-text-muted">Mobile : {COMPANY.mobile}</p>
+            </div>
+
+            {/* DELIVERY CHALLAN + GSTIN */}
+            <div className="flex justify-between items-center px-5 py-2 border-b border-crm-border bg-crm-sidebar text-white text-sm font-bold">
+              <span>DELIVERY CHALLAN</span>
+              <span className="font-semibold">GSTIN: {COMPANY.gstin}</span>
+            </div>
+
+            {/* Party Details */}
+            <div className="flex justify-between px-5 py-3 border-b border-crm-border text-[13px]">
+              <div className="flex-1 space-y-0.5">
+                <p><span className="font-bold text-crm-text-muted">M/S.:</span>&nbsp;&nbsp;{order.partyName}</p>
+                <p><span className="font-bold text-crm-text-muted">ADD.:</span>&nbsp;&nbsp;{partyAddress.en || order.partyAddress}</p>
+              </div>
+              <div className="text-right whitespace-nowrap space-y-0.5">
+                <p><span className="font-bold text-crm-text-muted">CHALLAN NO :</span>&nbsp;&nbsp;{order.csvId}</p>
+                <p><span className="font-bold text-crm-text-muted">CHALLAN DATE :</span>&nbsp;&nbsp;{formatDate(order.orderDate)}</p>
+              </div>
+            </div>
+
+            {/* Party GSTIN */}
+            {partyGstin && (
+              <div className="px-5 py-1.5 border-b border-crm-border text-[13px]">
+                <span className="font-bold text-crm-text-muted">GSTIN :</span>&nbsp;&nbsp;{partyGstin}
+              </div>
+            )}
+
+            {/* Items Table */}
+            <table className="w-full text-[13px] border-collapse">
+              <thead>
+                <tr className="bg-crm-sidebar text-white">
+                  <th className="border border-crm-sidebar-hover px-2 py-2 text-center w-[5%] font-semibold">NO.</th>
+                  <th className="border border-crm-sidebar-hover px-2 py-2 text-left w-[22%] font-semibold">ITEM NAME</th>
+                  <th className="border border-crm-sidebar-hover px-2 py-2 text-center w-[6%] font-semibold">PCS</th>
+                  <th className="border border-crm-sidebar-hover px-2 py-2 text-center w-[6%] font-semibold">ROLL</th>
+                  <th className="border border-crm-sidebar-hover px-2 py-2 text-center w-[10%] font-extrabold bg-crm-sidebar-active">GRS WT.</th>
+                  <th className="border border-crm-sidebar-hover px-2 py-2 text-center w-[8%] font-semibold">PCS WT</th>
+                  <th className="border border-crm-sidebar-hover px-2 py-2 text-center w-[9%] font-semibold">TR WT</th>
+                  <th className="border border-crm-sidebar-hover px-2 py-2 text-center w-[10%] font-semibold">NET WT</th>
+                  <th className="border border-crm-sidebar-hover px-2 py-2 text-center w-[9%] font-extrabold bg-crm-sidebar-active">RATE</th>
+                  <th className="border border-crm-sidebar-hover px-2 py-2 text-right w-[10%] font-semibold">AMT</th>
+                </tr>
+              </thead>
+              <tbody>
+                {groupedItems.map((g, idx) => {
+                  const rs = rowStates[g.key] || { grossWt: "", pcsWt: "0.070", bag: "", bagWt: "0.000", rate: "" };
+                  const calc = rowCalcs[g.key] || { totTrWt: 0, netWt: 0, amount: 0 };
+                  return (
+                    <tr key={g.key} className={idx % 2 === 0 ? "bg-white" : "bg-crm-bg/30"}>
+                      <td className="border border-crm-border px-2 py-2 text-center text-crm-text-muted">{idx + 1}</td>
+                      <td className="border border-crm-border px-2 py-2 whitespace-nowrap font-medium text-crm-text">{g.category} {g.material}</td>
+                      <td className="border border-crm-border px-2 py-2 text-center font-semibold">{g.pcs}</td>
+                      <td className="border border-crm-border px-2 py-2 text-center"></td>
+                      <td className="border border-crm-border px-0 py-0 bg-crm-primary-muted/30">
+                        <input type="text" value={rs.grossWt} onChange={(e) => updateRow(g.key, "grossWt", e.target.value)}
+                          className="w-full px-2 py-2 text-[13px] text-center font-bold text-crm-primary bg-transparent focus:outline-none focus:bg-crm-primary-muted transition-colors" />
+                      </td>
+                      <td className="border border-crm-border px-0 py-0">
+                        <input type="text" value={rs.pcsWt} onChange={(e) => updateRow(g.key, "pcsWt", e.target.value)}
+                          className="w-full px-2 py-2 text-[13px] text-center bg-transparent focus:outline-none focus:bg-crm-primary-muted transition-colors" />
+                      </td>
+                      <td className="border border-crm-border px-2 py-2 text-center text-crm-text-muted">{calc.totTrWt.toFixed(3)}</td>
+                      <td className="border border-crm-border px-2 py-2 text-center font-semibold">{calc.netWt.toFixed(3)}</td>
+                      <td className="border border-crm-border px-0 py-0 bg-crm-primary-muted/30">
+                        <input type="text" value={rs.rate} onChange={(e) => updateRow(g.key, "rate", e.target.value)}
+                          className="w-full px-2 py-2 text-[13px] text-center font-bold text-crm-primary bg-transparent focus:outline-none focus:bg-crm-primary-muted transition-colors" />
+                      </td>
+                      <td className="border border-crm-border px-2 py-2 text-right font-bold">{calc.amount.toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
+                {/* Single empty filler row */}
+                <tr className="bg-white">
+                  <td className="border border-crm-border px-2 py-2">&nbsp;</td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr className="bg-crm-bg/60 border-t-2 border-crm-text">
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2 font-bold text-crm-text">TOTAL:</td>
+                  <td className="border border-crm-border px-2 py-2 text-center font-bold">{totals.pcs}</td>
+                  <td className="border border-crm-border px-2 py-2 text-center font-bold">0</td>
+                  <td className="border border-crm-border px-2 py-2 text-center font-bold text-crm-primary">{totals.grossWt.toFixed(3)}</td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2 text-center font-bold">{totals.totTrWt.toFixed(3)}</td>
+                  <td className="border border-crm-border px-2 py-2 text-center font-bold">{totals.netWt.toFixed(3)}</td>
+                  <td className="border border-crm-border px-2 py-2"></td>
+                  <td className="border border-crm-border px-2 py-2 text-right font-bold text-crm-primary">{totals.amount.toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
+
+            {/* Footer */}
+            <div className="px-5 pt-3">
+              <p className="text-right text-sm font-bold text-crm-text">FOR, {COMPANY.name}</p>
+            </div>
+            <div className="flex justify-between px-5 pt-8 pb-4 text-xs font-semibold text-crm-text-muted">
+              <span>Recievers Sign:</span>
+              <span>AUTHORISED SIGNATORY</span>
+            </div>
+
+            {/* ── Editable fields below the challan (screen only) ── */}
+            <div className="border-t-2 border-crm-border px-5 py-4 space-y-3 bg-crm-bg/40">
+              {/* Row 1: Avg GRS WT / PCS + TRANS. CH. */}
+              <div className="grid grid-cols-2 gap-4 text-[13px]">
+                {(() => {
+                  const avg = totals.pcs > 0 ? totals.grossWt / totals.pcs : 0;
+                  const inRange = avg >= 1.0 && avg <= 1.3;
+                  const bgColor = avg === 0 ? "" : inRange ? "bg-yellow-100" : "bg-red-100";
+                  const textColor = avg === 0 ? "text-crm-primary" : inRange ? "text-yellow-700" : "text-red-700";
+                  return (
+                    <div className="flex items-center gap-3">
+                      <label className="font-bold text-crm-text shrink-0">Avg GRS WT / PCS</label>
+                      <div className={`flex-1 flex items-center gap-2 rounded-xl px-4 py-2.5 ${bgColor || "bg-white"} border border-crm-border`}>
+                        <span className={`font-bold text-[15px] ${textColor}`}>{avg.toFixed(3)}</span>
+                        <span className="text-crm-text-muted text-[11px]">({totals.grossWt.toFixed(3)} / {totals.pcs})</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+                <div className="flex items-center gap-3">
+                  <label className="font-bold text-crm-text shrink-0">TRANS. CH.</label>
+                  <input type="text" value={transCh} onChange={(e) => setTransCh(e.target.value)}
+                    className="flex-1 border border-crm-border rounded-xl px-4 py-2.5 text-right text-crm-text font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-crm-primary/30 focus:border-crm-primary transition-all" />
+                </div>
+              </div>
+
+              {/* Row 2: ADD/LESS + NET AMT. */}
+              <div className="grid grid-cols-2 gap-4 text-[13px]">
+                <div className="flex items-center gap-3">
+                  <label className="font-bold text-crm-text shrink-0">ADD/LESS</label>
+                  <input type="text" value={addLess} onChange={(e) => setAddLess(e.target.value)}
+                    className="flex-1 border border-crm-border rounded-xl px-4 py-2.5 text-right text-crm-text font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-crm-primary/30 focus:border-crm-primary transition-all" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="font-bold text-crm-text shrink-0">NET AMT.</label>
+                  <span className="font-bold text-[18px] text-crm-primary">{totals.netAmt.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Row 3: REMARK full width */}
+              <div className="flex items-center gap-3 text-[13px]">
+                <label className="font-bold text-crm-text shrink-0">REMARK</label>
+                <input type="text" value={remark} onChange={(e) => setRemark(e.target.value)}
+                  className="flex-1 border border-crm-border rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-crm-primary/30 focus:border-crm-primary transition-all" />
+              </div>
+
+              <div className="flex items-center gap-3 pt-1">
+                <button onClick={handlePrint} disabled={saving}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-crm-primary text-white text-sm font-bold rounded-lg hover:bg-crm-sidebar-active transition-colors">
+                  <Printer className="w-4 h-4" />
+                  {saving ? "Saving..." : "Print Challan"}
+                </button>
+                <Link href="/running-orders"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-crm-border text-crm-text text-sm font-bold rounded-lg hover:bg-white transition-colors">
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
+
+      {/* Print Challan (hidden on screen, shown on print) */}
+      <PrintChallan
+        companyName={COMPANY.name}
+        companyAddress={COMPANY.address}
+        companyMobile={COMPANY.mobile}
+        companyGstin={COMPANY.gstin}
+        partyName={order.partyName}
+        partyAddress={partyAddress.en || order.partyAddress}
+        partyLabel={partyAddress.gu || partyAddress.hi || partyAddress.en || order.partyName}
+        partyGstin={partyGstin || undefined}
+        challanNo={order.csvId}
+        challanDate={order.orderDate}
+        items={groupedItems.map((g) => {
+          const rs = rowStates[g.key] || { grossWt: "", pcsWt: "0.070", bag: "", bagWt: "0.000", rate: "" };
+          const calc = rowCalcs[g.key] || { totTrWt: 0, netWt: 0, amount: 0 };
+          return {
+            name: `${g.category} ${g.material}`.toUpperCase(),
+            pcs: g.pcs,
+            roll: 0,
+            grossWt: parseFloat(rs.grossWt) || 0,
+            pcsWt: parseFloat(rs.pcsWt) || 0,
+            trWt: calc.totTrWt,
+            netWt: calc.netWt,
+            rate: parseFloat(rs.rate) || 0,
+            amount: calc.amount,
+          };
+        })}
+        totals={{
+          pcs: totals.pcs,
+          roll: 0,
+          grossWt: totals.grossWt,
+          trWt: totals.totTrWt,
+          netWt: totals.netWt,
+          amount: totals.amount,
+        }}
+      />
 
       {/* Bag Modal */}
       {bagModalOpen && (

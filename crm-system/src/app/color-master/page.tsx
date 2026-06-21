@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo, useEffect } from "react";
 import { Plus, Search, Filter, X, Pencil, Trash2, Loader2 } from "lucide-react";
 import AddColorModal, { type ColorFormData } from "@/components/AddColorModal";
-import { addColor, updateColor, deleteColor } from "@/lib/colors";
+import { addColor, updateColor, deleteColor, CATEGORY_COLORS } from "@/lib/colors";
 import { useColorsQuery, useInvalidate } from "@/hooks/use-queries";
 import { useTracker } from "@/lib/activity-tracker-context";
 import type { Color } from "@/lib/types";
@@ -18,6 +18,7 @@ interface ColorRow {
   minStock: string;
   maxStock: string;
   currentStock: string;
+  pcsWt: string;
   runningColor: boolean;
   createdAt: string;
 }
@@ -49,6 +50,7 @@ function colorToRow(c: Color): ColorRow {
     minStock: String(c.minStock),
     maxStock: String(c.maxStock),
     currentStock: String(c.currentStock),
+    pcsWt: String(c.pcsWt),
     runningColor: c.runningColor,
     createdAt: c.createdAt,
   };
@@ -132,6 +134,7 @@ export default function ColorMasterPage(): React.JSX.Element {
         minStock: Number(data.minStock) || 0,
         maxStock: Number(data.maxStock) || 0,
         currentStock: Number(data.currentStock) || 0,
+        pcsWt: Number(data.pcsWt) || 0.070,
         runningColor: data.runningColor,
       });
       trackColorEdited({ colorName: data.name, category: data.category });
@@ -148,6 +151,7 @@ export default function ColorMasterPage(): React.JSX.Element {
         minStock: Number(data.minStock) || 0,
         maxStock: Number(data.maxStock) || 0,
         currentStock: Number(data.currentStock) || 0,
+        pcsWt: Number(data.pcsWt) || 0.070,
         runningColor: data.runningColor,
         sortOrder: 999,
         createdAt: now,
@@ -250,19 +254,22 @@ export default function ColorMasterPage(): React.JSX.Element {
                 <div className="px-4 pb-3">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-widest text-slate-400 mb-2">Category</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => toggleCategory(cat)}
-                        className={`px-2.5 py-1 rounded-lg text-[0.78rem] font-medium transition-colors ${
-                          filters.categories.includes(cat)
-                            ? "bg-blue-500 text-white"
-                            : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
+                    {categories.map((cat) => {
+                      const selected = filters.categories.includes(cat);
+                      const catColor = CATEGORY_COLORS[cat];
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => toggleCategory(cat)}
+                          className={`px-2.5 py-1 rounded-lg text-[0.78rem] font-medium transition-colors ${
+                            selected ? "" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                          }`}
+                          style={selected ? { backgroundColor: catColor ?? "#3b82f6", color: catColor === "#e8b838" ? "#333" : "#fff" } : {}}
+                        >
+                          {cat}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -506,6 +513,7 @@ export default function ColorMasterPage(): React.JSX.Element {
           minStock: editingColor.minStock,
           maxStock: editingColor.maxStock,
           currentStock: editingColor.currentStock,
+          pcsWt: editingColor.pcsWt ?? "0.070",
           runningColor: editingColor.runningColor,
         } : null}
       />

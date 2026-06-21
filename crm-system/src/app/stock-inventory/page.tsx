@@ -12,7 +12,7 @@ import {
   Check,
   ArrowRight,
 } from "lucide-react";
-import { updateColor } from "@/lib/colors";
+import { updateColor, CATEGORY_COLORS } from "@/lib/colors";
 import { useColorsQuery, useInvalidate } from "@/hooks/use-queries";
 import { useTracker } from "@/lib/activity-tracker-context";
 import type { Color } from "@/lib/types";
@@ -502,15 +502,15 @@ export default function StockInventoryPage(): React.JSX.Element {
           <div className="flex gap-0 overflow-x-auto pb-0">
             {categories.map((cat) => {
               const active = activeTab === cat;
+              const catColor = CATEGORY_COLORS[cat];
               return (
                 <button
                   key={cat}
                   onClick={() => setActiveTab(cat)}
                   className={`relative px-3 sm:px-4 py-1.5 sm:py-2.5 rounded-t-xl text-[0.76rem] sm:text-[0.82rem] font-semibold transition-all whitespace-nowrap ${
-                    active
-                      ? "bg-crm-bg/40 text-crm-text shadow-[inset_0_2px_0_0_var(--color-crm-primary)]"
-                      : "text-crm-text-muted hover:text-crm-text hover:bg-crm-bg/20"
+                    active ? "" : "text-crm-text-muted hover:text-crm-text hover:bg-crm-bg/20"
                   }`}
+                  style={active ? { backgroundColor: catColor ?? "var(--color-crm-primary)", color: catColor === "#e8b838" ? "#333" : "#fff" } : {}}
                 >
                   <span>{cat}</span>
                 </button>

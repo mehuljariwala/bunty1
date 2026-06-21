@@ -1,6 +1,7 @@
 "use client";
 
 import type { Order, OrderItem } from "@/lib/types";
+import { CATEGORY_COLORS } from "@/lib/colors";
 
 interface CategoryGroup {
   category: string;
@@ -9,16 +10,6 @@ interface CategoryGroup {
   totalDelivered: number;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "3 Tar": "#f5956b",
-  "5 Tar": "#5b5fc7",
-  "3 Tar Bullet": "#f5956b",
-  "5 Tar Bullet": "#5b5fc7",
-  "Yarn": "#36b49f",
-  "3 Tar Button": "#e8b838",
-  "5 Tar Button": "#9b59b6",
-  "6 Tar Button": "#3498db",
-};
 
 const SUB_CAT_ORDER = ["Celtionic", "Litchy", "Polyester", "Multy", "Rani multy"];
 
@@ -49,15 +40,18 @@ function groupItems(items: OrderItem[]): CategoryGroup[] {
   });
 }
 
+interface BagRow { bag: string; theli: string; cartoon: string }
+
 interface TempBillLayoutProps {
   order: Order;
   weights?: Record<string, string>;
   onWeightChange?: (key: string, value: string) => void;
   bagSummary?: string;
+  bagRows?: BagRow[];
   onBagClick?: () => void;
 }
 
-export default function TempBillLayout({ order, weights, onWeightChange, bagSummary, onBagClick }: TempBillLayoutProps) {
+export default function TempBillLayout({ order, weights, onWeightChange, bagSummary, bagRows, onBagClick }: TempBillLayoutProps) {
   const groups = groupItems(order.items ?? []);
   const grandOrdered = order.grandTotalOrdered ?? groups.reduce((s, g) => s + g.totalOrdered, 0);
   const grandDelivered = order.grandTotalDelivered ?? groups.reduce((s, g) => s + g.totalDelivered, 0);
@@ -102,7 +96,10 @@ export default function TempBillLayout({ order, weights, onWeightChange, bagSumm
                       <div className="flex items-center gap-1.5 mt-1">
                         <span className="text-[10px] font-semibold text-crm-text-muted">Wt:</span>
                         <input
-                          type="text"
+                          type="number"
+                          inputMode="decimal"
+                          step="0.001"
+                          min="0"
                           placeholder="0.000"
                           value={weights?.[wtKey] ?? ""}
                           onChange={(e) => onWeightChange(wtKey, e.target.value)}
@@ -141,6 +138,7 @@ export default function TempBillLayout({ order, weights, onWeightChange, bagSumm
           <div className="text-xs font-bold text-crm-text">BAG ({bagSummary || "—"})</div>
         )}
       </div>
+
     </div>
   );
 }

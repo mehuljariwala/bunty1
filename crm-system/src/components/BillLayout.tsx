@@ -1,4 +1,5 @@
 import type { Order, OrderItem } from "@/lib/types";
+import { CATEGORY_COLORS } from "@/lib/colors";
 
 interface CategoryGroup {
   category: string;
@@ -7,13 +8,6 @@ interface CategoryGroup {
   totalDelivered: number;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "3 Tar": "#f5956b",
-  "5 Tar": "#5b5fc7",
-  "3 Tar Bullet": "#f5956b",
-  "5 Tar Bullet": "#5b5fc7",
-  "Yarn": "#36b49f",
-};
 
 const SUB_CAT_ORDER = [
   "Celtionic",

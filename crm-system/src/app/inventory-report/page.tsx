@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { useColorsQuery } from "@/hooks/use-queries";
+import { CATEGORY_COLORS } from "@/lib/colors";
 import type { Color } from "@/lib/types";
 
 interface StockItem {
@@ -206,19 +207,22 @@ export default function InventoryReportPage(): React.JSX.Element {
         {/* Tabs: category + filters */}
         <div className="flex flex-col gap-0 px-2 sm:px-5 pt-0.5 sm:pt-3 pb-0 border-b border-crm-border/40 shrink-0">
           <div className="flex gap-0 overflow-x-auto pb-0">
-            {["all", ...CATEGORIES].map((cat) => (
-              <button
-                key={cat}
-                onClick={() => { setCatFilter(cat); setFilter("all"); }}
-                className={`px-2.5 sm:px-4 py-1 sm:py-2.5 rounded-t-xl text-[0.72rem] sm:text-[0.82rem] font-semibold transition-all whitespace-nowrap ${
-                  catFilter === cat
-                    ? "bg-crm-bg/40 text-crm-text shadow-[inset_0_2px_0_0_var(--color-crm-primary)]"
-                    : "text-crm-text-muted hover:text-crm-text hover:bg-crm-bg/20"
-                }`}
-              >
-                {cat === "all" ? "All" : cat}
-              </button>
-            ))}
+            {["all", ...CATEGORIES].map((cat) => {
+              const active = catFilter === cat;
+              const catColor = CATEGORY_COLORS[cat];
+              return (
+                <button
+                  key={cat}
+                  onClick={() => { setCatFilter(cat); setFilter("all"); }}
+                  className={`px-2.5 sm:px-4 py-1 sm:py-2.5 rounded-t-xl text-[0.72rem] sm:text-[0.82rem] font-semibold transition-all whitespace-nowrap ${
+                    active ? "" : "text-crm-text-muted hover:text-crm-text hover:bg-crm-bg/20"
+                  }`}
+                  style={active ? { backgroundColor: catColor ?? "var(--color-crm-primary)", color: catColor === "#e8b838" ? "#333" : "#fff" } : {}}
+                >
+                  {cat === "all" ? "All" : cat}
+                </button>
+              );
+            })}
           </div>
 
           <div className="flex gap-0.5 sm:gap-1 flex-wrap pb-1 sm:pb-2.5">

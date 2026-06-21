@@ -79,6 +79,7 @@ export interface Color {
   minStock: number;
   maxStock: number;
   currentStock: number;
+  pcsWt: number;
   runningColor: boolean;
   sortOrder: number;
   createdAt: string;

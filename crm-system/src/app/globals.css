@@ -67,3 +67,203 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ── Print Challan Styles ── */
+.print-challan-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 8mm;
+  }
+
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide everything on print */
+  body > * {
+    display: none !important;
+  }
+
+  /* Show only challan */
+  .print-challan-root {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: white;
+  }
+
+  .challan-page {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Times New Roman', Times, serif;
+    color: #000;
+    border: 2px solid #000;
+    box-sizing: border-box;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  /* Top bar: (SELF) (1/2) */
+  .challan-top-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 40px;
+    padding: 6px 16px 4px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Company header */
+  .challan-company-header {
+    text-align: center;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    padding: 8px 16px;
+  }
+
+  .challan-company-name {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin: 0;
+  }
+
+  .challan-company-address {
+    font-size: 12px;
+    margin: 2px 0 0;
+  }
+
+  .challan-company-mobile {
+    font-size: 13px;
+    margin: 2px 0 0;
+  }
+
+  /* Delivery Challan + GSTIN row */
+  .challan-dc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 16px;
+    border-bottom: 1px solid #000;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .challan-dc-label {
+    font-size: 14px;
+  }
+
+  .challan-dc-gstin {
+    font-size: 14px;
+  }
+
+  /* Party details */
+  .challan-party-section {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid #000;
+    font-size: 13px;
+  }
+
+  .challan-party-left {
+    flex: 1;
+  }
+
+  .challan-party-left p,
+  .challan-party-right p {
+    margin: 2px 0;
+  }
+
+  .challan-party-right {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* Party GSTIN */
+  .challan-party-gstin {
+    padding: 4px 16px;
+    border-bottom: 1px solid #000;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* Items table */
+  .challan-table {
+    width: 100%;
+    border-collapse: collapse;
+    flex: 1;
+    font-size: 13px;
+  }
+
+  .challan-table th,
+  .challan-table td {
+    border: 1px solid #000;
+    padding: 4px 6px;
+    vertical-align: top;
+  }
+
+  .challan-table thead th {
+    font-weight: 700;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .challan-table tbody td {
+    font-size: 13px;
+  }
+
+  .challan-table td.center {
+    text-align: center;
+  }
+
+  .challan-table td.right {
+    text-align: right;
+  }
+
+  .challan-table .empty-row td {
+    height: 22px;
+  }
+
+  .challan-table tfoot td {
+    border: 1px solid #000;
+    padding: 6px;
+    font-size: 13px;
+  }
+
+  .challan-table .total-row td {
+    border-top: 2px solid #000;
+  }
+
+  /* Footer */
+  .challan-footer {
+    padding: 8px 16px 12px;
+    border-top: 1px solid #000;
+  }
+
+  .challan-for-company {
+    text-align: right;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 4px 0 40px;
+  }
+
+  .challan-signatures {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}

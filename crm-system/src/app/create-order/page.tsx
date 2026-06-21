@@ -7,6 +7,7 @@ import AiOrderModal from "@/components/AiOrderModal";
 import { supabase } from "@/lib/supabase";
 import { usePartiesLiteQuery, useColorsQuery, useInvalidate } from "@/hooks/use-queries";
 import { getOrder, updateOrder } from "@/lib/orders";
+import { CATEGORY_COLORS } from "@/lib/colors";
 import type { Party, Color } from "@/lib/types";
 
 interface SelectedColor {
@@ -444,15 +445,15 @@ function CreateOrderPage() {
           <div className="flex overflow-x-auto border-b border-crm-border shrink-0">
             {categories.map((cat) => {
               const active = activeCat === cat;
+              const catColor = CATEGORY_COLORS[cat];
               return (
                 <button
                   key={cat}
                   onClick={() => setActiveCat(cat)}
                   className={`px-3 sm:px-6 py-2 sm:py-2.5 text-[0.75rem] sm:text-[0.82rem] font-semibold uppercase tracking-wider transition-all whitespace-nowrap ${
-                    active
-                      ? "text-crm-primary border-b-2 border-crm-primary"
-                      : "text-crm-text-muted hover:text-crm-text"
+                    active ? "rounded-t-lg" : "text-crm-text-muted hover:text-crm-text"
                   }`}
+                  style={active ? { backgroundColor: catColor ?? "var(--color-crm-primary)", color: catColor === "#e8b838" ? "#333" : "#fff" } : {}}
                 >
                   {cat}
                 </button>
@@ -543,7 +544,6 @@ function CreateOrderPage() {
                   (s, c) => s + c.deliveredQty,
                   0,
                 );
-                const CATEGORY_COLORS: Record<string, string> = { "3 Tar Bullet": "#f5956b", "5 Tar Bullet": "#5b5fc7", "Yarn": "#36b49f", "3 Tar Button": "#e8b838", "5 Tar Button": "#9b59b6", "6 Tar Button": "#3498db" };
                 const headerBg = CATEGORY_COLORS[cat] ?? "#5b5fc7";
                 return (
                   <div key={cat}>

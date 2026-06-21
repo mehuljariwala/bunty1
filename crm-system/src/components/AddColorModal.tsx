@@ -12,6 +12,7 @@ export interface ColorFormData {
   minStock: string;
   maxStock: string;
   currentStock: string;
+  pcsWt: string;
   runningColor: boolean;
 }
 
@@ -33,6 +34,7 @@ const EMPTY_FORM: ColorFormData = {
   minStock: "",
   maxStock: "",
   currentStock: "",
+  pcsWt: "0.070",
   runningColor: false,
 };
 
@@ -189,7 +191,7 @@ export default function AddColorModal({
           {/* Section 2 — Stock Details */}
           <div className="rounded-xl border border-crm-border p-4">
             <p className={SECTION_TITLE_CLS}>Stock Details</p>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
 
               <div>
                 <FieldLabel text="Min Stock" />
@@ -225,6 +227,21 @@ export default function AddColorModal({
                   placeholder="0"
                   value={form.currentStock}
                   onChange={(e) => update("currentStock", e.target.value)}
+                  required
+                  className={INPUT_CLS}
+                />
+              </div>
+
+              <div>
+                <FieldLabel text="PCS WT" />
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.001"
+                  min="0"
+                  placeholder="0.070"
+                  value={form.pcsWt}
+                  onChange={(e) => update("pcsWt", e.target.value)}
                   required
                   className={INPUT_CLS}
                 />

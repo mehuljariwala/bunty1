@@ -1,6 +1,15 @@
 import { supabase } from "./supabase";
 import type { Color } from "./types";
 
+export const CATEGORY_COLORS: Record<string, string> = {
+  "3 Tar Bullet": "#f5956b",
+  "5 Tar Bullet": "#5b5fc7",
+  "Yarn": "#36b49f",
+  "3 Tar Button": "#e8b838",
+  "5 Tar Button": "#9b59b6",
+  "6 Tar Button": "#3498db",
+};
+
 const TABLE = "colors";
 
 /* ── snake_case DB row type ── */
@@ -14,6 +23,7 @@ interface ColorRow {
   min_stock: number;
   max_stock: number;
   current_stock: number;
+  pcs_wt: number;
   running_color: boolean;
   sort_order: number;
   created_at: string;
@@ -32,6 +42,7 @@ function rowToColor(row: ColorRow): Color {
     minStock: Number(row.min_stock) || 0,
     maxStock: Number(row.max_stock) || 0,
     currentStock: Number(row.current_stock) || 0,
+    pcsWt: Number(row.pcs_wt) || 0.070,
     runningColor: row.running_color ?? false,
     sortOrder: Number(row.sort_order) || 0,
     createdAt: row.created_at ?? "",
@@ -43,6 +54,7 @@ const camelToSnake: Record<string, string> = {
   minStock: "min_stock",
   maxStock: "max_stock",
   currentStock: "current_stock",
+  pcsWt: "pcs_wt",
   runningColor: "running_color",
   sortOrder: "sort_order",
   createdAt: "created_at",
