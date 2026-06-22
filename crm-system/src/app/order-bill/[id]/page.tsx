@@ -83,12 +83,11 @@ export default function OrderBillPage({ params }: { params: Promise<{ id: string
     <>
       <style>{`
         @media print {
-          body * { visibility: hidden !important; }
-          .bill-print-area, .bill-print-area * { visibility: visible !important; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
+          .no-print { display: none !important; }
           .bill-print-area {
-            position: fixed !important;
+            position: absolute !important;
             top: 0; left: 0; right: 0;
-            z-index: 99999;
             background: #fff;
             padding: 0 !important;
             margin: 0 !important;
@@ -96,8 +95,6 @@ export default function OrderBillPage({ params }: { params: Promise<{ id: string
             border-radius: 0 !important;
             box-shadow: none !important;
           }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .no-print { display: none !important; }
           @page { margin: 0; }
         }
       `}</style>

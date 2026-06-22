@@ -85,20 +85,12 @@
     print-color-adjust: exact;
   }
 
-  /* Hide everything on print, then reveal only the challan subtree.
-     Use visibility (not `display:none` on `body > *`) so nested print
-     roots on other pages — e.g. .print-order-sheet on running-orders —
-     aren't wiped out by a hidden ancestor. */
-  body * {
-    visibility: hidden !important;
+  /* Hide everything on print */
+  body > * {
+    display: none !important;
   }
 
   /* Show only challan */
-  .print-challan-root,
-  .print-challan-root * {
-    visibility: visible !important;
-  }
-
   .print-challan-root {
     display: block !important;
     position: fixed;
