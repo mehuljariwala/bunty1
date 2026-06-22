@@ -84,6 +84,8 @@ export default function OrderBillPage({ params }: { params: Promise<{ id: string
       <style>{`
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
+          body * { visibility: hidden !important; }
+          .bill-print-area, .bill-print-area * { visibility: visible !important; }
           .no-print { display: none !important; }
           .bill-print-area {
             position: absolute !important;
