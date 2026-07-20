@@ -69,7 +69,7 @@ Return this exact JSON structure:
   try {
     const completion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: "llama-3.3-70b-versatile",
       temperature: 0,
       max_tokens: 4096,
       response_format: { type: "json_object" },
