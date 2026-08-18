@@ -63,13 +63,15 @@ ORDER TEXT:
 ${orderText}
 ---
 
-Return this exact JSON structure:
-{"items":[{"category":"5 Tar Bullet","colorName":"Red","quantity":1}]}`;
+OUTPUT FORMAT — return a JSON object with exactly this shape:
+{"items":[{"category":"<normalized category>","colorName":"<matched color>","quantity":<positive integer>}]}
+
+The line above is a SHAPE TEMPLATE ONLY. Never copy its placeholder text into your answer — every item you output must come from the ORDER TEXT above. Quantities are always positive integers; a leading dash in the order text (e.g. "Red -2 con") is a separator, not a minus sign.`;
 
   try {
     const completion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "llama-3.3-70b-versatile",
+      model: "openai/gpt-oss-120b",
       temperature: 0,
       max_tokens: 4096,
       response_format: { type: "json_object" },
@@ -95,12 +97,22 @@ Return this exact JSON structure:
 
     const deduped = new Map<string, { category: string; colorName: string; quantity: number }>();
     for (const item of parsed.items) {
-      const key = `${item.category}::${item.colorName}`;
+      const category = String(item?.category ?? "").trim();
+      const colorName = String(item?.colorName ?? "").trim();
+      // Drop echoed shape-template placeholders and unusable rows.
+      if (!category || !colorName) continue;
+      if (/^<.*>$/.test(category) || /^<.*>$/.test(colorName)) continue;
+
+      // A leading dash in the source text is a separator, not a minus sign.
+      const quantity = Math.round(Math.abs(Number(item?.quantity)));
+      if (!Number.isFinite(quantity) || quantity <= 0) continue;
+
+      const key = `${category}::${colorName}`;
       const existing = deduped.get(key);
       if (existing) {
-        existing.quantity += item.quantity;
+        existing.quantity += quantity;
       } else {
-        deduped.set(key, { ...item });
+        deduped.set(key, { category, colorName, quantity });
       }
     }
 
